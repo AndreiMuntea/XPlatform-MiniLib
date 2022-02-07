@@ -27,10 +27,11 @@ The project structure should looke like:
 In order to compile the project, open it in visual studio, or visual studio code.
 Can be ran directly from visual studio (after git cloning the googletest).
 
-Or it can be ran from command line using cmake
-  From XPlatform-MiniLib folder:
-	(for clang): CXX=clang++ CC=clang cmake -S . -B out && cd out && make && ctest -T memcheck --verbose
-        (for gcc): CXX=g++ CC=gcc cmake -S . -B out && cd out && make && ctest -T memcheck --verbose
+Or it can be ran from command line using cmake from XPlatform-MiniLib folder:
+
+> (for clang): CXX=clang++ CC=clang cmake -S . -B out && cd out && make && ctest -T memcheck --verbose
+
+> (for gcc): CXX=g++ CC=gcc cmake -S . -B out && cd out && make && ctest -T memcheck --verbose
 
 
 ## Header-Only
