@@ -112,6 +112,53 @@
         }
     #endif // XPLATFORM_PLACEMENT_NEW_DEFINITION
 
+#elif defined (__GNUC__)
+    #include <stdlib.h>
+    #include <string.h>
+    #include <wctype.h>
+    #include <assert.h>
+
+    #include "no_sal2.h"
+
+
+    //
+    // Platform-Specific instruction for assertion.
+    //
+    #define XPLATFORM_ASSERT assert
+
+    //
+    // Definition for unreferenced parameter
+    //
+    #define XPLATFORM_UNREFERENCED_PARAMETER(P)     (void)(P)
+
+    //
+    // Definition for default allocation alignment
+    //
+    #define XPLATFORM_MEMORY_ALLOCATION_ALIGNMENT   (sizeof(void*) * 2)
+
+    //
+    // Definition for default cache alignment
+    //
+    #define XPLATFORM_CACHE_ALIGNMENT               128
+
+
+    //
+    // Data types definitions for cross platform usage
+    //
+    using xp_int8_t  = signed char;
+    using xp_int16_t = short int;
+    using xp_int32_t = int;
+    using xp_int64_t = long int;
+
+    using xp_uint8_t  = unsigned char;
+    using xp_uint16_t = unsigned short int;
+    using xp_uint32_t = unsigned int;
+    using xp_uint64_t = unsigned long int;
+
+    using xp_char8_t  = char;
+    using xp_char16_t = char16_t;       // Interchangeable with wchar_t on Windows
+    using xp_char32_t = char32_t;
+
 #else
     #error Unsuported Compiler
 #endif
