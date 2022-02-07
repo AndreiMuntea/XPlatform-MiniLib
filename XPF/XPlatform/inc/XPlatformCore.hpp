@@ -112,7 +112,7 @@
         }
     #endif // XPLATFORM_PLACEMENT_NEW_DEFINITION
 
-#elif defined (__GNUC__)
+#elif defined (__GNUC__) || defined (__clang__)
     #include <stdlib.h>
     #include <string.h>
     #include <wctype.h>
@@ -156,8 +156,8 @@
     using xp_uint64_t = unsigned long int;
 
     using xp_char8_t  = char;
-    using xp_char16_t = char16_t;       // Interchangeable with wchar_t on Windows
-    using xp_char32_t = char32_t;
+    using xp_char16_t = char16_t;
+    using xp_char32_t = char32_t;   // Interchangeable with wchar_t on Linux
 
 #else
     #error Unsuported Compiler

@@ -78,7 +78,7 @@ namespace XPF
                 // This is a workaround -- on this else branch, it is guaranteed that T is not xp_uint64_t.
                 static_assert(XPF::IsSameType<T, xp_uint64_t>, "Unsuported type operation!");
             }
-        #elif defined (__GNUC__)
+        #elif defined (__GNUC__) || defined (__clang__)
             return __sync_add_and_fetch(Number, T{ 1 });
         #else
             #error Unsuported Compiler
@@ -134,7 +134,7 @@ namespace XPF
                 // This is a workaround -- on this else branch, it is guaranteed that T is not xp_uint64_t.
                 static_assert(XPF::IsSameType<T, xp_uint64_t>, "Unsuported type operation!");
             }
-        #elif defined (__GNUC__)
+        #elif defined (__GNUC__) || defined (__clang__)
             return __sync_sub_and_fetch(Number, T{ 1 });
         #else
             #error Unsuported Compiler
@@ -153,7 +153,7 @@ namespace XPF
     {
         #if defined(_MSC_VER)
             RtlSecureZeroMemory(Destination, Length);
-        #elif defined (__GNUC__)
+        #elif defined (__GNUC__) || defined (__clang__)
             memset(Destination, 0, Length);
         #else
             #error Unsuported Compiler
@@ -172,7 +172,7 @@ namespace XPF
     {
         #if defined(_MSC_VER)
             RtlCopyMemory(Destination, Source, Length);
-        #elif defined (__GNUC__)
+        #elif defined (__GNUC__) || defined (__clang__)
             memcpy(Destination, Source, Length);
         #else
             #error Unsuported Compiler
@@ -201,7 +201,7 @@ namespace XPF
             #else
                 return HeapAlloc(GetProcessHeap(), 0, Size);
             #endif
-        #elif defined (__GNUC__)
+        #elif defined (__GNUC__) || defined (__clang__)
             return aligned_alloc(XPLATFORM_MEMORY_ALLOCATION_ALIGNMENT, Size);
         #else
             #error Unsuported Compiler
@@ -224,7 +224,7 @@ namespace XPF
                 #else
                     (void) HeapFree(GetProcessHeap(), 0, Memory);
                 #endif
-            #elif defined (__GNUC__)
+            #elif defined (__GNUC__) || defined (__clang__)
                 free(Memory);
             #else
                 #error Unsuported Compiler
@@ -289,7 +289,7 @@ namespace XPF
                 // This is a workaround -- on this else branch, it is guaranteed that T is not xp_uint64_t.
                 static_assert(XPF::IsSameType<T, xp_uint64_t>, "Unsuported type operation!");
             }
-        #elif defined (__GNUC__)
+        #elif defined (__GNUC__) || defined (__clang__)
             return (true != __builtin_add_overflow(Augend, Addend, Result));
         #else
             #error Unsuported Compiler
@@ -354,7 +354,7 @@ namespace XPF
                 // This is a workaround -- on this else branch, it is guaranteed that T is not xp_uint64_t.
                 static_assert(XPF::IsSameType<T, xp_uint64_t>, "Unsuported type operation!");
             }
-        #elif defined (__GNUC__)
+        #elif defined (__GNUC__) || defined (__clang__)
             return (true != __builtin_sub_overflow(Minuend, Subtrahend, Result));
         #else
             #error Unsuported Compiler
@@ -418,7 +418,7 @@ namespace XPF
                 // This is a workaround -- on this else branch, it is guaranteed that T is not xp_uint64_t.
                 static_assert(XPF::IsSameType<T, xp_uint64_t>, "Unsuported type operation!");
             }
-        #elif defined (__GNUC__)
+        #elif defined (__GNUC__) || defined (__clang__)
             return (true != __builtin_mul_overflow(Multiplicand, Multiplier, Result));
         #else
             #error Unsuported Compiler
@@ -505,7 +505,7 @@ namespace XPF
                 }
                 return Character;
             #endif
-        #elif defined (__GNUC__)
+        #elif defined (__GNUC__) || defined (__clang__)
             return static_cast<CharType>(towlower(static_cast<wchar_t>(Character)));
         #else
             #error Unsuported Compiler
@@ -550,7 +550,7 @@ namespace XPF
                 }
                 return Character;
             #endif
-        #elif defined (__GNUC__)
+        #elif defined (__GNUC__) || defined (__clang__)
             return static_cast<CharType>(towupper(static_cast<wchar_t>(Character)));
         #else
             #error Unsuported Compiler

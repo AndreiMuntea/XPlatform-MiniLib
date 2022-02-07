@@ -24,9 +24,6 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     # Treat warning as errors
     add_compile_options(/WX)
 elseif (CMAKE_CXX_COMPILER_ID MATCHES  "GNU|Clang")
-    # GNU and CLANG specific 
-    add_compile_definitions(GNU_CLANG_LINUX_USERMODE)
-
     # Warning level
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-long-long -Wcast-align -pedantic -Waddress -Waddress-of-packed-member")
 endif()
