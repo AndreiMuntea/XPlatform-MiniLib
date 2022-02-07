@@ -13,12 +13,15 @@ Create a folder called "lib" and git clone the latest gtest library.
 
 The project structure should looke like:
 
-XPlatform-MiniLib
-  |-- XPF
-       |- XPlatform
-  |-- XPF-Tests
-  |-- lib
-       |--- googletest
+
+
+    XPlatform-MiniLib
+      |---- XPF
+            |---- XPlatform
+      |---- XPF-Tests
+      |---- lib
+            |--- googletest
+
 
 ## To use:
 In order to compile the project, open it in visual studio, or visual studio code.
