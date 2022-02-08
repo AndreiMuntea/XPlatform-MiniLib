@@ -112,7 +112,7 @@ namespace XPlatformTest
         INITIALIZE_TYPED_BUFFER(string, "My123String");
 
         XPF::String<TypeParam> str;
-        EXPECT_TRUE(str.Replace(str));
+        EXPECT_TRUE(str.Replace(string));
 
         XPF::StringView<TypeParam> view(str);
 
@@ -120,6 +120,94 @@ namespace XPlatformTest
         EXPECT_TRUE(view.RawBuffer() != nullptr);
         EXPECT_FALSE(view.IsEmpty());
         EXPECT_FALSE(view.begin() == view.end());
+    }
+
+    TYPED_TEST(TestStringFixture, StringViewCopyConstructor)
+    {
+        static const TypeParam* string1 = nullptr;
+        INITIALIZE_TYPED_BUFFER(string1, "My123String123");
+
+        XPF::StringView<TypeParam> view1(string1);
+        EXPECT_TRUE(view1.Size() == 14);
+
+        XPF::StringView<TypeParam> view2(view1);
+        EXPECT_TRUE(view1.Size() == 14);
+        EXPECT_TRUE(view2.Size() == 14);
+    }
+
+    TYPED_TEST(TestStringFixture, StringViewCopyAssignment)
+    {
+        static const TypeParam* string1 = nullptr;
+        INITIALIZE_TYPED_BUFFER(string1, "My123String123");
+
+        static const TypeParam* string2 = nullptr;
+        INITIALIZE_TYPED_BUFFER(string2, "1234");
+
+        XPF::StringView<TypeParam> view1(string1);
+        EXPECT_TRUE(view1.Size() == 14);
+
+        XPF::StringView<TypeParam> view2(string2);
+        EXPECT_TRUE(view2.Size() == 4);
+
+        view2 = view1;
+        EXPECT_TRUE(view1.Size() == 14);
+        EXPECT_TRUE(view2.Size() == 14);
+    }
+
+    TYPED_TEST(TestStringFixture, StringViewSelfCopyAssignment)
+    {
+        static const TypeParam* string1 = nullptr;
+        INITIALIZE_TYPED_BUFFER(string1, "My123String123");
+
+        XPF::StringView<TypeParam> view1(string1);
+        EXPECT_TRUE(view1.Size() == 14);
+
+        view1 = view1;
+        EXPECT_TRUE(view1.Size() == 14);
+    }
+
+    TYPED_TEST(TestStringFixture, StringViewMoveConstructor)
+    {
+        static const TypeParam* string1 = nullptr;
+        INITIALIZE_TYPED_BUFFER(string1, "My123String123");
+
+        XPF::StringView<TypeParam> view1(string1);
+        EXPECT_TRUE(view1.Size() == 14);
+
+        XPF::StringView<TypeParam> view2(XPF::Move(view1));
+        EXPECT_TRUE(view1.Size() == 0);
+        EXPECT_TRUE(view2.Size() == 14);
+    }
+
+    TYPED_TEST(TestStringFixture, StringViewMoveAssignment)
+    {
+        static const TypeParam* string1 = nullptr;
+        INITIALIZE_TYPED_BUFFER(string1, "My123String123");
+
+        static const TypeParam* string2 = nullptr;
+        INITIALIZE_TYPED_BUFFER(string2, "1234");
+
+        XPF::StringView<TypeParam> view1(string1);
+        EXPECT_TRUE(view1.Size() == 14);
+
+        XPF::StringView<TypeParam> view2(string2);
+        EXPECT_TRUE(view2.Size() == 4);
+
+        view2 = XPF::Move(view1);
+        EXPECT_TRUE(view1.Size() == 0);
+        EXPECT_TRUE(view2.Size() == 14);
+    }
+
+    TYPED_TEST(TestStringFixture, StringViewSelfMoveAssignment)
+    {
+        static const TypeParam* string1 = nullptr;
+        INITIALIZE_TYPED_BUFFER(string1, "My123String123");
+
+        XPF::StringView<TypeParam> view1(string1);
+        EXPECT_TRUE(view1.Size() == 14);
+
+        view1 = XPF::Move(view1);
+        EXPECT_TRUE(view1.Size() == 14);
     }
 
 }

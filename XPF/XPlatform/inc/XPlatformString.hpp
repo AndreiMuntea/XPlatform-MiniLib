@@ -661,7 +661,7 @@ namespace XPF
             XPF::String<CharType, Allocator> temp{ XPF::Move(*this) };
 
             // Our buffer is now empty. Try to replace it with the given string
-            if (!StringCat(String.Length(), String.RawBuffer()))
+            if (!StringCat(String.Size(), String.RawBuffer()))
             {
                 // Something failed. We will restore our previous elements
                 *this = XPF::Move(temp);
