@@ -59,5 +59,8 @@
     <ClInclude Include="XPlatform\inc\XPlatformUniquePointer.hpp">
       <Filter>Header Files\XPlatform\inc</Filter>
     </ClInclude>
+    <ClInclude Include="XPlatform\inc\XPlatformString.hpp">
+      <Filter>Header Files\XPlatform\inc</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

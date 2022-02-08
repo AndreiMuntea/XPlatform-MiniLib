@@ -171,6 +171,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="XPlatform\inc\XPlatformSharedPointer.hpp" />
+    <ClInclude Include="XPlatform\inc\XPlatformString.hpp" />
     <ClInclude Include="XPlatform\inc\XPlatformUniquePointer.hpp" />
     <ClInclude Include="XPlatform\inc\XPlatformVector.hpp" />
     <ClInclude Include="XPlatform\inc\XPlatformCore.hpp" />
