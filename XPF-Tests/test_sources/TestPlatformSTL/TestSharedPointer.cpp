@@ -1,6 +1,6 @@
 #include "../../XPF-Tests.h"
 
-namespace XPlatformraryTest
+namespace XPlatformTest
 {
     class TestSharedPointerFixture : public  testing::Test
     {

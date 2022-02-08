@@ -124,7 +124,7 @@ namespace XPF
         // begin() == end()
         bool operator==(const StringViewIterator& Other) const noexcept
         {
-            return XPF::ArePointersEqual(this->StringView, Other.StringView) && (this->position == Other.position);
+            return XPF::ArePointersEqual(this->stringView, Other.stringView) && (this->position == Other.position);
         }
 
         // begin() != end()
@@ -174,7 +174,7 @@ namespace XPF
     // Can be used when no copy is needed.
     // Heavily relies on the buffer size -- the buffer is not necessary null terminated.
     // It is the caller responsibility to guarantee the buffer is valid until
-    //      all ImmutableStringBase instances working with that buffer are disposed.
+    //      all StringView instances working with that buffer are disposed.
     //
     template <class CharType>
     class StringView
@@ -212,7 +212,7 @@ namespace XPF
             if ((nullptr != String) && (0 != Length))
             {
                 this->length = Length;
-                this->buffer = const_cast<CharType*>(String);
+                this->buffer = String;
             }
         }
 
@@ -254,7 +254,7 @@ namespace XPF
         }
         StringView& operator=(StringView&& Other) noexcept
         {
-            if (!XPF::ArePointersEqual(this, XPF::AddressOf(Other))) // Guard against self copy.
+            if (!XPF::ArePointersEqual(this, XPF::AddressOf(Other))) // Guard against self move.
             {
                 // Shallow copy. No memory needs to be freed
                 this->buffer = nullptr; 
@@ -437,6 +437,8 @@ namespace XPF
                 return true;
             }
 
+            // If Substring.length is 0, then we return a match at the position 0.
+            // No OOB is performed.
             for (size_t i = 0; i <= this->length - Substring.length; ++i)
             {
                 // Initialize a buffer with substring length to check for equality
@@ -465,7 +467,7 @@ namespace XPF
             return StringViewIterator<CharType>(this, Size());
         }
     private:
-        const CharType* const buffer = nullptr;
+        const CharType* buffer = nullptr;
         size_t length = 0;
     };
 
