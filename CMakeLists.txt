@@ -35,3 +35,4 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 # Include sub-projects.
 add_subdirectory("lib/googletest")
 add_subdirectory ("XPF-Tests")
+add_subdirectory ("XPF")

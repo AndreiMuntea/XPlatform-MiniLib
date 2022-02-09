@@ -10,6 +10,13 @@
 *.userosscache
 *.sln.docstates
 
+*.filters
+*.vcxproj
+*.cmake
+*.tcl
+*.sln
+CmakeCache.txt
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
@@ -19,6 +26,7 @@ mono_crash.*
 # Build results
 out/
 lib/
+CMakeFiles/
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/

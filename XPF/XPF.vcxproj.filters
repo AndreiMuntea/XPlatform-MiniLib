@@ -1,66 +1,24 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="Header Files\XPlatform">
-      <UniqueIdentifier>{4d0f75ef-b6dc-4b0d-9409-a10a2313121d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\XPlatform\inc">
-      <UniqueIdentifier>{a2b5eb53-2d55-46b4-878d-07c39dea8c16}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="Source.cpp">
+    <ClCompile Include="D:\Projects\XPF\XPF\XPF.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="XPlatform\XPlatformIncludes.hpp">
-      <Filter>Header Files\XPlatform</Filter>
+    <ClInclude Include="D:\Projects\XPF\XPF\XPF.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="XPlatform\inc\XPlatformCore.hpp">
-      <Filter>Header Files\XPlatform\inc</Filter>
-    </ClInclude>
-    <ClInclude Include="XPlatform\inc\XPlatformNumericLimits.hpp">
-      <Filter>Header Files\XPlatform\inc</Filter>
-    </ClInclude>
-    <ClInclude Include="XPlatform\inc\XPlatformTypeTraits.hpp">
-      <Filter>Header Files\XPlatform\inc</Filter>
-    </ClInclude>
-    <ClInclude Include="XPlatform\inc\XPlatformUtilsApiSet.hpp">
-      <Filter>Header Files\XPlatform\inc</Filter>
-    </ClInclude>
-    <ClInclude Include="XPlatform\inc\XPlatformSpecificApi.hpp">
-      <Filter>Header Files\XPlatform\inc</Filter>
-    </ClInclude>
-    <ClInclude Include="XPlatform\inc\XPlatformMemoryAllocator.hpp">
-      <Filter>Header Files\XPlatform\inc</Filter>
-    </ClInclude>
-    <ClInclude Include="XPlatform\inc\XPlatformList.hpp">
-      <Filter>Header Files\XPlatform\inc</Filter>
-    </ClInclude>
-    <ClInclude Include="XPlatform\inc\XPlatformVector.hpp">
-      <Filter>Header Files\XPlatform\inc</Filter>
-    </ClInclude>
-    <ClInclude Include="XPlatform\inc\XPlatformSharedPointer.hpp">
-      <Filter>Header Files\XPlatform\inc</Filter>
-    </ClInclude>
-    <ClInclude Include="XPlatform\inc\XPlatformUniquePointer.hpp">
-      <Filter>Header Files\XPlatform\inc</Filter>
-    </ClInclude>
-    <ClInclude Include="XPlatform\inc\XPlatformString.hpp">
-      <Filter>Header Files\XPlatform\inc</Filter>
-    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\Projects\XPF\XPF\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{D9F00790-C11C-31E2-B607-07A1653A4506}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{9BA89C0C-25E5-3BE8-9742-CDB376598FD3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>
