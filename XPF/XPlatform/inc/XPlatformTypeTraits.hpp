@@ -107,6 +107,8 @@ namespace XPF
     {
         return __builtin_addressof(Argument);
     }
+    template <class T>
+    constexpr inline T* AddressOf(const T&& Argument) noexcept = delete;
 }
 
 

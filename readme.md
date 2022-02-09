@@ -26,15 +26,6 @@ The project structure should looke like:
 ## To use:
 In order to compile the project, open it in visual studio, or visual studio code.
 Can be ran directly from visual studio (after git cloning the googletest).
-Open a Developer Command Prompt console in the repo's root and run
-
-> cmake -G "Visual Studio 17" .\CMakeLists.txt
-
-This will generate the X-Platform.sln required and then you can load it in visual studio.
-Please note that I am using Visual Studio 2022 (hence the 17). You might need to change that to work with yours.
-To list available visual studio versions you can issue
-> cmake -help 
-
 
 Or it can be ran from command line using cmake from XPlatform-MiniLib folder:
 

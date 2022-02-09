@@ -222,7 +222,7 @@ namespace XPF
         {
             if (!String.IsEmpty())
             {
-                this->buffer = &String[0];
+                this->buffer = XPF::AddressOf(String[0]);
                 this->length = String.Size();
             }
         }
@@ -271,9 +271,10 @@ namespace XPF
         // Raw pointer to the beginning of the buffer.
         // Might be nullptr. Use with care.
         //
+        _IRQL_requires_max_(DISPATCH_LEVEL)
         _Ret_maybenull_
         _Must_inspect_result_
-        const CharType* const 
+        const CharType*
         RawBuffer(
             void
         ) const noexcept
@@ -284,6 +285,7 @@ namespace XPF
         // 
         // Retrieves the size of the buffer
         //
+        _IRQL_requires_max_(DISPATCH_LEVEL)
         size_t 
         Size(
             void
@@ -295,6 +297,7 @@ namespace XPF
         // 
         // Checks if the string is empty.
         //
+        _IRQL_requires_max_(DISPATCH_LEVEL)
         _Must_inspect_result_
         bool 
         IsEmpty(
@@ -319,6 +322,8 @@ namespace XPF
         // CaseInsensitive - bool value specifying whether the test should be
         //                   case sensitive or case insensitive.
         //
+        _When_(CaseInsensitive == false,  _IRQL_requires_max_(PASSIVE_LEVEL))
+        _When_(CaseInsensitive == true,   _IRQL_requires_max_(DISPATCH_LEVEL))
         _Must_inspect_result_
         bool 
         Equals(
@@ -355,6 +360,8 @@ namespace XPF
         // CaseInsensitive - bool value specifying whether the test should be
         //                   case sensitive or case insensitive.
         //
+        _When_(CaseInsensitive == false,  _IRQL_requires_max_(PASSIVE_LEVEL))
+        _When_(CaseInsensitive == true,   _IRQL_requires_max_(DISPATCH_LEVEL))
         _Must_inspect_result_
         bool 
         StartsWith(
@@ -387,6 +394,8 @@ namespace XPF
         // CaseInsensitive - bool value specifying whether the test should be
         //                   case sensitive or case insensitive.
         //
+        _When_(CaseInsensitive == false,  _IRQL_requires_max_(PASSIVE_LEVEL))
+        _When_(CaseInsensitive == true,   _IRQL_requires_max_(DISPATCH_LEVEL))
         _Must_inspect_result_
         bool
         EndsWith(
@@ -420,6 +429,8 @@ namespace XPF
         //                   case sensitive or case insensitive.
         // MatchPosition - stores the index in the string where the match was found.
         //
+        _When_(CaseInsensitive == false,  _IRQL_requires_max_(PASSIVE_LEVEL))
+        _When_(CaseInsensitive == true,   _IRQL_requires_max_(DISPATCH_LEVEL))
         _Must_inspect_result_
         bool 
         Contains(
@@ -522,6 +533,7 @@ namespace XPF
         //
         // Destroys all elements in string
         //
+        _IRQL_requires_max_(DISPATCH_LEVEL)
         void
         Clear(
             void
@@ -548,6 +560,7 @@ namespace XPF
         //
         // Retrieves the current size of the string
         //
+        _IRQL_requires_max_(DISPATCH_LEVEL)
         size_t
         Size(
             void
@@ -559,6 +572,7 @@ namespace XPF
         // 
         // Checks if the buffer has no elements.
         //
+        _IRQL_requires_max_(DISPATCH_LEVEL)
         _Must_inspect_result_
         bool
         IsEmpty(
@@ -573,6 +587,8 @@ namespace XPF
         // CaseInsensitive - bool value specifying whether the test should be
         //                   case sensitive or case insensitive.
         //
+        _When_(CaseInsensitive == false,  _IRQL_requires_max_(PASSIVE_LEVEL))
+        _When_(CaseInsensitive == true,   _IRQL_requires_max_(DISPATCH_LEVEL))
         _Must_inspect_result_
         bool 
         Equals(
@@ -589,6 +605,8 @@ namespace XPF
         // CaseInsensitive - bool value specifying whether the test should be
         //                   case sensitive or case insensitive.
         //
+        _When_(CaseInsensitive == false,  _IRQL_requires_max_(PASSIVE_LEVEL))
+        _When_(CaseInsensitive == true,   _IRQL_requires_max_(DISPATCH_LEVEL))
         _Must_inspect_result_
         bool 
         StartsWith(
@@ -605,6 +623,8 @@ namespace XPF
         // CaseInsensitive - bool value specifying whether the test should be
         //                   case sensitive or case insensitive.
         //
+        _When_(CaseInsensitive == false,  _IRQL_requires_max_(PASSIVE_LEVEL))
+        _When_(CaseInsensitive == true,   _IRQL_requires_max_(DISPATCH_LEVEL))
         _Must_inspect_result_
         bool
         EndsWith(
@@ -621,11 +641,9 @@ namespace XPF
         // CaseInsensitive - bool value specifying whether the test should be
         //                   case sensitive or case insensitive.
         // MatchPosition - stores the index in the string where the match was found.
-        //               - 0 on failure (return value should always be inspected)
-        // If 2 empty strings are tested, the return value will be true,
-        // and the match position will be 0 (which will be an invalid index in the string!)
-        // It is the caller responsibility to guard against this scenario
         //
+        _When_(CaseInsensitive == false,  _IRQL_requires_max_(PASSIVE_LEVEL))
+        _When_(CaseInsensitive == true,   _IRQL_requires_max_(DISPATCH_LEVEL))
         _Must_inspect_result_
         bool 
         Contains(
@@ -643,13 +661,14 @@ namespace XPF
         // The string will be inserted at the end of the buffer.
         // It will still guarantee that the buffer will be null-terminated.
         //
+        _IRQL_requires_max_(DISPATCH_LEVEL)
         _Must_inspect_result_
         bool 
         Append(
             _In_ _Const_ const StringView<CharType>& String
         ) noexcept
         {
-            return StringCat(String.Length(), String.RawBuffer());
+            return StringCat(String.Size(), String.RawBuffer());
         }
 
         // 
@@ -657,6 +676,7 @@ namespace XPF
         // The string will be copied (memory allocations will be performed.
         // The operation might fail -- it is guaranteed that the content is preserved in such cases.
         //
+        _IRQL_requires_max_(DISPATCH_LEVEL)
         _Must_inspect_result_
         bool 
         Replace(
@@ -731,6 +751,7 @@ namespace XPF
         // The new string will be inserted at the end of the buffer.
         // It will still guarantee that the buffer will be null-terminated.
         //
+        _IRQL_requires_max_(DISPATCH_LEVEL)
         _Must_inspect_result_
         bool 
         StringCat(
