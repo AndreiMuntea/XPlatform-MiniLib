@@ -110,5 +110,8 @@
     <ClCompile Include="test_sources\TestPlatformUtils\TestUtilsApiSet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_sources\TestPlatformSTL\TestRedBlackTree.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
