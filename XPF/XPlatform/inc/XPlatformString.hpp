@@ -372,6 +372,10 @@ namespace XPF
             {
                 return true;
             }
+            if (Prefix.length == 0)
+            {
+                return false;
+            }
 
             // Initialize a buffer with prefix length to check for equality
             StringView tmp{ this->buffer, Prefix.length };
@@ -400,6 +404,10 @@ namespace XPF
             {
                 return true;
             }
+            if (Suffix.length == 0)
+            {
+                return false;
+            }
 
             // Initialize a buffer with suffix length to check for equality
             StringView tmp{ &this->buffer[this->length - Suffix.length], Suffix.length };
@@ -411,10 +419,6 @@ namespace XPF
         // CaseInsensitive - bool value specifying whether the test should be
         //                   case sensitive or case insensitive.
         // MatchPosition - stores the index in the string where the match was found.
-        //               - 0 on failure (return value should always be inspected)
-        // If 2 empty strings are tested, the return value will be true,
-        // and the match position will be 0 (which will be an invalid index in the string!)
-        // It is the caller responsibility to guard against this scenario
         //
         _Must_inspect_result_
         bool 
@@ -431,14 +435,16 @@ namespace XPF
             {
                 return false;
             }
+            if (Substring.length == 0)
+            {
+                return false;
+            }
             // We know that length >= Substring.length ==> both strings are empty if length == 0
             if (this->length == 0)
             {
                 return true;
             }
 
-            // If Substring.length is 0, then we return a match at the position 0.
-            // No OOB is performed.
             for (size_t i = 0; i <= this->length - Substring.length; ++i)
             {
                 // Initialize a buffer with substring length to check for equality

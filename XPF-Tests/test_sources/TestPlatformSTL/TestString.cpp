@@ -210,4 +210,147 @@ namespace XPlatformTest
         EXPECT_TRUE(view1.Size() == 14);
     }
 
+    TYPED_TEST(TestStringFixture, StringViewEquals)
+    {
+        static const TypeParam* string1 = nullptr;
+        INITIALIZE_TYPED_BUFFER(string1, "My123String123");
+
+        static const TypeParam* string2 = nullptr;
+        INITIALIZE_TYPED_BUFFER(string2, "My123STRING123");
+
+        static const TypeParam* string3 = nullptr;
+        INITIALIZE_TYPED_BUFFER(string3, "My12323");
+
+        static const TypeParam* string4 = nullptr;
+
+        XPF::StringView<TypeParam> view1(string1);
+        EXPECT_TRUE(view1.Size() == 14);
+        XPF::StringView<TypeParam> view2(string2);
+        EXPECT_TRUE(view2.Size() == 14);
+        XPF::StringView<TypeParam> view3(string3);
+        EXPECT_TRUE(view3.Size() == 7);
+        XPF::StringView<TypeParam> view4(string4);
+        EXPECT_TRUE(view4.Size() == 0);
+
+        EXPECT_TRUE(view1.Equals(view1, true));
+        EXPECT_TRUE(view1.Equals(view1, false));
+
+        EXPECT_TRUE(view1.Equals(view2,  true));
+        EXPECT_FALSE(view1.Equals(view2, false));
+
+        EXPECT_FALSE(view1.Equals(view3, true));
+        EXPECT_FALSE(view1.Equals(view3, false));
+
+        EXPECT_FALSE(view1.Equals(view4, true));
+        EXPECT_FALSE(view1.Equals(view4, false));
+    }
+
+    TYPED_TEST(TestStringFixture, StringViewStartsWith)
+    {
+        static const TypeParam* string1 = nullptr;
+        INITIALIZE_TYPED_BUFFER(string1, "My123String123");
+
+        static const TypeParam* string2 = nullptr;
+        INITIALIZE_TYPED_BUFFER(string2, "My123STRING");
+
+        static const TypeParam* string3 = nullptr;
+        INITIALIZE_TYPED_BUFFER(string3, "My12323");
+
+        static const TypeParam* string4 = nullptr;
+
+        XPF::StringView<TypeParam> view1(string1);
+        EXPECT_TRUE(view1.Size() == 14);
+        XPF::StringView<TypeParam> view2(string2);
+        EXPECT_TRUE(view2.Size() == 11);
+        XPF::StringView<TypeParam> view3(string3);
+        EXPECT_TRUE(view3.Size() == 7);
+        XPF::StringView<TypeParam> view4(string4);
+        EXPECT_TRUE(view4.Size() == 0);
+
+        EXPECT_TRUE(view1.StartsWith(view1, true));
+        EXPECT_TRUE(view1.StartsWith(view1, false));
+
+        EXPECT_TRUE(view1.StartsWith(view2,  true));
+        EXPECT_FALSE(view1.StartsWith(view2, false));
+
+        EXPECT_FALSE(view1.StartsWith(view3, true));
+        EXPECT_FALSE(view1.StartsWith(view3, false));
+
+        EXPECT_FALSE(view1.StartsWith(view4, true));
+        EXPECT_FALSE(view1.StartsWith(view4, false));
+    }
+
+    TYPED_TEST(TestStringFixture, StringViewEndsWith)
+    {
+        static const TypeParam* string1 = nullptr;
+        INITIALIZE_TYPED_BUFFER(string1, "My123String123");
+
+        static const TypeParam* string2 = nullptr;
+        INITIALIZE_TYPED_BUFFER(string2, "3STRING123");
+
+        static const TypeParam* string3 = nullptr;
+        INITIALIZE_TYPED_BUFFER(string3, "My12323");
+
+        static const TypeParam* string4 = nullptr;
+
+        XPF::StringView<TypeParam> view1(string1);
+        EXPECT_TRUE(view1.Size() == 14);
+        XPF::StringView<TypeParam> view2(string2);
+        EXPECT_TRUE(view2.Size() == 10);
+        XPF::StringView<TypeParam> view3(string3);
+        EXPECT_TRUE(view3.Size() == 7);
+        XPF::StringView<TypeParam> view4(string4);
+        EXPECT_TRUE(view4.Size() == 0);
+
+        EXPECT_TRUE(view1.EndsWith(view1, true));
+        EXPECT_TRUE(view1.EndsWith(view1, false));
+
+        EXPECT_TRUE(view1.EndsWith(view2, true));
+        EXPECT_FALSE(view1.EndsWith(view2, false));
+
+        EXPECT_FALSE(view1.EndsWith(view3, true));
+        EXPECT_FALSE(view1.EndsWith(view3, false));
+
+        EXPECT_FALSE(view1.EndsWith(view4, true));
+        EXPECT_FALSE(view1.EndsWith(view4, false));
+    }
+
+    TYPED_TEST(TestStringFixture, StringViewContains)
+    {
+        static const TypeParam* string1 = nullptr;
+        INITIALIZE_TYPED_BUFFER(string1, "My123String123");
+
+        static const TypeParam* string2 = nullptr;
+        INITIALIZE_TYPED_BUFFER(string2, "3STRING123");
+
+        static const TypeParam* string3 = nullptr;
+        INITIALIZE_TYPED_BUFFER(string3, "My12323");
+
+        static const TypeParam* string4 = nullptr;
+
+        XPF::StringView<TypeParam> view1(string1);
+        EXPECT_TRUE(view1.Size() == 14);
+        XPF::StringView<TypeParam> view2(string2);
+        EXPECT_TRUE(view2.Size() == 10);
+        XPF::StringView<TypeParam> view3(string3);
+        EXPECT_TRUE(view3.Size() == 7);
+        XPF::StringView<TypeParam> view4(string4);
+        EXPECT_TRUE(view4.Size() == 0);
+
+        size_t pos = 0;
+        EXPECT_TRUE(view1.Contains(view1, true, pos));
+        EXPECT_TRUE(pos == 0);
+        EXPECT_TRUE(view1.Contains(view1, false, pos));
+        EXPECT_TRUE(pos == 0);
+
+        EXPECT_TRUE(view1.Contains(view2, true, pos));
+        EXPECT_TRUE(pos == 4);
+        EXPECT_FALSE(view1.Contains(view2, false, pos));
+
+        EXPECT_FALSE(view1.Contains(view3, true, pos));
+        EXPECT_FALSE(view1.Contains(view3, false, pos));
+
+        EXPECT_FALSE(view1.Contains(view4, true, pos));
+        EXPECT_FALSE(view1.Contains(view4, false, pos));
+    }
 }
