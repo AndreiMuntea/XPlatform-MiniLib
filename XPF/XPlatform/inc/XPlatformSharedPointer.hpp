@@ -26,6 +26,20 @@
 #ifndef __XPLATFORM_SHARED_POINTER_HPP__
 #define __XPLATFORM_SHARED_POINTER_HPP__
 
+//
+// This file contains a basic implementation of shared_pointer<> functionality.
+// For now the only method provided for instantiating is MakeShared.
+// Because it is optimized to perform a single allocation:
+//      | T storage | padding | refcounter |
+// It allocates an object of type T, some padding to ensure the refcounter is aligned
+//      to work properly with Interlocked* APIs.
+// The make_shared method should suffice for the basic functionality.
+//      When the need arise, other constructors can be implemented and this class can be revamped.
+// 
+// As in STL, this class is NOT thread-safe!
+// Every operation that may occur on the same shared_ptr object from multiple threads MUST be lock-guared!
+//
+
 namespace XPF
 {
     template <class T, class Allocator = MemoryAllocator<T>>

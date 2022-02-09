@@ -26,6 +26,15 @@
 #define __XPLATFORM_UNIQUE_POINTER_HPP__
 
 
+//
+// This file contains a basic implementation of unique_pointer<> functionality.
+// For now the only method provided for instantiating is MakeUnique.
+// When the need arise, other constructors can be implemented and this class can be revamped.
+//
+// As in STL, these clases are NOT thread-safe!
+// Every operation that may occur on the same unique_ptr object from multiple threads MUST be lock-guared!
+//
+
 namespace XPF
 {
     template <class T, class Allocator = MemoryAllocator<T>>

@@ -25,6 +25,11 @@
 #ifndef __XPLATFORM_NUMERIC_LIMITS_HPP__
 #define __XPLATFORM_NUMERIC_LIMITS_HPP__
 
+//
+// This file contains the MIN-MAX values for the data types used along the lib.
+// They are on par with the std::numeric_limits.
+//
+
 namespace XPF
 {
     //

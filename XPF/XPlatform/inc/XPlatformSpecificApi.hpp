@@ -25,6 +25,11 @@
 #ifndef __XPLATFORM_SPECIFIC_API_HPP__
 #define __XPLATFORM_SPECIFIC_API_HPP__
 
+//
+// This file contains the standalone APIs that are used along the project.
+// They are compiler-specific or platform specific.
+// It groups them togheter to ensure the same output.
+//
 
 namespace XPF
 {

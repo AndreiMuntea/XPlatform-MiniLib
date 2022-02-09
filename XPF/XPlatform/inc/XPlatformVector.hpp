@@ -25,6 +25,21 @@
 #ifndef __XPLATFORM_VECTOR_HPP__
 #define __XPLATFORM_VECTOR_HPP__
 
+//
+// This file contains a vector implementation.
+// It contains a minimal set of supported operations.
+// Can be extended at a later date with other functionality as the need arise.
+// 
+// It is guaranteed that the elements will be stored in a continous buffer zone.
+// The elements alignment will depend on each element 
+//      if one needs T to be aligned, it should ensure T is aligned (vector class will not take care of this).
+// The vector will grow or shrink with a multiplication factor of 2.
+// It will take care of the possible overflows that may occur and will fail accordingly.
+// 
+// As in STL, these clases are NOT thread-safe!
+// Every operation that may occur on the same vector object from multiple threads MUST be lock-guared!
+//
+
 namespace XPF
 {
     //

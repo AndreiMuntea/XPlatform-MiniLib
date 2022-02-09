@@ -25,6 +25,12 @@
 #ifndef __XPLATFORM_CORE_HPP__
 #define __XPLATFORM_CORE_HPP__
 
+//
+// This file contains the needed includes for each platform and compiler.
+// Feel free to remove or add includes as needed.
+//
+
+
 #if defined(_MSC_VER)
     //
     // MSVC-Specific definitions

@@ -25,6 +25,13 @@
 #ifndef __XPLATFORM_MEMORY_ALLOCATOR_HPP__
 #define __XPLATFORM_MEMORY_ALLOCATOR_HPP__
 
+//
+// This file contains the basic MemoryAllocator used by other structures.
+// One can write its own memory allocator, for example you might want a non-paged pool alocator for Windows KM.
+// Or one that uses a lookaside list for optimization.
+// You can write your own as long as it inherits the MemoryAllocator<T> class defined below.
+//
+
 namespace XPF
 {
     template <class Type>

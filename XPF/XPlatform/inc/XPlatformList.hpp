@@ -25,6 +25,24 @@
 #ifndef __XPLATFORM_LIST_HPP__
 #define __XPLATFORM_LIST_HPP__
 
+
+//
+// This file contains a doubly-linked list implementation.
+// Each node in the list is independetly allocated.
+// Each node in the list has a reference to the next node and the previous node.
+// We will use "Head" to refer to the first element in the list and "TAIL" to refer to the last one
+// 
+//          --------                 ----------                 ---------- 
+//          |      |-----NEXT------->|        |-----NEXT------->|        |
+//          | TAIL |                 |  HEAD  |                 |  NEXT  | 
+//          |      |<----PREV--------|        |<----PREV--------|        |
+//          --------                 ----------                 ----------
+// 
+// As in STL, this class is NOT thread-safe!
+// Every operation that may occur on the same list object from multiple threads MUST be lock-guared!
+//
+
+
 namespace XPF
 {
     //

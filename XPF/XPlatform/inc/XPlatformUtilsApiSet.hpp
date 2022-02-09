@@ -25,6 +25,13 @@
 #ifndef __XPLATFORM_UTILS_APISET_HPP__
 #define __XPLATFORM_UTILS_APISET_HPP__
 
+
+//
+// This file contains a common ApiSet that it is not platform or compiler dependant.
+// Most of the APIs are constexpr and can be used at compile time.
+//
+
+
 namespace XPF
 {
     //

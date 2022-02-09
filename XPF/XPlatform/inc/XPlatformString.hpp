@@ -25,6 +25,24 @@
 #ifndef __XPLATFORM_STRING_HPP__
 #define __XPLATFORM_STRING_HPP__
 
+
+//
+// This file contains string_view and string implementation.
+// string_view can be used when a shallow copy is sufficient (no memory allocations are performed)
+//      and all operations are guaranteed to be constant.
+// string class can be used when a deep copy is needed. 
+//      Replace() and Append() methods are provided in order to signal errors as no exceptions can be thrown.
+//      It is guaranteed that the elements in the string class will be allocated as a continous buffer which will be null terminated.
+// 
+// It supports char, char16_t and char32_t
+//      For windows, wchar_t is interchangeable with char16_t
+//      For linux, wchar_t is interchangeable with char32_t
+// Custom APIs can be defined to reinterpret cast from wchar_t* to char16_t* on windows, and from wchar_t* to char32_t* on Linux.
+// 
+// As in STL, these clases are NOT thread-safe!
+// Every operation that may occur on the same string object from multiple threads MUST be lock-guared!
+//
+
 namespace XPF
 {
     //

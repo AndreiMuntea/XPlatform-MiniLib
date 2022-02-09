@@ -25,6 +25,10 @@
 #ifndef __XPLATFORM_TYPE_TRAITS_HPP__
 #define __XPLATFORM_TYPE_TRAITS_HPP__
 
+//
+// This file contains type traits used along the project.
+// They are on par with their std:: counterparts.
+//
 
 namespace XPF
 {
