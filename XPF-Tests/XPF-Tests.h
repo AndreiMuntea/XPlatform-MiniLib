@@ -8,7 +8,19 @@
 
 #include <iostream>
 #include <limits>
+
+#if defined(_MSC_VER)
+    // There are some warnings in gtest that won't let the compilation succeed with W4 on MSVC compiler.
+    #pragma warning(push)
+    #pragma warning(disable:4389)
+#endif
+
 #include <gtest/gtest.h>
+
+#if defined(_MSC_VER)
+    // Restore warngins
+    #pragma warning(pop)
+#endif
 
 // Helper structs and test definitions
 #include "test_headers/TestDummyStruct.hpp"

@@ -96,6 +96,22 @@
     using xp_char16_t = char16_t;       // Interchangeable with wchar_t on Windows
     using xp_char32_t = char32_t;
 
+    
+    ///
+    /// Placement new and placement delete definition. Not always required. 
+    /// When needed, add XPLATFORM_PLACEMENT_NEW_DEFINITION preprocessor definition.
+    ///
+    #ifdef XPLATFORM_PLACEMENT_NEW_DEFINITION
+        inline void* __cdecl operator new (size_t, void* Location) noexcept
+        {
+            return Location;
+        }
+        inline void __cdecl operator delete(void*, void*) noexcept
+        {
+            return;
+        }
+    #endif // XPLATFORM_PLACEMENT_NEW_DEFINITION
+
 #elif defined (__GNUC__) || defined (__clang__)
     #include <stdlib.h>
     #include <string.h>
@@ -146,21 +162,6 @@
 #else
     #error Unsuported Compiler
 #endif
-
-///
-/// Placement new and placement delete definition. Not always required. 
-/// When needed, add XPLATFORM_PLACEMENT_NEW_DEFINITION preprocessor definition.
-///
-#ifdef XPLATFORM_PLACEMENT_NEW_DEFINITION
-    inline void* __cdecl operator new (size_t, void* Location) noexcept
-    {
-        return Location;
-    }
-    inline void __cdecl operator delete(void*, void*) noexcept
-    {
-        return;
-    }
-#endif // XPLATFORM_PLACEMENT_NEW_DEFINITION
 
 
 ///

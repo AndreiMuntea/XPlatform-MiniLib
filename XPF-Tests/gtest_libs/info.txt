@@ -1,0 +1,2 @@
+In this folder the libraries generated from "prebuild.bat" script will be copied.
+Make sure you inspect the output from the prebuild script and see if paths are in order.

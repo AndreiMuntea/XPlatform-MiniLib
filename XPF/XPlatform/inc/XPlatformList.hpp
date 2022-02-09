@@ -558,7 +558,7 @@ namespace XPF
         _Must_inspect_result_
         bool 
         EraseNode(
-            _Post_invalid_ ListIterator<T, Allocator> Iterator
+            _In_ ListIterator<T, Allocator> Iterator
         ) noexcept
         {
             // Checks if the iterator belongs to the current list -- for sanity

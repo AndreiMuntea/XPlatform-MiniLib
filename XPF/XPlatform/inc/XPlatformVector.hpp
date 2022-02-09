@@ -203,7 +203,7 @@ namespace XPF
         _Must_inspect_result_
         bool
         Erase(
-            _Post_invalid_ VectorIterator<T, Allocator> Iterator
+            _In_ VectorIterator<T, Allocator> Iterator
         ) noexcept
         {
             VectorIterator copyIt{ this, Iterator.CurrentPosition() };

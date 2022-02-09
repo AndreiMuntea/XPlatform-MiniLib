@@ -10,11 +10,9 @@
 *.userosscache
 *.sln.docstates
 
-*.filters
-*.vcxproj
 *.cmake
 *.tcl
-*.sln
+*.lib
 CmakeCache.txt
 
 # User-specific files (MonoDevelop/Xamarin Studio)
