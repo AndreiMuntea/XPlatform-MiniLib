@@ -11,6 +11,106 @@ namespace XPlatformTest
         TestMemoryLeak* memoryLeakChecker = nullptr;
     };
 
+    class TestRbNode : public XPF::RedBlackTreeNode
+    {
+    public:
+        TestRbNode() noexcept = default;
+        virtual ~TestRbNode() noexcept = default;
+
+        // Copy semantics -- deleted (We can't copy the node)
+        TestRbNode(const TestRbNode& Other) noexcept = delete;
+        TestRbNode& operator=(const TestRbNode& Other) noexcept = delete;
+
+        // Move semantics -- deleted (Nor we can move it)
+        TestRbNode(TestRbNode&& Other) noexcept = delete;
+        TestRbNode& operator=(TestRbNode&& Other) noexcept = delete;
+
+    public:
+        int DummyData = 0;
+    };
+
+    static TestRbNode* 
+    TestRbCreateNode(
+        int Data
+    ) noexcept
+    {
+        XPF::MemoryAllocator<TestRbNode> allocator;
+
+        auto node = allocator.AllocateMemory(sizeof(TestRbNode));
+        if (node != nullptr)
+        {
+            ::new (node) TestRbNode();
+            node->DummyData = Data;
+        }
+        return node;
+    }
+
+    static void 
+    TestRbDestroyNode(
+        _Pre_valid_ _Post_invalid_ XPF::RedBlackTreeNode* Node
+    ) noexcept
+    {
+        auto node = reinterpret_cast<TestRbNode*>(Node);
+        XPF::MemoryAllocator<TestRbNode> allocator;
+
+        EXPECT_TRUE(node != nullptr);
+
+        node->~TestRbNode();
+        allocator.FreeMemory(node);
+    }
+
+    static XPF::RedBlackTreeNodeComparatorResult 
+    TestRbCompareNode(
+        _In_ _Const_ const XPF::RedBlackTreeNode* Left,
+        _In_ _Const_ const XPF::RedBlackTreeNode* Right
+    ) noexcept
+    {
+        auto left = reinterpret_cast<const TestRbNode*>(Left);
+        auto right = reinterpret_cast<const TestRbNode*>(Right);
+
+        EXPECT_TRUE(left != nullptr);
+        EXPECT_TRUE(right != nullptr);
+
+        if (left->DummyData < right->DummyData)
+        {
+            return XPF::RedBlackTreeNodeComparatorResult::LessThan;
+        }
+        else if (left->DummyData > right->DummyData)
+        {
+            return XPF::RedBlackTreeNodeComparatorResult::GreaterThan;
+        }
+        else
+        {
+            return XPF::RedBlackTreeNodeComparatorResult::Equals;
+        }
+    }
+
+    static XPF::RedBlackTreeNodeComparatorResult
+    TestRbCustomCompareNode(
+        _In_ _Const_ const XPF::RedBlackTreeNode* Node,
+        _In_ _Const_ const void* Data
+    ) noexcept
+    {
+        auto node = reinterpret_cast<const TestRbNode*>(Node);
+        auto data = reinterpret_cast<const int*>(Data);
+
+        EXPECT_TRUE(node != nullptr);
+        EXPECT_TRUE(data != nullptr);
+
+        if (node->DummyData < *data)
+        {
+            return XPF::RedBlackTreeNodeComparatorResult::LessThan;
+        }
+        else if (node->DummyData > *data)
+        {
+            return XPF::RedBlackTreeNodeComparatorResult::GreaterThan;
+        }
+        else
+        {
+            return XPF::RedBlackTreeNodeComparatorResult::Equals;
+        }
+    }
+
     TEST_F(TestRedBlackTreeFixture, TestRedBlackTreeNodeConstructor)
     {
         XPF::RedBlackTreeNode rbNode;
@@ -23,11 +123,11 @@ namespace XPlatformTest
     TEST_F(TestRedBlackTreeFixture, TestRedBlackTreeNodeMinMaxNode)
     {
         //
-        //           N1 
-        //        /     \
-        //      N2       N3
-        //     /  \     /  \
-        //    N6   N4  N5   N7
+        //          N1 
+        //        [    ] 
+        //      N2     N3
+        //     [  ]    [ ]  
+        //    N6  N4 N5   N7
         //
 
         XPF::RedBlackTreeNode N1;
@@ -68,4 +168,181 @@ namespace XPlatformTest
         EXPECT_TRUE(N7.MinNode() == &N7);
         EXPECT_TRUE(N7.MaxNode() == &N7);
     }
+
+    TEST_F(TestRedBlackTreeFixture, TestRedBlackTreeDefaultConstructor)
+    {
+        XPF::RedBlackTree rbTree(TestRbDestroyNode, TestRbCompareNode);
+
+        EXPECT_TRUE(rbTree.IsEmpty());
+        EXPECT_TRUE(rbTree.Size() == 0);
+        EXPECT_TRUE(rbTree.begin() == rbTree.end());
+    }
+
+    TEST_F(TestRedBlackTreeFixture, TestRedBlackTreeInsert)
+    {
+        XPF::RedBlackTree rbTree(TestRbDestroyNode, TestRbCompareNode);
+
+        auto node = TestRbCreateNode(100);
+        EXPECT_TRUE(nullptr != node);
+
+        int element = 100;
+        auto it1 = rbTree.Find(reinterpret_cast<const void*>(&element), TestRbCustomCompareNode);
+        EXPECT_TRUE(it1 == rbTree.end());
+
+        EXPECT_TRUE(rbTree.Insert(node));
+        EXPECT_FALSE(rbTree.Insert(nullptr));
+
+        auto it2 = rbTree.Find(reinterpret_cast<const void*>(&element), TestRbCustomCompareNode);
+        EXPECT_TRUE(it2 == rbTree.begin());
+
+        EXPECT_FALSE(rbTree.IsEmpty());
+        EXPECT_TRUE(rbTree.Size() == 1);
+        EXPECT_TRUE(rbTree.begin() != rbTree.end());
+    }
+
+    TEST_F(TestRedBlackTreeFixture, TestRedBlackTreeInsertSameElementTwice)
+    {
+        XPF::RedBlackTree rbTree(TestRbDestroyNode, TestRbCompareNode);
+
+        auto node1 = TestRbCreateNode(100);
+        EXPECT_TRUE(nullptr != node1);
+
+        auto node2 = TestRbCreateNode(100);
+        EXPECT_TRUE(nullptr != node2);
+
+        EXPECT_TRUE(rbTree.Insert(node1));
+        EXPECT_TRUE(rbTree.Insert(node2));
+
+        EXPECT_TRUE(node1->Right == node2);
+
+        EXPECT_FALSE(rbTree.IsEmpty());
+        EXPECT_TRUE(rbTree.Size() == 2);
+        EXPECT_TRUE(rbTree.begin() != rbTree.end());
+    }
+
+    TEST_F(TestRedBlackTreeFixture, TestInsertFindMultipleElements)
+    {
+        XPF::RedBlackTree rbTree(TestRbDestroyNode, TestRbCompareNode);
+
+        for (int i = 100; i <= 500; ++i)
+        {
+            auto node = TestRbCreateNode(i);
+            EXPECT_TRUE(nullptr != node);
+
+            EXPECT_TRUE(rbTree.Insert(node));
+
+            auto it = rbTree.Find(reinterpret_cast<const void*>(&i), TestRbCustomCompareNode);
+            EXPECT_TRUE(it.CurrentNode() == node);
+        }
+
+        for (int i = 1000; i > 500; --i)
+        {
+            auto node = TestRbCreateNode(i);
+            EXPECT_TRUE(nullptr != node);
+
+            EXPECT_TRUE(rbTree.Insert(node));
+
+            auto it = rbTree.Find(reinterpret_cast<const void*>(&i), TestRbCustomCompareNode);
+            EXPECT_TRUE(it.CurrentNode() == node);
+        }
+
+        for (int i = 0; i < 100; ++i)
+        {
+            auto node = TestRbCreateNode(i);
+            EXPECT_TRUE(nullptr != node);
+
+            EXPECT_TRUE(rbTree.Insert(node));
+
+            auto it = rbTree.Find(reinterpret_cast<const void*>(&i), TestRbCustomCompareNode);
+            EXPECT_TRUE(it.CurrentNode() == node);
+        }
+
+        int i = 0;
+        for (auto it = rbTree.begin(); it != rbTree.end(); it++)
+        {
+            auto crtNode = it.CurrentNode();
+            auto node = reinterpret_cast<TestRbNode*>(crtNode);
+            EXPECT_EQ(i, node->DummyData);
+
+            ++i;
+        }
+    }
+
+    TEST_F(TestRedBlackTreeFixture, TestEraseFindMultipleElements)
+    {
+        XPF::RedBlackTree rbTree(TestRbDestroyNode, TestRbCompareNode);
+        for (int i = 0; i <= 1500; ++i)
+        {
+            auto node = TestRbCreateNode(i);
+            EXPECT_TRUE(nullptr != node);
+
+            EXPECT_TRUE(rbTree.Insert(node));
+
+            auto it = rbTree.Find(reinterpret_cast<const void*>(&i), TestRbCustomCompareNode);
+            EXPECT_TRUE(it.CurrentNode() == node);
+        }
+
+        for (int i = 1500; i >= 0; --i)
+        {
+            auto itb = rbTree.Find(reinterpret_cast<const void*>(&i), TestRbCustomCompareNode);
+            EXPECT_TRUE(itb != rbTree.end());
+
+            EXPECT_TRUE(rbTree.Erase(itb.CurrentNode()));
+
+            auto ita= rbTree.Find(reinterpret_cast<const void*>(&i), TestRbCustomCompareNode);
+            EXPECT_TRUE(ita == rbTree.end());
+        }
+    }
+
+    TEST_F(TestRedBlackTreeFixture, TestMoveSemantics)
+    {
+        XPF::RedBlackTree rbTree1(TestRbDestroyNode, TestRbCompareNode);
+        for (int i = 0; i < 1500; ++i)
+        {
+            auto node = TestRbCreateNode(i);
+            EXPECT_TRUE(nullptr != node);
+
+            EXPECT_TRUE(rbTree1.Insert(node));
+        }
+
+        EXPECT_TRUE(rbTree1.Size() == 1500);
+
+        XPF::RedBlackTree rbTree2{ XPF::Move(rbTree1) };
+        XPF::RedBlackTree rbTree3(TestRbDestroyNode, TestRbCompareNode);
+
+        EXPECT_TRUE(rbTree1.Size() == 0);
+        EXPECT_TRUE(rbTree2.Size() == 1500);
+
+        
+        for (int i = 6000; i > 2000; --i)
+        {
+            auto node = TestRbCreateNode(i);
+            EXPECT_TRUE(nullptr != node);
+
+            // After an rbtree is moved, the inserts should be blocked
+            EXPECT_FALSE(rbTree1.Insert(node));
+
+            EXPECT_TRUE(rbTree3.Insert(node));
+        }
+        EXPECT_TRUE(rbTree1.Size() == 0);
+        EXPECT_TRUE(rbTree3.Size() == 4000);
+
+        rbTree3 = XPF::Move(rbTree2);
+
+        EXPECT_TRUE(rbTree2.Size() == 0);
+        EXPECT_TRUE(rbTree3.Size() == 1500);
+
+        for (int i = 10000; i > 8000; --i)
+        {
+            auto node = TestRbCreateNode(i);
+            EXPECT_TRUE(nullptr != node);
+
+            // After an rbtree is moved, the inserts should be blocked
+            EXPECT_FALSE(rbTree2.Insert(node));
+
+            EXPECT_TRUE(rbTree3.Insert(node));
+        }
+        EXPECT_TRUE(rbTree3.Size() == 3500);
+    }
+
 }
