@@ -59,7 +59,7 @@ namespace XPF
         SetNode& operator=(SetNode&& Other) noexcept = delete;
 
     public:
-        Key* KeyData = nullptr;
+        const Key* KeyData = nullptr;
     };
 
     //
@@ -160,29 +160,27 @@ namespace XPF
 
         //
         // Allocates and construcs a new element of type key.
-        // The arguments will be moved to create a new element of type Key.
-        // If the key would be duplicated, the Arguments will be already moved, but the key will not be inserted.
-        // The validity of the arguments must be inspected if the call fail.
+        // The key must be copy constructible and have <, > and == defined.
         //
-        template<typename... Args >
         _Must_inspect_result_
         bool
         Emplace(
-            Args&&... Arguments
+            _In_ _Const_ const Key& KeyData
         ) noexcept
         {
-            auto setNode = this->SetNodeCreateApi(XPF::Forward<Args>(Arguments)...);
+            auto iterator = this->rbTree.Find(&KeyData, SetNodeCustomCompareApi);
+            if (iterator != this->rbTree.end())
+            {
+                return false;
+            }
+
+            auto setNode = this->SetNodeCreateApi(KeyData);
             if (nullptr == setNode)
             {
                 return false;
             }
             
-            auto iterator = this->rbTree.Find(setNode->KeyData, SetNodeCustomCompareApi);
-            if (iterator != this->rbTree.end())
-            {
-                SetNodeDestroyApi(setNode, this);
-                return false;
-            }
+
             if (!this->rbTree.Insert(SetNodeCompareApi, setNode))
             {
                 SetNodeDestroyApi(setNode, this);
@@ -203,7 +201,7 @@ namespace XPF
         ) noexcept
         {
             auto rbIterator = Iterator.RbIterator();
-            SetIterator copyIt{ this, rbIterator };
+            SetIterator<Key, Allocator> copyIt{ this, rbIterator };
 
             // Sanity check if iterator belongs to other set
             if (copyIt != Iterator)
@@ -236,7 +234,7 @@ namespace XPF
             void
         ) noexcept
         {
-            this->rbTree.Clear(&SetNodeDestroyApi, this);
+            this->rbTree.Clear(SetNodeDestroyApi, this);
         }
 
         //
@@ -259,7 +257,7 @@ namespace XPF
             void
         ) const noexcept
         {
-            return Size() == 0;
+            return this->rbTree.IsEmpty();
         }
 
         // 
@@ -279,12 +277,11 @@ namespace XPF
         }
 
     private:
-        template<typename... Args>
         _Ret_maybenull_
         _Must_inspect_result_
         SetNode<Key>*
         SetNodeCreateApi(
-            Args&&... Arguments
+            _In_ _Const_ const Key& KeyData
         ) noexcept
         {
             // We need key -- and it will be placed after our Node
@@ -309,7 +306,7 @@ namespace XPF
 
                 // Proper construct key
                 auto key = reinterpret_cast<xp_uint8_t*>(node) + nodeSize;
-                ::new (key) Key(XPF::Forward<Args>(Arguments)...);
+                ::new (key) Key(KeyData);
 
                 // Setup node key link
                 node->KeyData = reinterpret_cast<Key*>(key);

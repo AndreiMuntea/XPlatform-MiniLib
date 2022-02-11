@@ -668,20 +668,17 @@ namespace XPF
             
             while (X != this->root && IsNodeBlack(X))                   // [1] while x != T.root and x.color == BLACK
             {
-                auto xParent = Parent(X);
-
-                if (X == Left(xParent))                                 // [2] if x == x.p.left
+                if (X == Left(Parent(X)))                               // [2] if x == x.p.left
                 {
-                    auto w = Right(xParent);                            // [3] w = x.p.right
+                    auto w = Right(Parent(X));                          // [3] w = x.p.right
 
                     if (IsNodeRed(w))                                   // [4] if w.color == RED
                     {
                         ColorBlack(w);                                  // [5] w.color = BLACK
-                        ColorRed(xParent);                              // [6] x.p.color = RED
-                        LeftRotate(xParent);                            // [7] LEFT-ROTATE(x.p)
+                        ColorRed(Parent(X));                            // [6] x.p.color = RED
+                        LeftRotate(Parent(X));                          // [7] LEFT-ROTATE(x.p)
 
-                        xParent = Parent(X);
-                        w = Right(xParent);                             // [8] w = x.p.right
+                        w = Right(Parent(X));                           // [8] w = x.p.right
                     }
 
                     if (IsNodeBlack(Left(w)) && IsNodeBlack(Right(w)))  // [9] if w.left.color == BLACK and w.right.color == BLACK
@@ -699,28 +696,23 @@ namespace XPF
                             w = Right(Parent(X));                       // [16] w = x.p.right
                         }
 
-                        xParent = Parent(X);
-
-                        ColorAsNode(w, xParent);                        // [17] w.color = x.p.color
-                        ColorBlack(xParent);                            // [18] x.p.color = BLACK
+                        ColorAsNode(w, Parent(X));                      // [17] w.color = x.p.color
+                        ColorBlack(Parent(X));                          // [18] x.p.color = BLACK
                         ColorBlack(Right(w));                           // [19] w.right.color = BLACK             
-                        LeftRotate(xParent);                            // [20] LEFT-ROTATE(T, x.p)
+                        LeftRotate(Parent(X));                          // [20] LEFT-ROTATE(T, x.p)
                         X = this->root;                                 // [21] x = T.root
                     }
                 }
                 else                                                    // [22] else same as then clause with right and left exchanged
                 {
-                    auto w = Left(xParent);                             // [23] w = x.p.left
- 
+                    auto w = Left(Parent(X));                           // [23] w = x.p.left
 
                     if (IsNodeRed(w))                                   // [24] if w.color == RED
                     {
                         ColorBlack(w);                                  // [25] w.color = BLACK
-                        ColorRed(xParent);                              // [26] x.p.color = RED
-                        RightRotate(xParent);                           // [27] RIGHT-ROTATE(x.p)
-
-                        xParent = Parent(X);
-                        w = Left(xParent);                              // [28] w = x.p.left
+                        ColorRed(Parent(X));                            // [26] x.p.color = RED
+                        RightRotate(Parent(X));                         // [27] RIGHT-ROTATE(x.p)
+                        w = Left(Parent(X));                            // [28] w = x.p.left
                     }
 
                     if (IsNodeBlack(Left(w)) && IsNodeBlack(Right(w)))  // [29] if w.left.color == BLACK and w.right.color == BLACK
@@ -738,12 +730,10 @@ namespace XPF
                             w = Left(Parent(X));                        // [36] w = x.p.left
                         }
 
-                        xParent = Parent(X);
-
-                        ColorAsNode(w, xParent);                    // [37] w.color = x.p.color
-                        ColorBlack(xParent);                        // [38] x.p.color = BLACK
+                        ColorAsNode(w, Parent(X));                  // [37] w.color = x.p.color
+                        ColorBlack(Parent(X));                      // [38] x.p.color = BLACK
                         ColorBlack(Left(w));                        // [39] w.left.color = BLACK
-                        RightRotate(xParent);                       // [40] RIGHT-ROTATE(T, x.p)
+                        RightRotate(Parent(X));                     // [40] RIGHT-ROTATE(T, x.p)
                         X = this->root;                             // [41] x = T.root
                     }
                 }

@@ -57,6 +57,15 @@
         #undef NOMINMAX
     #endif
 
+    //
+    // Using alignas causes a warning specifying that structure was padded due to alignment specifier (C4324).
+    // This is intended. So we want to be able to suppress such warnings when needed
+    //
+    #define XPLATFORM_SUPPRESS_ALIGNMENT_WARNING_BEGIN      \
+                        _Pragma("warning(push)")            \
+                        _Pragma("warning(disable : 4324)")  // Was padded due to alignment specifier
+    #define XPLATFORM_SUPPRESS_ALIGNMENT_WARNING_END        \
+                        _Pragma("warning(pop)")
 
     //
     // Platform-Specific instruction for assertion.
@@ -124,6 +133,13 @@
     #include <assert.h>
 
     #include "no_sal2.h"
+
+    //
+    // Using alignas causes some cimpilers to trigger a warning specifying that structure was padded due to alignment specifier.
+    // This is intended. So we want to be able to suppress such warnings when needed
+    //
+    #define XPLATFORM_SUPPRESS_ALIGNMENT_WARNING_BEGIN  
+    #define XPLATFORM_SUPPRESS_ALIGNMENT_WARNING_END    
 
 
     //
