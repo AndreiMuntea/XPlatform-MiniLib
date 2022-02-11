@@ -84,7 +84,6 @@
     //
     #define XPLATFORM_CACHE_ALIGNMENT               SYSTEM_CACHE_ALIGNMENT_SIZE
 
-
     //
     // Data types definitions for cross platform usage
     //
@@ -146,7 +145,6 @@
     // Definition for default cache alignment
     //
     #define XPLATFORM_CACHE_ALIGNMENT               128
-
 
     //
     // Data types definitions for cross platform usage

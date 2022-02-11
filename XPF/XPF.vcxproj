@@ -169,6 +169,7 @@
   <ItemGroup>
     <ClInclude Include="XPF.h" />
     <ClInclude Include="XPlatform\inc\XPlatformRedBlackTree.hpp" />
+    <ClInclude Include="XPlatform\inc\XPlatformSet.hpp" />
     <ClInclude Include="XPlatform\inc\XPlatformSharedPointer.hpp" />
     <ClInclude Include="XPlatform\inc\XPlatformString.hpp" />
     <ClInclude Include="XPlatform\inc\XPlatformUniquePointer.hpp" />

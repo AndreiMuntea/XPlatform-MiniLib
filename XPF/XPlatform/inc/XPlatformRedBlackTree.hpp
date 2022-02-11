@@ -26,7 +26,7 @@
 #define __XPLATFORM_RED_BLACK_TREE_HPP__
 
 //
-// This file contains a Red-Black tree implementation.
+// This file contains a Red-Black tree NON-RECURSIVE implementation.
 // The implementation details are followed from Cormen Introduction to Algorithms 3rd Edition.
 // It contains a minimal set of supported operations.
 // Can be extended at a later date with other functionality as the need arise.
@@ -83,8 +83,9 @@ namespace XPF
     //
     // Helper API used to destroy a custom RB-Tree Node.
     //
-    typedef void (*RedBlackTreeNodeDestroyAPI)(
-        _Pre_valid_ _Post_invalid_ XPF::RedBlackTreeNode* Node
+    typedef void(*RedBlackTreeNodeDestroyAPI)(
+        _Pre_valid_ _Post_invalid_ XPF::RedBlackTreeNode* Node,
+        _Inout_opt_ void* Context
     ) noexcept;
     //
     // Helper API used to compare two nodes.
@@ -247,17 +248,8 @@ namespace XPF
     class RedBlackTree
     {
     public:
-        RedBlackTree(
-            _In_ RedBlackTreeNodeDestroyAPI NodeDestroyApi,
-            _In_ RedBlackTreeNodeCompareAPI NodeCompareApi
-        ) noexcept :
-            nodeDestroyApi{ NodeDestroyApi },
-            nodeCompareApi{ NodeCompareApi }
-        {
-            XPLATFORM_ASSERT(nullptr != nodeDestroyApi);
-            XPLATFORM_ASSERT(nullptr != nodeCompareApi);
-        }
-        ~RedBlackTree() noexcept { Clear(); }
+        RedBlackTree() noexcept = default;
+        ~RedBlackTree() noexcept { XPLATFORM_ASSERT(IsEmpty()); }
 
 
         // Copy semantics -- deleted (We can't copy the tree)
@@ -267,8 +259,6 @@ namespace XPF
         // Move semantics
         RedBlackTree(RedBlackTree&& Other) noexcept
         {
-            XPF::Swap(this->nodeCompareApi, Other.nodeCompareApi);
-            XPF::Swap(this->nodeDestroyApi, Other.nodeDestroyApi);
             XPF::Swap(this->root, Other.root);
             XPF::Swap(this->size, Other.size);
         }
@@ -276,10 +266,6 @@ namespace XPF
         {
             if (!XPF::ArePointersEqual(this, XPF::AddressOf(Other)))
             {
-                XPF::RedBlackTree temp{ XPF::Move(*this) };
-
-                XPF::Swap(this->nodeCompareApi, Other.nodeCompareApi);
-                XPF::Swap(this->nodeDestroyApi, Other.nodeDestroyApi);
                 XPF::Swap(this->root, Other.root);
                 XPF::Swap(this->size, Other.size);
             }
@@ -310,16 +296,20 @@ namespace XPF
         }
         
         // 
-        // Destroys all elements in the tree
+        // Destroys all elements in the tree.
+        // Erasing root causes minimal number of rotations.
+        // The overall complexity will still be O(n * log(n)) 
+        // This can be improved. But for now we are interested in it to work.
         //
         void 
         Clear(
-            void
+            _In_ RedBlackTreeNodeDestroyAPI NodeDestroyApi,
+            _In_opt_ void* Context
         ) noexcept
         {
             while (!IsEmpty())
             {
-                (void) Erase(this->root);
+                (void) Erase(NodeDestroyApi, Context, this->root);
             }
         }
 
@@ -331,10 +321,11 @@ namespace XPF
         //
         bool
         Insert(
+            _In_ RedBlackTreeNodeCompareAPI CompareApi,
             _Inout_ RedBlackTreeNode* Node
         ) noexcept
         {
-            return RbInsert(Node);
+            return RbInsert(CompareApi, Node);
         }
 
         //
@@ -343,10 +334,12 @@ namespace XPF
         //
         bool
         Erase(
+            _In_ RedBlackTreeNodeDestroyAPI NodeDestroyApi,
+            _In_opt_ void* Context,
             _Pre_valid_ _Post_invalid_ RedBlackTreeNode* Node
         ) noexcept
         {
-            return RbDelete(Node);
+            return RbDelete(NodeDestroyApi, Context, Node);
         }
 
         // 
@@ -457,6 +450,7 @@ namespace XPF
 
         bool
         RbInsert(
+            _In_ RedBlackTreeNodeCompareAPI CompareApi,
             _Inout_opt_ RedBlackTreeNode* Z
         ) noexcept
         {
@@ -465,7 +459,7 @@ namespace XPF
             // No need to use the helper APIs to retrieve left/right/parent or to color a NIL node.
             // All the checks are performed in this method.
             //
-            if (nullptr == Z || nullptr == this->nodeDestroyApi || nullptr == this->nodeCompareApi)
+            if (nullptr == Z || nullptr == CompareApi)
             {
                 return false; // Sanity checks - block inserts if the required APIs are not set.
             }
@@ -477,7 +471,7 @@ namespace XPF
             {
                 y = x;                                                              // [4] y = x
 
-                auto result = this->nodeCompareApi(Z, x);
+                auto result = CompareApi(Z, x);
                 if (result == RedBlackTreeNodeComparatorResult::LessThan)           // [5] if z.key < x. key
                 {
                     x = x->Left;                                                    // [6] x = x.left
@@ -495,7 +489,7 @@ namespace XPF
             }
             else
             {
-                auto result = this->nodeCompareApi(Z, y);
+                auto result = CompareApi(Z, y);
                 if (result == RedBlackTreeNodeComparatorResult::LessThan)           // [11] elseif z.key < y.key
                 {
                     y->Left = Z;                                                    // [12] y.left = z
@@ -592,6 +586,8 @@ namespace XPF
 
         bool
         RbDelete(
+            _In_ RedBlackTreeNodeDestroyAPI NodeDestroyApi,
+            _In_opt_ void* Context,
             _Pre_valid_ _Post_invalid_ RedBlackTreeNode* Z
         ) noexcept
         {
@@ -600,7 +596,7 @@ namespace XPF
             // No need to use the helper APIs to retrieve left/right/parent or to color a NIL node.
             // All the checks are performed in this method.
             //
-            if (nullptr == Z)
+            if (nullptr == Z || nullptr == NodeDestroyApi)
             {
                 return false; // Sanity checks
             }
@@ -650,7 +646,7 @@ namespace XPF
                 RbDeleteFixup(x);                               // [22] RB-DELETE-FIXUP(T,x)
             }
 
-            this->nodeDestroyApi(Z);
+            NodeDestroyApi(Z, Context);
             this->size--;
 
             return true;
@@ -937,8 +933,6 @@ namespace XPF
         }
 
     private:
-        RedBlackTreeNodeDestroyAPI nodeDestroyApi = nullptr;
-        RedBlackTreeNodeCompareAPI nodeCompareApi = nullptr;
         RedBlackTreeNode* root = nullptr;
         size_t size = 0;
     };

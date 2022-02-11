@@ -63,6 +63,9 @@
     <ClInclude Include="XPlatform\inc\XPlatformRedBlackTree.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="XPlatform\inc\XPlatformSet.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="XPF.cpp">

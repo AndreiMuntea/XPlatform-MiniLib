@@ -56,7 +56,9 @@
 #include "inc/XPlatformList.hpp"
 #include "inc/XPlatformVector.hpp"
 #include "inc/XPlatformString.hpp"
+
 #include "inc/XPlatformRedBlackTree.hpp"
+#include "inc/XPlatformSet.hpp"
 
 
 #endif // __XPLATFORM_PLATFORM_INCLUDES_HPP__
