@@ -16,7 +16,7 @@ namespace XPlatformTest
         for (size_t i = 0; i < NoElements; ++i)
         {
             auto result = (InsertHead) ? List.InsertHead(BaselineStruct.Number + static_cast<int>(i), BaselineStruct.Character, BaselineStruct.FloatNumber)
-                : List.InsertTail(BaselineStruct.Number + static_cast<int>(i), BaselineStruct.Character, BaselineStruct.FloatNumber);
+                                       : List.InsertTail(BaselineStruct.Number + static_cast<int>(i), BaselineStruct.Character, BaselineStruct.FloatNumber);
             EXPECT_TRUE(result);
             _Analysis_assume_(result == true);
         }

@@ -222,6 +222,7 @@
     <ClCompile Include="test_sources\TestPlatformAPI\TestStringApi.cpp" />
     <ClCompile Include="test_sources\TestPlatformSTL\TestList.cpp" />
     <ClCompile Include="test_sources\TestPlatformSTL\TestMap.cpp" />
+    <ClCompile Include="test_sources\TestPlatformSTL\TestPair.cpp" />
     <ClCompile Include="test_sources\TestPlatformSTL\TestRedBlackTree.cpp" />
     <ClCompile Include="test_sources\TestPlatformSTL\TestSet.cpp" />
     <ClCompile Include="test_sources\TestPlatformSTL\TestSharedPointer.cpp" />

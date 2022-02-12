@@ -38,16 +38,14 @@
 
 // #define XPLATFORM_PLACEMENT_NEW_DEFINITION
 
-#include "inc/XPlatformCore.hpp"
-
-
 ///
 /// This will force the definition of the initializer list. If needed, it can be uncommented.
 ///
 
 // #define XPLATFORM_INITIALIZER_LIST_DEFINITION
 
-#include "inc/XPlatformInitializerList.hpp"
+
+#include "inc/XPlatformCore.hpp"
 
 
 #include "inc/XPlatformNumericLimits.hpp"
@@ -68,5 +66,8 @@
 #include "inc/XPlatformSet.hpp"
 #include "inc/XPlatformMap.hpp"
 
+
+#include "inc/XPlatformInitializerList.hpp"
+#include "inc/XPlatformPair.hpp"
 
 #endif // __XPLATFORM_PLATFORM_INCLUDES_HPP__
