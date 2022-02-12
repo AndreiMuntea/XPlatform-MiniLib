@@ -75,6 +75,9 @@
     <ClInclude Include="XPlatform\inc\XPlatformPair.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="XPlatform\inc\XPlatformLocking.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="XPF.cpp">

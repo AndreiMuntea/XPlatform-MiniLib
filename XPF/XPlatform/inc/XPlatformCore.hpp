@@ -31,30 +31,28 @@
 //
 
 
+//
+// Compiler specific includes
+//
 #if defined(_MSC_VER)
     //
-    // MSVC-Specific definitions
+    // MSVC specific section
     //
     #include <intrin.h>
     #include <sal.h>
 
     #ifdef _KERNEL_MODE
         //
-        // Specific Windows Kernel-Mode includes -- when compiling with /kernel switch.
+        // When compiling with /kernel switch.
         //
-        #include <fltKernel.h>
-        #include <ntintsafe.h>
-        #include <ntstrsafe.h>
+        #define XPLATFORM_WINDOWS_KERNEL_MODE
+    #elif defined(_WIN32) || defined(_WIN64)
+        //
+        // When compiling without /kernel switch.
+        //
+        #define XPLATFORM_WINDOWS_USER_MODE
     #else
-        //
-        // Specific Windows User-Mode includes -- when compiling without /kernel switch.
-        //
-        #define NOMINMAX
-            #include <Windows.h>
-            #include <winternl.h>
-            #include <intsafe.h>
-            #include <strsafe.h>
-        #undef NOMINMAX
+        #error Unknown Platform Definition
     #endif
 
     //
@@ -66,6 +64,50 @@
                         _Pragma("warning(disable : 4324)")  // Was padded due to alignment specifier
     #define XPLATFORM_SUPPRESS_ALIGNMENT_WARNING_END        \
                         _Pragma("warning(pop)")
+
+#elif defined (__GNUC__) || defined (__clang__)
+    //
+    // GCC and clang specific section
+    //
+    #include "no_sal2.h"
+
+    #if defined(_WIN32) || defined(_WIN64)
+        #define XPLATFORM_WINDOWS_USER_MODE
+    #elif defined (__linux__)
+        #define XPLATFORM_LINUX_USER_MODE
+    #else
+        #error Unknown Platform Definition
+    #endif
+
+    //
+    // Using alignas causes some cimpilers to trigger a warning specifying that structure was padded due to alignment specifier.
+    // This is intended. So we want to be able to suppress such warnings when needed
+    //
+    #define XPLATFORM_SUPPRESS_ALIGNMENT_WARNING_BEGIN  
+    #define XPLATFORM_SUPPRESS_ALIGNMENT_WARNING_END  
+
+#else
+    #error Unsupported Compiler
+#endif
+
+
+//
+// Platform specific definitions
+//
+#if defined(XPLATFORM_WINDOWS_USER_MODE) || defined (XPLATFORM_WINDOWS_KERNEL_MODE)
+
+    #if defined(XPLATFORM_WINDOWS_USER_MODE)
+        #define NOMINMAX
+            #include <Windows.h>
+            #include <winternl.h>
+            #include <intsafe.h>
+            #include <strsafe.h>
+        #undef NOMINMAX
+    #elif defined(XPLATFORM_WINDOWS_KERNEL_MODE)
+        #include <fltKernel.h>
+        #include <ntintsafe.h>
+        #include <ntstrsafe.h>
+    #endif
 
     //
     // Platform-Specific instruction for assertion.
@@ -110,7 +152,6 @@
     using xp_char16_t = char16_t;       // Interchangeable with wchar_t on Windows
     using xp_char32_t = char32_t;
 
-    
     ///
     /// Placement new and placement delete definition. Not always required. 
     /// When needed, add XPLATFORM_PLACEMENT_NEW_DEFINITION preprocessor definition.
@@ -126,23 +167,13 @@
         }
     #endif // XPLATFORM_PLACEMENT_NEW_DEFINITION
 
-#elif defined (__GNUC__) || defined (__clang__)
+#elif defined(XPLATFORM_LINUX_USER_MODE)
     #include <stdlib.h>
     #include <string.h>
     #include <wctype.h>
     #include <assert.h>
 
-    #include "no_sal2.h"
-
-    //
-    // Using alignas causes some cimpilers to trigger a warning specifying that structure was padded due to alignment specifier.
-    // This is intended. So we want to be able to suppress such warnings when needed
-    //
-    #define XPLATFORM_SUPPRESS_ALIGNMENT_WARNING_BEGIN  
-    #define XPLATFORM_SUPPRESS_ALIGNMENT_WARNING_END    
-
-
-    //
+   //
     // Platform-Specific instruction for assertion.
     //
     #define XPLATFORM_ASSERT assert
@@ -180,7 +211,7 @@
     using xp_char32_t = char32_t;   // Interchangeable with wchar_t on Linux
 
 #else
-    #error Unsuported Compiler
+    #error Unsupported Platform
 #endif
 
 

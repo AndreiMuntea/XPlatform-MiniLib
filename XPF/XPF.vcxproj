@@ -169,6 +169,7 @@
   <ItemGroup>
     <ClInclude Include="XPF.h" />
     <ClInclude Include="XPlatform\inc\XPlatformInitializerList.hpp" />
+    <ClInclude Include="XPlatform\inc\XPlatformLocking.hpp" />
     <ClInclude Include="XPlatform\inc\XPlatformMap.hpp" />
     <ClInclude Include="XPlatform\inc\XPlatformPair.hpp" />
     <ClInclude Include="XPlatform\inc\XPlatformRedBlackTree.hpp" />

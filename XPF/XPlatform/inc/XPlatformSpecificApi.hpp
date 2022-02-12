@@ -148,6 +148,61 @@ namespace XPF
 
 
     //
+    // Uses compiler intrinsics to atomically change a value.
+    // Target is the address of the number to be atomically changed.
+    // Returns the initial value after the decrement was performed.
+    //
+    template <class T>
+    _Must_inspect_result_
+    inline T
+    ApiAtomicExchange(
+        _Inout_ volatile T* Target,
+        _In_  const T& Value
+    ) noexcept
+    {
+        static_assert(
+            XPF::IsSameType<T, xp_uint8_t>  || XPF::IsSameType<T, xp_int8_t>  ||
+            XPF::IsSameType<T, xp_uint16_t> || XPF::IsSameType<T, xp_int16_t> ||
+            XPF::IsSameType<T, xp_uint32_t> || XPF::IsSameType<T, xp_int32_t> ||
+            XPF::IsSameType<T, xp_uint64_t> || XPF::IsSameType<T, xp_int64_t>,
+            "Unsuported Type Operation"
+        );
+
+        /// This API should not be used with an unaligned pointer.
+        /// Interlocked APIs have an undefined behavior on unaligned pointers.
+        /// Assert here and investigate the case on debug builds.
+        XPLATFORM_ASSERT(XPF::IsPointerAligned(Target, sizeof(T)));
+
+        #if defined(_MSC_VER)
+            if constexpr (XPF::IsSameType<T, xp_uint8_t> || XPF::IsSameType<T, xp_int8_t>)
+            {
+                return static_cast<T>(InterlockedExchange8(reinterpret_cast<volatile xp_char8_t*>(Target), static_cast<xp_char8_t>(Value)));
+            }
+            else if constexpr (XPF::IsSameType<T, xp_uint16_t> || XPF::IsSameType<T, xp_int16_t>)
+            {
+                return static_cast<T>(InterlockedExchange16(reinterpret_cast<volatile xp_int16_t*>(Target), static_cast<xp_int16_t>(Value)));
+            }
+            else if constexpr (XPF::IsSameType<T, xp_uint32_t> || XPF::IsSameType<T, xp_int32_t>)
+            {
+                return static_cast<T>(InterlockedExchange(reinterpret_cast<volatile xp_uint32_t*>(Target), static_cast<xp_uint32_t>(Value)));
+            }
+            else if constexpr (XPF::IsSameType<T, xp_uint64_t> || XPF::IsSameType<T, xp_int64_t>)
+            {
+                return static_cast<T>(InterlockedExchange64(reinterpret_cast<volatile xp_int64_t*>(Target), static_cast<xp_int64_t>(Value)));
+            }
+            else
+            {
+                // This is a workaround -- on this else branch, it is guaranteed that T is not xp_uint64_t.
+                static_assert(XPF::IsSameType<T, xp_uint64_t>, "Unsuported type operation!");
+            }
+        #elif defined (__GNUC__) || defined (__clang__)
+            return __sync_lock_test_and_set(Target, Value);
+        #else
+            #error Unsuported Compiler
+        #endif
+    }
+
+    //
     // Fills a block of memory with zero.
     //
     inline void 
@@ -156,12 +211,12 @@ namespace XPF
         _In_ size_t Length
     ) noexcept
     {
-        #if defined(_MSC_VER)
+        #if defined(XPLATFORM_WINDOWS_USER_MODE) || defined(XPLATFORM_WINDOWS_KERNEL_MODE)
             RtlSecureZeroMemory(Destination, Length);
-        #elif defined (__GNUC__) || defined (__clang__)
+        #elif defined (XPLATFORM_LINUX_USER_MODE)
             memset(Destination, 0, Length);
         #else
-            #error Unsuported Compiler
+            #error Unsuported Platform
         #endif
     }
 
@@ -175,9 +230,9 @@ namespace XPF
         _In_ size_t Length
     ) noexcept
     {
-        #if defined(_MSC_VER)
+        #if defined(XPLATFORM_WINDOWS_USER_MODE) || defined(XPLATFORM_WINDOWS_KERNEL_MODE)
             RtlCopyMemory(Destination, Source, Length);
-        #elif defined (__GNUC__) || defined (__clang__)
+        #elif defined (XPLATFORM_LINUX_USER_MODE)
             memcpy(Destination, Source, Length);
         #else
             #error Unsuported Compiler
@@ -200,16 +255,14 @@ namespace XPF
             Size = 1;
         }
 
-        #if defined(_MSC_VER)
-            #ifdef _KERNEL_MODE
-                return ExAllocatePoolWithTag(POOL_TYPE::PagedPool, Size, 'ppc#');
-            #else
-                return HeapAlloc(GetProcessHeap(), 0, Size);
-            #endif
-        #elif defined (__GNUC__) || defined (__clang__)
+        #if defined(XPLATFORM_WINDOWS_KERNEL_MODE)
+            return ExAllocatePoolWithTag(POOL_TYPE::PagedPool, Size, 'ppc#');
+        #elif defined(XPLATFORM_WINDOWS_USER_MODE)
+            return HeapAlloc(GetProcessHeap(), 0, Size);
+        #elif defined (XPLATFORM_LINUX_USER_MODE)
             return aligned_alloc(XPLATFORM_MEMORY_ALLOCATION_ALIGNMENT, Size);
         #else
-            #error Unsuported Compiler
+            #error Unsuported Platform
         #endif
     }
 
@@ -223,16 +276,14 @@ namespace XPF
     {
         if (nullptr != Memory)
         {
-            #if defined(_MSC_VER)
-                #ifdef _KERNEL_MODE
-                    ExFreePoolWithTag(Memory, 'ppc#');
-                #else
-                    (void) HeapFree(GetProcessHeap(), 0, Memory);
-                #endif
-            #elif defined (__GNUC__) || defined (__clang__)
+            #if defined(XPLATFORM_WINDOWS_KERNEL_MODE)
+                ExFreePoolWithTag(Memory, 'ppc#');
+            #elif defined(XPLATFORM_WINDOWS_USER_MODE)
+                (void) HeapFree(GetProcessHeap(), 0, Memory);
+            #elif defined (XPLATFORM_LINUX_USER_MODE)
                 free(Memory);
             #else
-                #error Unsuported Compiler
+                #error Unsuported Platform
             #endif
         }
     }
@@ -259,33 +310,33 @@ namespace XPF
         #if defined(_MSC_VER)
             if constexpr (XPF::IsSameType<T, xp_uint8_t>)
             {
-                #ifdef _KERNEL_MODE
+                #if defined(XPLATFORM_WINDOWS_KERNEL_MODE)
                     return NT_SUCCESS(RtlUInt8Add(Augend, Addend, Result));
-                #else
+                #elif defined(XPLATFORM_WINDOWS_USER_MODE)
                     return SUCCEEDED(UInt8Add(Augend, Addend, Result));
                 #endif
             }
             else if constexpr (XPF::IsSameType<T, xp_uint16_t>)
             {
-                #ifdef _KERNEL_MODE
+                #if defined(XPLATFORM_WINDOWS_KERNEL_MODE)
                     return NT_SUCCESS(RtlUInt16Add(Augend, Addend, Result));
-                #else
+                #elif defined(XPLATFORM_WINDOWS_USER_MODE)
                     return SUCCEEDED(UInt16Add(Augend, Addend, Result));
                 #endif
             }
             else if constexpr (XPF::IsSameType<T, xp_uint32_t>)
             {
-                #ifdef _KERNEL_MODE
+                #if defined(XPLATFORM_WINDOWS_KERNEL_MODE)
                     return NT_SUCCESS(RtlUInt32Add(Augend, Addend, Result));
-                #else
+                #elif defined(XPLATFORM_WINDOWS_USER_MODE)
                     return SUCCEEDED(UInt32Add(Augend, Addend, Result));
                 #endif
             }
             else if constexpr (XPF::IsSameType<T, xp_uint64_t>)
             {
-                #ifdef _KERNEL_MODE
+                #if defined(XPLATFORM_WINDOWS_KERNEL_MODE)
                     return NT_SUCCESS(RtlUInt64Add(Augend, Addend, Result));
-                #else
+                #elif defined(XPLATFORM_WINDOWS_USER_MODE)
                     return SUCCEEDED(UInt64Add(Augend, Addend, Result));
                 #endif
             }
@@ -324,33 +375,33 @@ namespace XPF
         #if defined(_MSC_VER)
             if constexpr (XPF::IsSameType<T, xp_uint8_t>)
             {
-                #ifdef _KERNEL_MODE
+                #if defined(XPLATFORM_WINDOWS_KERNEL_MODE)
                     return NT_SUCCESS(RtlUInt8Sub(Minuend, Subtrahend, Result));
-                #else
+                #elif defined(XPLATFORM_WINDOWS_USER_MODE)
                     return SUCCEEDED(UInt8Sub(Minuend, Subtrahend, Result));
                 #endif
             }
             else if constexpr (XPF::IsSameType<T, xp_uint16_t>)
             {
-                #ifdef _KERNEL_MODE
+                #if defined(XPLATFORM_WINDOWS_KERNEL_MODE)
                     return NT_SUCCESS(RtlUInt16Sub(Minuend, Subtrahend, Result));
-                #else
+                #elif defined(XPLATFORM_WINDOWS_USER_MODE)
                     return SUCCEEDED(UInt16Sub(Minuend, Subtrahend, Result));
                 #endif
             }
             else if constexpr (XPF::IsSameType<T, xp_uint32_t>)
             {
-                #ifdef _KERNEL_MODE
+                #if defined(XPLATFORM_WINDOWS_KERNEL_MODE)
                     return NT_SUCCESS(RtlUInt32Sub(Minuend, Subtrahend, Result));
-                #else
+                #elif defined(XPLATFORM_WINDOWS_USER_MODE)
                     return SUCCEEDED(UInt32Sub(Minuend, Subtrahend, Result));
                 #endif
             }
             else if constexpr (XPF::IsSameType<T, xp_uint64_t>)
             {
-                #ifdef _KERNEL_MODE
+                #if defined(XPLATFORM_WINDOWS_KERNEL_MODE)
                     return NT_SUCCESS(RtlUInt64Sub(Minuend, Subtrahend, Result));
-                #else
+                #elif defined(XPLATFORM_WINDOWS_USER_MODE)
                     return SUCCEEDED(UInt64Sub(Minuend, Subtrahend, Result));
                 #endif
             }
@@ -388,33 +439,33 @@ namespace XPF
         #if defined(_MSC_VER)
             if constexpr (XPF::IsSameType<T, xp_uint8_t>)
             {
-                #ifdef _KERNEL_MODE
+                #if defined(XPLATFORM_WINDOWS_KERNEL_MODE)
                     return NT_SUCCESS(RtlUInt8Mult(Multiplicand, Multiplier, Result));
-                #else
+                #elif defined(XPLATFORM_WINDOWS_USER_MODE)
                     return SUCCEEDED(UInt8Mult(Multiplicand, Multiplier, Result));
                 #endif
             }
             else if constexpr (XPF::IsSameType<T, xp_uint16_t>)
             {
-                #ifdef _KERNEL_MODE
+                #if defined(XPLATFORM_WINDOWS_KERNEL_MODE)
                     return NT_SUCCESS(RtlUInt16Mult(Multiplicand, Multiplier, Result));
-                #else
+                #elif defined(XPLATFORM_WINDOWS_USER_MODE)
                     return SUCCEEDED(UInt16Mult(Multiplicand, Multiplier, Result));
                 #endif
             }
             else if constexpr (XPF::IsSameType<T, xp_uint32_t>)
             {
-                #ifdef _KERNEL_MODE
+                #if defined(XPLATFORM_WINDOWS_KERNEL_MODE)
                     return NT_SUCCESS(RtlUInt32Mult(Multiplicand, Multiplier, Result));
-                #else
+                #elif defined(XPLATFORM_WINDOWS_USER_MODE)
                     return SUCCEEDED(UInt32Mult(Multiplicand, Multiplier, Result));
                 #endif
             }
             else if constexpr (XPF::IsSameType<T, xp_uint64_t>)
             {
-                #ifdef _KERNEL_MODE
+                #if defined(XPLATFORM_WINDOWS_KERNEL_MODE)
                     return NT_SUCCESS(RtlUInt64Mult(Multiplicand, Multiplier, Result));
-                #else
+                #elif defined(XPLATFORM_WINDOWS_USER_MODE)
                     return SUCCEEDED(UInt64Mult(Multiplicand, Multiplier, Result));
                 #endif
             }
@@ -489,28 +540,26 @@ namespace XPF
                       XPF::IsSameType<CharType, xp_char32_t>,
                       "Unsuported type operation!");
 
-        #if defined(_MSC_VER)
+        #if defined(XPLATFORM_WINDOWS_USER_MODE)
             //
             // On windows the conversion is possible only if the value can be stored on 2 bytes.
             // Otherwise we simply return the original character
             //
-            #ifdef _KERNEL_MODE
-                if(static_cast<xp_uint32_t>(Character) <= XPF::NumericLimits<xp_uint16_t>::MaxValue)
-                {
-                    wchar_t character = static_cast<wchar_t>(Character);
-                    Character = static_cast<CharType>(RtlDowncaseUnicodeChar(character));
-                }
-                return Character;
-            #else
-                if(static_cast<xp_uint32_t>(Character) <= XPF::NumericLimits<xp_uint16_t>::MaxValue)
-                {
-                    wchar_t character = static_cast<wchar_t>(Character);
-                    CharLowerBuffW(&character, 1);
-                    Character = static_cast<CharType>(character);
-                }
-                return Character;
-            #endif
-        #elif defined (__GNUC__) || defined (__clang__)
+            if(static_cast<xp_uint32_t>(Character) <= XPF::NumericLimits<xp_uint16_t>::MaxValue)
+            {
+                wchar_t character = static_cast<wchar_t>(Character);
+                CharLowerBuffW(&character, 1);
+                Character = static_cast<CharType>(character);
+            }
+            return Character;
+        #elif defined(XPLATFORM_WINDOWS_KERNEL_MODE)
+            if(static_cast<xp_uint32_t>(Character) <= XPF::NumericLimits<xp_uint16_t>::MaxValue)
+            {
+                wchar_t character = static_cast<wchar_t>(Character);
+                Character = static_cast<CharType>(RtlDowncaseUnicodeChar(character));
+            }
+            return Character;
+        #elif defined (XPLATFORM_LINUX_USER_MODE)
             return static_cast<CharType>(towlower(static_cast<wchar_t>(Character)));
         #else
             #error Unsuported Compiler
@@ -534,28 +583,26 @@ namespace XPF
                       XPF::IsSameType<CharType, xp_char32_t>,
                       "Unsuported type operation!");
 
-        #if defined(_MSC_VER)
+        #if defined(XPLATFORM_WINDOWS_USER_MODE)
             //
             // On windows the conversion is possible only if the value can be stored on 2 bytes.
             // Otherwise we simply return the original character
             //
-            #ifdef _KERNEL_MODE
-                if(static_cast<xp_uint32_t>(Character) <= XPF::NumericLimits<xp_uint16_t>::MaxValue)
-                {
-                    wchar_t character = static_cast<wchar_t>(Character);
-                    Character = static_cast<CharType>(RtlUpcaseUnicodeChar(character));
-                }
-                return Character;
-            #else
-                if(static_cast<xp_uint32_t>(Character) <= XPF::NumericLimits<xp_uint16_t>::MaxValue)
-                {
-                    wchar_t character = static_cast<wchar_t>(Character);
-                    CharUpperBuffW(&character, 1);
-                    Character = static_cast<CharType>(character);
-                }
-                return Character;
-            #endif
-        #elif defined (__GNUC__) || defined (__clang__)
+            if(static_cast<xp_uint32_t>(Character) <= XPF::NumericLimits<xp_uint16_t>::MaxValue)
+            {
+                wchar_t character = static_cast<wchar_t>(Character);
+                CharUpperBuffW(&character, 1);
+                Character = static_cast<CharType>(character);
+            }
+            return Character;
+        #elif defined(XPLATFORM_WINDOWS_KERNEL_MODE)
+            if(static_cast<xp_uint32_t>(Character) <= XPF::NumericLimits<xp_uint16_t>::MaxValue)
+            {
+                wchar_t character = static_cast<wchar_t>(Character);
+                Character = static_cast<CharType>(RtlUpcaseUnicodeChar(character));
+            }
+            return Character;
+        #elif defined (XPLATFORM_LINUX_USER_MODE)
             return static_cast<CharType>(towupper(static_cast<wchar_t>(Character)));
         #else
             #error Unsuported Compiler
