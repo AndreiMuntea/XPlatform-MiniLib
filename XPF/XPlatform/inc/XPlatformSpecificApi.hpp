@@ -240,6 +240,25 @@ namespace XPF
     }
 
     //
+    // Checks if memory blocks are equal
+    //
+    inline bool
+    ApiEqualMemory(
+        _In_reads_bytes_(Length) const void* const Block1,
+        _In_reads_bytes_(Length) const void* const Block2,
+        _In_ size_t Length
+    ) noexcept
+    {
+        #if defined(XPLATFORM_WINDOWS_USER_MODE) || defined(XPLATFORM_WINDOWS_KERNEL_MODE)
+            return RtlEqualMemory(Block1, Block2, Length);
+        #elif defined (XPLATFORM_LINUX_USER_MODE)
+            return 0 == memcmp(Block1, Block2, Length);
+        #else
+            #error Unsuported Compiler
+        #endif
+    }
+
+    //
     // Allocates memory on a XPLATFORM_MEMORY_ALLOCATION_ALIGNMENT alignment boundary.
     //
     _Ret_maybenull_

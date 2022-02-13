@@ -227,6 +227,7 @@
     <ClCompile Include="test_sources\TestPlatformSTL\TestSet.cpp" />
     <ClCompile Include="test_sources\TestPlatformSTL\TestSharedPointer.cpp" />
     <ClCompile Include="test_sources\TestPlatformSTL\TestString.cpp" />
+    <ClCompile Include="test_sources\TestPlatformSTL\TestThread.cpp" />
     <ClCompile Include="test_sources\TestPlatformSTL\TestUniquePointer.cpp" />
     <ClCompile Include="test_sources\TestPlatformSTL\TestVector.cpp" />
     <ClCompile Include="test_sources\TestPlatformUtils\TestNumericLimits.cpp" />

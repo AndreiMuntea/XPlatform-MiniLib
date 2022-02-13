@@ -136,7 +136,8 @@
     #define XPLATFORM_CACHE_ALIGNMENT               SYSTEM_CACHE_ALIGNMENT_SIZE
 
     //
-    // Data types definitions for cross platform usage
+    // Data types definitions for cross platform usage.
+    // "using" instead of "typedef" so signed char will be the same type as xp_in8_t.
     //
     using xp_int8_t  = signed char;
     using xp_int16_t = short;
@@ -172,6 +173,7 @@
     #include <string.h>
     #include <wctype.h>
     #include <assert.h>
+    #include <pthread.h>
 
    //
     // Platform-Specific instruction for assertion.
@@ -195,6 +197,7 @@
 
     //
     // Data types definitions for cross platform usage
+    // "using" instead of "typedef" so signed char will be the same type as xp_in8_t.
     //
     using xp_int8_t  = signed char;
     using xp_int16_t = short int;

@@ -32,9 +32,15 @@
 
 namespace XPF
 {
+    enum class LockState
+    {
+        Uninitialized = 0,
+        Unlocked = 1,
+        AcquiredExclusive = 2
+    };
+
     //
     // All exclusive locks must derive from this class.
-    // An InitializeLock method is provided as some locks may fail during init.
     //
     class ExclusiveLock
     {
@@ -52,6 +58,11 @@ namespace XPF
 
         virtual void LockExclusive(void) noexcept = 0;
         virtual void UnlockExclusive(void) noexcept = 0;
+
+        LockState State(void) const noexcept { return state; }
+
+    protected:
+        LockState state = LockState::Uninitialized;
     };
 
     //

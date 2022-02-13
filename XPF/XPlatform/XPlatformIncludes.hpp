@@ -70,4 +70,9 @@
 #include "inc/XPlatformInitializerList.hpp"
 #include "inc/XPlatformPair.hpp"
 
+
+#include "inc/XPlatformLocking.hpp"
+#include "inc/XPlatformReadWriteLock.hpp"
+#include "inc/XPlatformThread.hpp"
+
 #endif // __XPLATFORM_PLATFORM_INCLUDES_HPP__

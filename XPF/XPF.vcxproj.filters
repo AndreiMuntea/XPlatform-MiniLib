@@ -78,6 +78,12 @@
     <ClInclude Include="XPlatform\inc\XPlatformLocking.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="XPlatform\inc\XPlatformReadWriteLock.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="XPlatform\inc\XPlatformThread.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="XPF.cpp">

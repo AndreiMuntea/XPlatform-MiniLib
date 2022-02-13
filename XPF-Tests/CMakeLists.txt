@@ -23,6 +23,7 @@ add_executable (XPF-Tests "XPF-Tests.cpp" "XPF-Tests.h"
                 "test_sources/TestPlatformSTL/TestSet.cpp"
                 "test_sources/TestPlatformSTL/TestMap.cpp"
                 "test_sources/TestPlatformSTL/TestPair.cpp"
+                "test_sources/TestPlatformSTL/TestThread.cpp"
 )
 
 # Link test executable against gtest & gtest_main

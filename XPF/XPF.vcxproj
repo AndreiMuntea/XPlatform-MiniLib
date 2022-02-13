@@ -171,11 +171,13 @@
     <ClInclude Include="XPlatform\inc\XPlatformInitializerList.hpp" />
     <ClInclude Include="XPlatform\inc\XPlatformLocking.hpp" />
     <ClInclude Include="XPlatform\inc\XPlatformMap.hpp" />
+    <ClInclude Include="XPlatform\inc\XPlatformReadWriteLock.hpp" />
     <ClInclude Include="XPlatform\inc\XPlatformPair.hpp" />
     <ClInclude Include="XPlatform\inc\XPlatformRedBlackTree.hpp" />
     <ClInclude Include="XPlatform\inc\XPlatformSet.hpp" />
     <ClInclude Include="XPlatform\inc\XPlatformSharedPointer.hpp" />
     <ClInclude Include="XPlatform\inc\XPlatformString.hpp" />
+    <ClInclude Include="XPlatform\inc\XPlatformThread.hpp" />
     <ClInclude Include="XPlatform\inc\XPlatformUniquePointer.hpp" />
     <ClInclude Include="XPlatform\inc\XPlatformVector.hpp" />
     <ClInclude Include="XPlatform\inc\XPlatformCore.hpp" />
