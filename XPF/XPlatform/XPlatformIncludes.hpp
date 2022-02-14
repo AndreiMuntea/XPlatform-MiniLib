@@ -74,5 +74,6 @@
 #include "inc/XPlatformLocking.hpp"
 #include "inc/XPlatformReadWriteLock.hpp"
 #include "inc/XPlatformThread.hpp"
+#include "inc/XPlatformSemaphore.hpp"
 
 #endif // __XPLATFORM_PLATFORM_INCLUDES_HPP__

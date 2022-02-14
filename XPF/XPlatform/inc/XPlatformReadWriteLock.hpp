@@ -34,6 +34,7 @@ namespace XPF
     class ReadWriteLock : public SharedLock
     {
     public:
+        _IRQL_requires_max_(APC_LEVEL)
         ReadWriteLock() noexcept : SharedLock()
         {
             ///
@@ -42,15 +43,20 @@ namespace XPF
             /// One should always inspect the lock state before using it.
             /// 
             #if defined (XPLATFORM_WINDOWS_USER_MODE)
-                this->mutex = SRWLOCK_INIT;
+                InitializeSRWLock(&this->mutex);
                 this->state = LockState::Unlocked;
             #elif defined (XPLATFORM_WINDOWS_KERNEL_MODE)
-                if(NT_SUCCESS(ExInitializeResourceLite(&this->mutex)))
+                XPLATFORM_ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+                auto status = ExInitializeResourceLite(&this->mutex);
+                XPLATFORM_ASSERT(NT_SUCCESS(status));
+                if (NT_SUCCESS(status))
                 {
                     this->state = LockState::Unlocked;
                 }
             #elif defined(XPLATFORM_LINUX_USER_MODE)
-                if(0 == pthread_rwlock_init(&this->mutex, nullptr))
+                auto error = pthread_rwlock_init(&this->mutex, nullptr);
+                XPLATFORM_ASSERT(0 == error);
+                if (0 == error)
                 {
                     this->state = LockState::Unlocked;
                 }
@@ -63,14 +69,16 @@ namespace XPF
             // Assert here to signal it in debug builds.
             // It may happen when the system has not enough resources.
             // It is always a good idea to use the .State() method from base class to inspect the state.
-            // The lock will not be acquired if it has not been uninitialized
+            // The lock will not be acquired if it has not been initialized!
             //
             XPLATFORM_ASSERT(this->state == LockState::Unlocked);
         }
+
+        _IRQL_requires_max_(APC_LEVEL)
         virtual ~ReadWriteLock() noexcept
         {
             //
-            // We usually don't expect lock to not be uninitialized.
+            // We usually don't expect lock to not be initialized.
             // However we assert here to catch such rare scenarios on debug builds.
             //
             XPLATFORM_ASSERT(this->state != LockState::Uninitialized);
@@ -103,9 +111,18 @@ namespace XPF
                 #if defined (XPLATFORM_WINDOWS_USER_MODE)
                     this->mutex = SRWLOCK_INIT;
                 #elif defined (XPLATFORM_WINDOWS_KERNEL_MODE)
-                    (void) ExDeleteResourceLite(&this->mutex);
+                    XPLATFORM_ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+                    auto status = ExDeleteResourceLite(&this->mutex);
+                    if (!NT_SUCCESS(status))
+                    {
+                        XPLATFORM_ASSERT(NT_SUCCESS(status));
+                    }
                 #elif defined(XPLATFORM_LINUX_USER_MODE)
-                    (void) pthread_rwlock_destroy(&this->mutex);
+                    auto error = pthread_rwlock_destroy(&this->mutex);
+                    if (0 != error)
+                    {
+                        XPLATFORM_ASSERT(0 == error);
+                    }
                 #else
                     #error Unsupported Platform
                 #endif
@@ -120,11 +137,12 @@ namespace XPF
         ReadWriteLock(ReadWriteLock&& Other) noexcept = delete;
         ReadWriteLock& operator=(ReadWriteLock&& Other) noexcept = delete;
 
+        _IRQL_requires_max_(APC_LEVEL)
         _Acquires_exclusive_lock_(this->mutex)
         virtual void LockExclusive(void) noexcept override
         {
             //
-            // We usually don't expect lock to not be uninitialized.
+            // We usually don't expect lock to not be initialized.
             // However we assert here to catch such rare scenarios on debug builds.
             //
             XPLATFORM_ASSERT(this->state != LockState::Uninitialized);
@@ -147,6 +165,7 @@ namespace XPF
                     // This routine returns FALSE if the input Wait is FALSE and exclusive access cannot be granted immediately.
                     // Safe to ignore return value.
                     //
+                    XPLATFORM_ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
                     KeEnterCriticalRegion();
                     (void) ExAcquireResourceExclusiveLite(&this->mutex, TRUE);
 
@@ -180,6 +199,7 @@ namespace XPF
             }
         }
 
+        _IRQL_requires_max_(APC_LEVEL)
         _Requires_exclusive_lock_held_(this->mutex)
         _Releases_exclusive_lock_(this->mutex)
         virtual void UnlockExclusive(void) noexcept override
@@ -209,6 +229,7 @@ namespace XPF
                 #if defined (XPLATFORM_WINDOWS_USER_MODE)
                     ReleaseSRWLockExclusive(&this->mutex);
                 #elif defined (XPLATFORM_WINDOWS_KERNEL_MODE)
+                    XPLATFORM_ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
                     ExReleaseResourceLite(&this->mutex);
                     KeLeaveCriticalRegion();
                 #elif defined(XPLATFORM_LINUX_USER_MODE)
@@ -225,11 +246,12 @@ namespace XPF
             }
         }
 
+        _IRQL_requires_max_(APC_LEVEL)
         _Acquires_shared_lock_(this->mutex)
         virtual void LockShared(void) noexcept override
         {
             //
-            // We usually don't expect lock to not be uninitialized.
+            // We usually don't expect lock to not be initialized.
             // However we assert here to catch such rare scenarios on debug builds.
             //
             XPLATFORM_ASSERT(this->state != LockState::Uninitialized);
@@ -252,6 +274,7 @@ namespace XPF
                     // This routine returns FALSE if the input Wait is FALSE shared exclusive access cannot be granted immediately.
                     // Safe to ignore return value.
                     //
+                    XPLATFORM_ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
                     KeEnterCriticalRegion();
                     (void) ExAcquireResourceSharedLite(&this->mutex, TRUE);
                 #elif defined(XPLATFORM_LINUX_USER_MODE)
@@ -276,6 +299,7 @@ namespace XPF
             }
         }
 
+        _IRQL_requires_max_(APC_LEVEL)
         _Requires_shared_lock_held_(this->mutex)
         _Releases_shared_lock_(this->mutex)
         virtual void UnlockShared(void) noexcept override
@@ -298,6 +322,7 @@ namespace XPF
                 #if defined (XPLATFORM_WINDOWS_USER_MODE)
                     ReleaseSRWLockShared(&this->mutex);
                 #elif defined (XPLATFORM_WINDOWS_KERNEL_MODE)
+                    XPLATFORM_ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
                     ExReleaseResourceLite(&this->mutex);
                     KeLeaveCriticalRegion();
                 #elif defined(XPLATFORM_LINUX_USER_MODE)

@@ -122,6 +122,12 @@ namespace XPF
                 #error Unsupported Platform
             #endif
             
+            //
+            // We don't really expect thread creation to fail.
+            // It might happen under heavy load or stress for the system.
+            // Assert here to investigate the failure on debug 
+            //
+            XPLATFORM_ASSERT(this->wasCreated);
             return this->wasCreated;
         }
 

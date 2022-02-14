@@ -187,6 +187,7 @@
     <ClInclude Include="XPlatform\inc\XPlatformSpecificApi.hpp" />
     <ClInclude Include="XPlatform\inc\XPlatformTypeTraits.hpp" />
     <ClInclude Include="XPlatform\inc\XPlatformUtilsApiSet.hpp" />
+    <ClInclude Include="XPlatform\inc\XPlatformSemaphore.hpp" />
     <ClInclude Include="XPlatform\XPlatformIncludes.hpp" />
   </ItemGroup>
   <ItemGroup>

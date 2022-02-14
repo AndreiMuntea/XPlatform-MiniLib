@@ -62,7 +62,7 @@ namespace XPF
         LockState State(void) const noexcept { return state; }
 
     protected:
-        LockState state = LockState::Uninitialized;
+        volatile LockState state = LockState::Uninitialized;
     };
 
     //
