@@ -3,6 +3,13 @@
 
 #pragma once
 
+#if defined(_MSC_VER)
+    // For linux we can use valgrind for memory leaks.
+    // For windows we use crt
+    #define _CRTDBG_MAP_ALLOC
+    #include <stdlib.h>
+    #include <crtdbg.h>
+#endif
 
 #include "../XPF/XPlatform/XPlatformIncludes.hpp"
 

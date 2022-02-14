@@ -97,6 +97,6 @@ namespace XPlatformTest
             }
         }
 
-        EXPECT_TRUE(number == 1000);
+        EXPECT_TRUE(number == 4000);
     }
 }

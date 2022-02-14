@@ -121,6 +121,13 @@
     #endif
 
     //
+    // Platform specific instruction for yield the processor.
+    // Can translate to  _mm_pause or __yield or __asm{ rep nop }
+    // https://docs.microsoft.com/en-us/windows/win32/api/winnt/nf-winnt-yieldprocessor
+    //
+    #define XPLATFORM_YIELD_PROCESSOR()             { YieldProcessor(); }             
+
+    //
     // Definition for unreferenced parameter
     //
     #define XPLATFORM_UNREFERENCED_PARAMETER(P)     UNREFERENCED_PARAMETER(P)
@@ -173,12 +180,19 @@
     #include <string.h>
     #include <wctype.h>
     #include <assert.h>
+    #include <sched.h>
     #include <pthread.h>
 
-   //
+
+    //
+    // Platform specific instruction for yield the processor.
+    //
+    #define XPLATFORM_YIELD_PROCESSOR()             { (void) sched_yield(); }
+
+    //
     // Platform-Specific instruction for assertion.
     //
-    #define XPLATFORM_ASSERT assert
+    #define XPLATFORM_ASSERT                        assert
 
     //
     // Definition for unreferenced parameter

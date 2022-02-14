@@ -56,14 +56,32 @@ namespace XPF
         // Schedules the thread to run.
         // Do not run this method twice - it will lead to undefined behavior.
         //
+        _No_competing_thread_
         _Must_inspect_result_
         bool Run(ThreadCallback Callback, void* Context) noexcept
         {
-            XPLATFORM_ASSERT(nullptr == this->callback);
+            //
+            // Can't run the same thread object twice.
+            // It may lead to memory leaks. Try to guard as much as possible.
+            //
+            if (this->wasCreated)
+            {
+                XPLATFORM_ASSERT(false);
+                return false;
+            }
 
+            //
+            // Initialize callback and the context.
+            // These will be run on a separate thread.
+            // 
             this->callback = Callback;
             this->context = Context;
 
+            //
+            // Platform specific API to create a thread.
+            // It may fail in case of low system resources.
+            // The result of this function must always be inspected.
+            //
             #if defined (XPLATFORM_WINDOWS_USER_MODE)
                 this->thread = CreateThread(nullptr, 
                                             0, 
@@ -71,7 +89,7 @@ namespace XPF
                                             reinterpret_cast<void*>(this), 
                                             0, 
                                             nullptr);
-                return (this->thread != NULL && this->thread != INVALID_HANDLE_VALUE);
+                this->wasCreated = (this->thread != NULL && this->thread != INVALID_HANDLE_VALUE);
             #elif defined (XPLATFORM_WINDOWS_KERNEL_MODE)
                 OBJECT_ATTRIBUTES objectAttributes = { 0 };
                 InitializeObjectAttributes(&objectAttributes, 
@@ -92,31 +110,55 @@ namespace XPF
                     XPLATFORM_ASSERT(NT_SUCCESS(status));
                     this->thread = INVALID_HANDLE_VALUE;
                 }
-                return (NT_SUCCESS(status));
+                this->wasCreated = (NT_SUCCESS(status));
             #elif defined(XPLATFORM_LINUX_USER_MODE)
                 auto error = pthread_create(&thread, nullptr, ThreadStartRoutine, reinterpret_cast<void*>(this));
                 if (error != 0)
                 {
                     XPLATFORM_ASSERT((error != 0));
-                    XPF::ApiZeroMemory(&this->thread, sizeof(this->thread));
                 }
-                return (error == 0);
+                this->wasCreated = (error == 0);
             #else
                 #error Unsupported Platform
             #endif
-                
+            
+            return this->wasCreated;
         }
 
         //
         // Waits for the thread to finish.
         // DO NOT call this method if Run was not called or it failed.
-        // DO NOT call this method twice!
-        // This method MUST be manually called before the thread is actually destroyed.
-        // It will NOT be called by the destructor.
+        // This method CAN be manually called before the thread is actually destroyed.
         //
         _Must_inspect_result_
         bool Join(void) noexcept
         {
+            //
+            // Can't join a thread that was not created.
+            // Join should not be called in such scenarios.
+            // Assert here and bail out quickly.
+            //
+            if (!this->wasCreated)
+            {
+                XPLATFORM_ASSERT(false);
+                return false;
+            }
+
+            //
+            // Join should not be called twice.
+            // Return true as thread was already joined.
+            //
+            if (XPF::ApiAtomicExchange(&this->wasJoined, xp_int8_t{ 1 }) == 1)
+            {
+                return true;
+            }
+
+            //
+            // Platform specific API to wait for the thread.
+            // It will wait indefinitely. Similar with std::thread behavior.
+            // Won't attempt to kill the thread as that may lead to leaving locks acquired.
+            // It is better to have a hanging thread as it will be easier to investigate the problem as well.
+            //
             #if defined (XPLATFORM_WINDOWS_USER_MODE)
                 return (WAIT_OBJECT_0 == WaitForSingleObject(this->thread, INFINITE));
             #elif defined (XPLATFORM_WINDOWS_KERNEL_MODE)
@@ -138,7 +180,7 @@ namespace XPF
             static DWORD WINAPI ThreadStartRoutine(void* Argument) noexcept
             {
                 auto thread = reinterpret_cast<XPF::Thread*>(Argument);
-                if (thread->callback != nullptr)
+                if (thread != nullptr && thread->callback != nullptr)
                 {
                     thread->callback(thread->context);
                 }
@@ -148,7 +190,7 @@ namespace XPF
             static void ThreadStartRoutine(void* Argument) noexcept
             {
                 auto thread = reinterpret_cast<XPF::Thread*>(Argument);
-                if (thread->callback != nullptr)
+                if (thread != nullptr && thread->callback != nullptr)
                 {
                     thread->callback(thread->context);
                 }
@@ -157,7 +199,7 @@ namespace XPF
             static void* ThreadStartRoutine(void* Argument) noexcept
             {
                 auto thread = reinterpret_cast<XPF::Thread*>(Argument);
-                if (thread->callback != nullptr)
+                if (thread != nullptr && thread->callback != nullptr)
                 {
                     thread->callback(thread->context);
                 }
@@ -169,14 +211,38 @@ namespace XPF
 
         //
         // Some platforms require extra cleanup after a thread ended.
+        // It ensures the thread was stopped
         // This method is invoked in destructor to ensure all resources are properly disposed.
         //
         void Dispose(void) noexcept
         {
+            //
+            // Nothing left to do if thread was not properly initialized.
+            // Bail out quickly in this case without attempting anything.
+            //
+            if (this->wasCreated == false)
+            {
+                return;
+            }
+            
+            //
+            // Wait for the thread to finish. If it fails, we can't really do anything. Just cleanup the resources.
+            // Also add an assert to signal this case on debugging.
+            //
+            if (!Join())
+            {
+                XPLATFORM_ASSERT(false);
+            }
+
+            //
+            // Platform specific API to dispose the needed resources that are created with the thread.
+            // We can't really do anything if these method fails.
+            // Simply ignore the result.
+            //
             #if defined (XPLATFORM_WINDOWS_USER_MODE)
                 if (NULL != this->thread && INVALID_HANDLE_VALUE != this->thread)
                 {
-                    (void)CloseHandle(this->thread);
+                    (void) CloseHandle(this->thread);
                     this->thread = INVALID_HANDLE_VALUE;
                 }
             #elif defined (XPLATFORM_WINDOWS_KERNEL_MODE)
@@ -193,15 +259,31 @@ namespace XPF
         }
 
     private:
+        //
+        // Callback and context that are user-defined.
+        // These will be called from the separate thread.
+        //
         ThreadCallback callback = nullptr;
         void* context = nullptr;
 
+        //
+        // These are used to signal the thread state.
+        // Try to prevent invalid transitions as much as possible.
+        //
+        volatile xp_int8_t wasJoined = 0;
+        volatile bool wasCreated = false;
+
+        //
+        // Platform-Specific thread resource.
+        // On Windows - use HANDLE
+        // On Linux - a pthread_t
+        //
         #if defined (XPLATFORM_WINDOWS_USER_MODE)
             HANDLE thread = INVALID_HANDLE_VALUE;
         #elif defined (XPLATFORM_WINDOWS_KERNEL_MODE)
             HANDLE thread = INVALID_HANDLE_VALUE;
         #elif defined(XPLATFORM_LINUX_USER_MODE)
-            pthread_t thread = {0};
+            pthread_t thread{ };
         #else
             #error Unsupported Platform
         #endif

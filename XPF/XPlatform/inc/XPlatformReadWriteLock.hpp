@@ -33,10 +33,16 @@ namespace XPF
 {
     class ReadWriteLock : public SharedLock
     {
+    public:
         ReadWriteLock() noexcept : SharedLock()
         {
+            ///
+            /// Platform specific API to initialize a read-write lock.
+            /// If somethin will go bad, the lock state will not be Unlocked, it will remain Uninitialized.
+            /// One should always inspect the lock state before using it.
+            /// 
             #if defined (XPLATFORM_WINDOWS_USER_MODE)
-                InitializeSRWLock(&this->mutex);
+                this->mutex = SRWLOCK_INIT;
                 this->state = LockState::Unlocked;
             #elif defined (XPLATFORM_WINDOWS_KERNEL_MODE)
                 if(NT_SUCCESS(ExInitializeResourceLite(&this->mutex)))
@@ -51,20 +57,49 @@ namespace XPF
             #else
                 #error Unsupported Platform
             #endif
+
+            //
+            // We usually don't expect lock initialization to fail.
+            // Assert here to signal it in debug builds.
+            // It may happen when the system has not enough resources.
+            // It is always a good idea to use the .State() method from base class to inspect the state.
+            // The lock will not be acquired if it has not been uninitialized
+            //
+            XPLATFORM_ASSERT(this->state == LockState::Unlocked);
         }
         virtual ~ReadWriteLock() noexcept
         {
+            //
+            // We usually don't expect lock to not be uninitialized.
+            // However we assert here to catch such rare scenarios on debug builds.
+            //
             XPLATFORM_ASSERT(this->state != LockState::Uninitialized);
 
+            //
+            // Do not try to destroy an uninitialized object.
+            //
             if(this->state != LockState::Uninitialized)
             {
                 ///
-                /// This helps a lot during debugging
-                /// Tries to esnure that this lock was properly released from all threads
+                /// This helps a lot during debugging.
+                /// Tries to esnure that this lock was properly released from all threads.
+                /// If there is a hanging lock, it will not be incorrectly destroyed leading to memory corruptions.
                 /// 
                 LockExclusive();
                 UnlockExclusive();
 
+                //
+                // We don't expect this lock to be reused.
+                // And this variable is actually used in every subsequent function.
+                // If we have an use after free, some assert might trigger and help us find it.
+                //
+                this->state = LockState::Uninitialized;
+
+                //
+                // Platform-Specific API to release all resources allocated internally by the OS.
+                // We can't really do anything if the API fails.
+                // Just ignore the result and mark the state as uninitialized to ensure the lock is not reused.
+                //
                 #if defined (XPLATFORM_WINDOWS_USER_MODE)
                     this->mutex = SRWLOCK_INIT;
                 #elif defined (XPLATFORM_WINDOWS_KERNEL_MODE)
@@ -74,9 +109,6 @@ namespace XPF
                 #else
                     #error Unsupported Platform
                 #endif
-
-                XPF::ApiZeroMemory(XPF::AddressOf(this->mutex), sizeof(this->mutex));
-                this->state = LockState::Uninitialized;
             }
         }
 
@@ -91,11 +123,22 @@ namespace XPF
         _Acquires_exclusive_lock_(this->mutex)
         virtual void LockExclusive(void) noexcept override
         {
+            //
+            // We usually don't expect lock to not be uninitialized.
+            // However we assert here to catch such rare scenarios on debug builds.
+            //
             XPLATFORM_ASSERT(this->state != LockState::Uninitialized);
 
+            //
             // Don't try to acquire an uninitialized lock
+            //
             if (this->state != LockState::Uninitialized)
             {
+                //
+                // Platform-Specific API to acquire the lock exclusively.
+                // It guarantees that no failures will take place and the lock will be acquired exclusively after this method returns.
+                // Or it will be stucked into a while() loop signaling a deadlock (LINUX only)
+                //
                 #if defined (XPLATFORM_WINDOWS_USER_MODE)
                     AcquireSRWLockExclusive(&this->mutex);
                 #elif defined (XPLATFORM_WINDOWS_KERNEL_MODE)
@@ -105,7 +148,7 @@ namespace XPF
                     // Safe to ignore return value.
                     //
                     KeEnterCriticalRegion();
-                    (void)ExAcquireResourceExclusiveLite(&this->mutex, TRUE);
+                    (void) ExAcquireResourceExclusiveLite(&this->mutex, TRUE);
 
                 #elif defined(XPLATFORM_LINUX_USER_MODE)
                     //
@@ -116,11 +159,23 @@ namespace XPF
                     //      * [EINVAL]     The value specified by rwlock does not refer to an initialised read - write lock object.
                     //      * [EDEADLK]    The current thread already owns the read - write lock for writing or reading.
                     //
-                    while(0 != pthread_rwlock_wrlock(&this->mutex));
+                    while(0 != pthread_rwlock_wrlock(&this->mutex))
+                    {
+                        //
+                        // Don't busy wait. Try to relinquish the CPU by moving the thread to the end of the queue.
+                        //
+                        XPLATFORM_YIELD_PROCESSOR();
+                    }
                 #else
                     #error Unsupported Platform
                 #endif
 
+                //
+                // Mark the lock as acquired exclusively. 
+                // To be used in unlock functions to not release shared an exclusive lock or vice-versa.
+                // This variable should be protected by the lock itself.
+                // It is safe to write it here because the lock is taken.
+                //
                 this->state = LockState::AcquiredExclusive;
             }
         }
@@ -129,12 +184,28 @@ namespace XPF
         _Releases_exclusive_lock_(this->mutex)
         virtual void UnlockExclusive(void) noexcept override
         {
+            //
             // Extra safety to early catch AcquireShared() -> ReleaseExclusive() bugs
+            //
+            XPLATFORM_ASSERT(this->state != LockState::Uninitialized);
             XPLATFORM_ASSERT(this->state == LockState::AcquiredExclusive);
 
+            //
             // Don't try to release an uninitialized lock
+            //
             if (this->state != LockState::Uninitialized)
             { 
+                //
+                // Mark the lock state as unlocked before actually releasing the lock.
+                // It is ok to do so because this state is rather informative, used only for asserts.
+                // And if doing it with the lock held, we ensure no data races while writing this variable.
+                // 
+                this->state = LockState::Unlocked;
+
+                //
+                // Platform-Specific API to release the lock exclusively.
+                // If the lock was not acquired exclusively, it will lead to undefined behavior by releasing the lock.
+                //
                 #if defined (XPLATFORM_WINDOWS_USER_MODE)
                     ReleaseSRWLockExclusive(&this->mutex);
                 #elif defined (XPLATFORM_WINDOWS_KERNEL_MODE)
@@ -151,19 +222,28 @@ namespace XPF
                 #else
                     #error Unsupported Platform
                 #endif
-
-                this->state = LockState::Unlocked;
             }
         }
 
         _Acquires_shared_lock_(this->mutex)
         virtual void LockShared(void) noexcept override
         {
+            //
+            // We usually don't expect lock to not be uninitialized.
+            // However we assert here to catch such rare scenarios on debug builds.
+            //
             XPLATFORM_ASSERT(this->state != LockState::Uninitialized);
 
+            //
             // Don't try to lock an uninitialized lock
+            //
             if (this->state != LockState::Uninitialized)
             {
+                //
+                // Platform-Specific API to acquire the lock shared.
+                // It guarantees that no failures will take place and the lock will be acquired shared after this method returns.
+                // Or it will be stucked into a while() loop signaling a deadlock (LINUX only)
+                //
                 #if defined (XPLATFORM_WINDOWS_USER_MODE)
                     AcquireSRWLockShared(&this->mutex);
                 #elif defined (XPLATFORM_WINDOWS_KERNEL_MODE)
@@ -183,7 +263,13 @@ namespace XPF
                     //      * [EINVAL]     The value specified by rwlock does not refer to an initialised read - write lock object.
                     //      * [EDEADLK]    The current thread already owns the read - write lock for writing or reading.
                     //
-                    while (0 != pthread_rwlock_rdlock(&this->mutex));
+                    while (0 != pthread_rwlock_rdlock(&this->mutex))
+                    {
+                        //
+                        // Don't busy wait. Try to relinquish the CPU by moving the thread to the end of the queue.
+                        //
+                        XPLATFORM_YIELD_PROCESSOR();
+                    }
                 #else
                     #error Unsupported Platform
                 #endif
@@ -194,13 +280,21 @@ namespace XPF
         _Releases_shared_lock_(this->mutex)
         virtual void UnlockShared(void) noexcept override
         {
+            //
             // Extra safety to early catch AcquireExclusive() -> ReleaseShared() bugs
+            // 
             XPLATFORM_ASSERT(this->state != LockState::Uninitialized);
             XPLATFORM_ASSERT(this->state != LockState::AcquiredExclusive);
 
+            //
             // Don't try to unlock an uninitialized lock
+            //
             if (this->state != LockState::Uninitialized)
             {
+                //
+                // Platform-Specific API to release the lock exclusively.
+                // If the lock was not acquired exclusively, it will lead to undefined behavior by releasing the lock.
+                //
                 #if defined (XPLATFORM_WINDOWS_USER_MODE)
                     ReleaseSRWLockShared(&this->mutex);
                 #elif defined (XPLATFORM_WINDOWS_KERNEL_MODE)
@@ -221,11 +315,17 @@ namespace XPF
         }
 
     private:
+        //
+        // Platform specific definition for a read-write lock.
+        // For windows user mode we use the SRWLOCK for that.
+        // For windows kernel mode we use ERESOURCE (as it copes well with verifier and !locks)
+        // For linux we use the pthread_rwlock_t
+        //
         XPLATFORM_SUPPRESS_ALIGNMENT_WARNING_BEGIN
             #if defined (XPLATFORM_WINDOWS_USER_MODE)
-                alignas(XPLATFORM_MEMORY_ALLOCATION_ALIGNMENT) SRWLOCK mutex = { 0 };
+                alignas(XPLATFORM_MEMORY_ALLOCATION_ALIGNMENT) SRWLOCK mutex{ };
             #elif defined (XPLATFORM_WINDOWS_KERNEL_MODE)
-                alignas(XPLATFORM_MEMORY_ALLOCATION_ALIGNMENT) ERESOURCE mutex = { 0 };
+                alignas(XPLATFORM_MEMORY_ALLOCATION_ALIGNMENT) ERESOURCE mutex{ };
             #elif defined(XPLATFORM_LINUX_USER_MODE)
                 alignas(XPLATFORM_MEMORY_ALLOCATION_ALIGNMENT) pthread_rwlock_t mutex{ };
             #else
