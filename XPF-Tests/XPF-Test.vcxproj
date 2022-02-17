@@ -225,6 +225,7 @@
     <ClCompile Include="test_sources\TestPlatformSTL\TestPair.cpp" />
     <ClCompile Include="test_sources\TestPlatformSTL\TestReadWriteLock.cpp" />
     <ClCompile Include="test_sources\TestPlatformSTL\TestRedBlackTree.cpp" />
+    <ClCompile Include="test_sources\TestPlatformSTL\TestSemaphore.cpp" />
     <ClCompile Include="test_sources\TestPlatformSTL\TestSet.cpp" />
     <ClCompile Include="test_sources\TestPlatformSTL\TestSharedPointer.cpp" />
     <ClCompile Include="test_sources\TestPlatformSTL\TestString.cpp" />
@@ -233,6 +234,7 @@
     <ClCompile Include="test_sources\TestPlatformSTL\TestVector.cpp" />
     <ClCompile Include="test_sources\TestPlatformUtils\TestNumericLimits.cpp" />
     <ClCompile Include="test_sources\TestPlatformUtils\TestUtilsApiSet.cpp" />
+    <ClCompile Include="test_sources\TestPlatformSTL\TestThreadPool.cpp" />
     <ClCompile Include="XPF-Tests.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -108,7 +108,7 @@ namespace XPlatformTest
 
         for (xp_int32_t i = 0; i < threadsCount; ++i)
         {
-            EXPECT_TRUE(threads[i].Join());
+            threads[i].Join();
         }
     }
 
@@ -135,7 +135,7 @@ namespace XPlatformTest
 
         for (xp_int32_t i = 0; i < threadsCount; ++i)
         {
-            EXPECT_TRUE(threads[i].Join());
+            threads[i].Join();
         }
 
         EXPECT_TRUE(sum == ((threadsCount - 1) * threadsCount) / 2);

@@ -34,7 +34,7 @@ namespace XPlatformTest
         XPF::Thread thread;
 
         EXPECT_TRUE(thread.Run(nullptr, nullptr));
-        EXPECT_TRUE(thread.Join());
+        thread.Join();
     }
 
 
@@ -44,7 +44,7 @@ namespace XPlatformTest
         XPF::Thread thread;
 
         EXPECT_TRUE(thread.Run(TestThreadCallback, &number));
-        EXPECT_TRUE(thread.Join());
+        thread.Join();
 
         EXPECT_TRUE(number == 1);
     }
@@ -56,7 +56,7 @@ namespace XPlatformTest
         {
             XPF::Thread thread;
             EXPECT_TRUE(thread.Run(TestThreadCallback, &number));
-            EXPECT_TRUE(thread.Join());
+            thread.Join();
         }
 
 
@@ -74,7 +74,7 @@ namespace XPlatformTest
         }
         for (int i = 0; i < 10; ++i)
         {
-            EXPECT_TRUE(thread[i].Join());
+            thread[i].Join();
         }
 
         EXPECT_TRUE(number == 10);
@@ -93,7 +93,7 @@ namespace XPlatformTest
             }
             for (int i = 0; i < 4; ++i)
             {
-                EXPECT_TRUE(thread[i].Join());
+                thread[i].Join();
             }
         }
 

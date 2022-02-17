@@ -189,6 +189,7 @@
     <ClInclude Include="XPlatform\inc\XPlatformUtilsApiSet.hpp" />
     <ClInclude Include="XPlatform\inc\XPlatformSemaphore.hpp" />
     <ClInclude Include="XPlatform\XPlatformIncludes.hpp" />
+    <ClInclude Include="XPlatform\inc\XPlatformThreadPool.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="XPF.cpp" />

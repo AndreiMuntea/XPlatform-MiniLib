@@ -128,5 +128,11 @@
     <ClCompile Include="test_sources\TestPlatformSTL\TestReadWriteLock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_sources\TestPlatformSTL\TestSemaphore.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test_sources\TestPlatformSTL\TestThreadPool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

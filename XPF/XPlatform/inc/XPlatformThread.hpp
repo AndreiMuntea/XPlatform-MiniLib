@@ -42,7 +42,7 @@ namespace XPF
     {
     public:
         Thread() noexcept = default;
-        ~Thread() noexcept { Dispose(); };
+        ~Thread() noexcept = default;
 
         // Copy semantics -- deleted (We can't copy the thread)
         Thread(const Thread&) noexcept = delete;
@@ -132,31 +132,30 @@ namespace XPF
         }
 
         //
+        // Checks if a thread is joinable and whether it should be waited for.
+        //
+        bool Joinable(void) const noexcept
+        {
+            return (this->wasCreated);
+        }
+
+        //
         // Waits for the thread to finish.
         // DO NOT call this method if Run was not called or it failed.
-        // This method CAN be manually called before the thread is actually destroyed.
+        // This method MUST be manually called before the thread is actually destroyed.
         //
-        _Must_inspect_result_
-        bool Join(void) noexcept
+        _No_competing_thread_
+        void Join(void) noexcept
         {
             //
             // Can't join a thread that was not created.
             // Join should not be called in such scenarios.
             // Assert here and bail out quickly.
             //
-            if (!this->wasCreated)
+            if (!Joinable())
             {
                 XPLATFORM_ASSERT(false);
-                return false;
-            }
-
-            //
-            // Join should not be called twice.
-            // Return true as thread was already joined.
-            //
-            if (XPF::ApiAtomicExchange(&this->wasJoined, xp_int8_t{ 1 }) == 1)
-            {
-                return true;
+                return;
             }
 
             //
@@ -166,11 +165,30 @@ namespace XPF
             // It is better to have a hanging thread as it will be easier to investigate the problem as well.
             //
             #if defined (XPLATFORM_WINDOWS_USER_MODE)
-                return (WAIT_OBJECT_0 == WaitForSingleObject(this->thread, INFINITE));
+                auto result = WaitForSingleObject(this->thread, INFINITE);
+                if (result != WAIT_OBJECT_0)
+                {
+                    XPLATFORM_ASSERT(WAIT_OBJECT_0 == result);
+                }
+
+                (void) CloseHandle(this->thread);
+                this->thread = INVALID_HANDLE_VALUE;
+
             #elif defined (XPLATFORM_WINDOWS_KERNEL_MODE)
-                return NT_SUCCESS(ZwWaitForSingleObject(this->thread, FALSE, nullptr));
+                auto status = ZwWaitForSingleObject(this->thread, FALSE, nullptr);
+                if (!NT_SUCCESS(status))
+                {
+                    XPLATFORM_ASSERT(NT_SUCCESS(status));
+                }
+
+                (void) ZwClose(this->thread);
+                this->thread = INVALID_HANDLE_VALUE;
             #elif defined(XPLATFORM_LINUX_USER_MODE)
-                return (0 == pthread_join(this->thread, nullptr));
+                auto error = pthread_join(this->thread, nullptr);
+                if (0 != error)
+                {
+                    XPLATFORM_ASSERT(0 == error);
+                }
             #else
                 #error Unsupported Platform
             #endif
@@ -215,55 +233,6 @@ namespace XPF
             #error Unsupported Platform
         #endif
 
-        //
-        // Some platforms require extra cleanup after a thread ended.
-        // It ensures the thread was stopped
-        // This method is invoked in destructor to ensure all resources are properly disposed.
-        //
-        void Dispose(void) noexcept
-        {
-            //
-            // Nothing left to do if thread was not properly initialized.
-            // Bail out quickly in this case without attempting anything.
-            //
-            if (this->wasCreated == false)
-            {
-                return;
-            }
-            
-            //
-            // Wait for the thread to finish. If it fails, we can't really do anything. Just cleanup the resources.
-            // Also add an assert to signal this case on debugging.
-            //
-            if (!Join())
-            {
-                XPLATFORM_ASSERT(false);
-            }
-
-            //
-            // Platform specific API to dispose the needed resources that are created with the thread.
-            // We can't really do anything if these method fails.
-            // Simply ignore the result.
-            //
-            #if defined (XPLATFORM_WINDOWS_USER_MODE)
-                if (NULL != this->thread && INVALID_HANDLE_VALUE != this->thread)
-                {
-                    (void) CloseHandle(this->thread);
-                    this->thread = INVALID_HANDLE_VALUE;
-                }
-            #elif defined (XPLATFORM_WINDOWS_KERNEL_MODE)
-                if (NULL != this->thread && INVALID_HANDLE_VALUE != this->thread)
-                {
-                    (void) ZwClose(this->thread);
-                    this->thread = INVALID_HANDLE_VALUE;
-                }
-            #elif defined(XPLATFORM_LINUX_USER_MODE)
-                return;
-            #else
-                #error Unsupported Platform
-            #endif
-        }
-
     private:
         //
         // Callback and context that are user-defined.
@@ -276,7 +245,6 @@ namespace XPF
         // These are used to signal the thread state.
         // Try to prevent invalid transitions as much as possible.
         //
-        volatile xp_int8_t wasJoined = 0;
         volatile bool wasCreated = false;
 
         //

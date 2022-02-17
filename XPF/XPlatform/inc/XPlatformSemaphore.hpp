@@ -34,7 +34,7 @@ namespace XPF
     class Semaphore
     {
     public:
-        Semaphore(xp_uint8_t Limit) noexcept
+        Semaphore(xp_int8_t Limit) noexcept
         {
             this->limit = Limit;
 
@@ -43,9 +43,10 @@ namespace XPF
             // It determines how many waiting threads become eligible for execution when the semaphore is set
             //     to the signaled state and can therefore access the resource that the semaphore protects.
             //
-            if (this->limit == 0)
+            if (this->limit <= 0)
             {
-                XPLATFORM_ASSERT(this->limit != 0);
+                XPLATFORM_ASSERT(this->limit <= 0);
+                this->limit = 0;
                 return;
             }
 
@@ -91,11 +92,6 @@ namespace XPF
             //
             XPLATFORM_ASSERT(this->limit != 0);
 
-            //
-            // We should have no threads waiting for this semaphore.
-            //
-            XPLATFORM_ASSERT(this->available == this->limit);
-
             if (this->limit > 0)
             {
                 //
@@ -103,9 +99,9 @@ namespace XPF
                 // We don't really expect the API to fail.
                 //
                 #if defined (XPLATFORM_WINDOWS_USER_MODE)
-                if (this->semaphore == NULL || this->semaphore == INVALID_HANDLE_VALUE)
+                if (this->semaphore != NULL && this->semaphore != INVALID_HANDLE_VALUE)
                 {
-                    (void)CloseHandle(this->semaphore);
+                    (void) CloseHandle(this->semaphore);
                     this->semaphore = INVALID_HANDLE_VALUE;
                 }
                 #elif defined (XPLATFORM_WINDOWS_KERNEL_MODE)
@@ -157,16 +153,6 @@ namespace XPF
             if (this->limit != 0)
             {
                 //
-                // Don't try to release a semaphore if it could exceed the limit.
-                // It might raise exceptions on some platforms.
-                //
-                if (XPF::ApiAtomicIncrement(&this->available) > this->limit)
-                {
-                    (void) XPF::ApiAtomicDecrement(&this->available);
-                    return;
-                }
-
-                //
                 // Platform specific API used to release a semaphore.
                 // We can't do much if this fails. Just assert here.
                 //
@@ -191,8 +177,6 @@ namespace XPF
                     //      STATUS_SEMAPHORE_LIMIT_EXCEEDED, is raised.
                     // 
                     // In case of exception, we simply ignore it.
-                    // We should not have exceptions because we are taking guarantees.
-                    // Guard for them however.
                     //
                     __try
                     { 
@@ -200,14 +184,10 @@ namespace XPF
                     }
                     __except (EXCEPTION_EXECUTE_HANDLER)
                     {
-                        XPLATFORM_ASSERT(false);
+                        YieldProcessor();
                     }
                 #elif defined(XPLATFORM_LINUX_USER_MODE)
-                    auto error = sem_post(&this->semaphore);
-                    if (0 != error)
-                    {
-                        XPLATFORM_ASSERT(0 == error);
-                    }
+                    (void) sem_post(&this->semaphore);
                 #else
                     #error Unsupported Platform
                 #endif
@@ -277,12 +257,9 @@ namespace XPF
         //
         // These are needed to ensure the semaphore is properly initialized and used correctly.
         // A valid semaphore has a non-zero limit.
-        // 
         // Initially there are no available tasks. The semaphore must be manually released.
-        // The number of available tasks will not exceed the limit.
         //
-        volatile xp_uint8_t limit = 0;
-        volatile xp_uint16_t available = 0;
+        alignas(xp_int8_t)  volatile xp_int8_t limit = 0;
     };
 }
 
