@@ -145,4 +145,52 @@ namespace XPlatformTest
             EXPECT_EQ(i++, e);
         }
     }
+
+    TEST_F(TestSetFixture, TestSetFindIf)
+    {
+        XPF::Set<int> set;
+
+        auto it1 = set.FindIf([&](const int& Element) { return Element == 2; });
+        EXPECT_TRUE(it1 == set.end());
+
+        for (int i = 0; i < 100; ++i)
+        {
+            EXPECT_TRUE(set.Emplace(i));
+        }
+        EXPECT_TRUE(set.Size() == 100);
+
+        auto it2 = set.FindIf([&](const int& Element) { return Element == 2; });
+        EXPECT_FALSE(it2 == set.end());
+
+        auto it3 = set.FindIf([&](const int& Element) { return Element == 222; });
+        EXPECT_TRUE(it3 == set.end());
+    }
+
+    TEST_F(TestSetFixture, TestSetEraseIf)
+    {
+        XPF::Set<int> set;
+
+        for (int i = 0; i < 100; ++i)
+        {
+            EXPECT_TRUE(set.Emplace(i));
+        }
+        EXPECT_TRUE(set.Size() == 100);
+
+        set.EraseIf([&](const int&) { return false; });
+        EXPECT_TRUE(set.Size() == 100);
+
+        auto it1 = set.FindIf([&](const int& Element) { return Element == 2; });
+        EXPECT_FALSE(it1 == set.end());
+
+        set.EraseIf([&](const int& Element) { return Element == 2; });
+        EXPECT_TRUE(set.Size() == 99);
+
+        auto it2 = set.FindIf([&](const int& Element) { return Element == 2; });
+        EXPECT_TRUE(it2 == set.end());
+
+        set.EraseIf([&](const int&) { return true; });
+        EXPECT_TRUE(set.Size() == 0);
+        EXPECT_TRUE(set.begin() == set.end());
+        EXPECT_TRUE(set.IsEmpty());
+    }
 }

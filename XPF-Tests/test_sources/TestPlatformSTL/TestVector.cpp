@@ -248,4 +248,52 @@ namespace XPlatformTest
             index++;
         }
     }
+
+    TEST_F(TestVectorFixture, TestVectorFindIf)
+    {
+        XPF::Vector<DummyTestStruct> vector;
+
+        auto it1 = vector.FindIf([&](const DummyTestStruct& Element) { return Element.Number == 2; });
+        EXPECT_TRUE(it1 == vector.end());
+
+        for (int i = 0; i < 100; ++i)
+        {
+            EXPECT_TRUE(vector.Emplace(i, 'x', 4.2f));
+        }
+        EXPECT_TRUE(vector.Size() == 100);
+
+        auto it2 = vector.FindIf([&](const DummyTestStruct& Element) { return Element.Number == 2; });
+        EXPECT_FALSE(it2 == vector.end());
+
+        auto it3 = vector.FindIf([&](const DummyTestStruct& Element) { return Element.Number == 222; });
+        EXPECT_TRUE(it3 == vector.end());
+    }
+
+    TEST_F(TestVectorFixture, TestVectorEraseIf)
+    {
+        XPF::Vector<DummyTestStruct> vector;
+
+        for (int i = 0; i < 100; ++i)
+        {
+            EXPECT_TRUE(vector.Emplace(i, 'x', 4.2f));
+        }
+        EXPECT_TRUE(vector.Size() == 100);
+
+        vector.EraseIf([&](const DummyTestStruct&) { return false; });
+        EXPECT_TRUE(vector.Size() == 100);
+
+        auto it1 = vector.FindIf([&](const DummyTestStruct& Element) { return Element.Number == 2; });
+        EXPECT_FALSE(it1 == vector.end());
+
+        vector.EraseIf([&](const DummyTestStruct& Element) { return Element.Number == 2; });
+        EXPECT_TRUE(vector.Size() == 99);
+
+        auto it2 = vector.FindIf([&](const DummyTestStruct& Element) { return Element.Number == 2; });
+        EXPECT_TRUE(it2 == vector.end());
+
+        vector.EraseIf([&](const DummyTestStruct&) { return true; });
+        EXPECT_TRUE(vector.Size() == 0);
+        EXPECT_TRUE(vector.begin() == vector.end());
+        EXPECT_TRUE(vector.IsEmpty());
+    }
 }

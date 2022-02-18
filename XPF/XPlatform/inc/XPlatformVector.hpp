@@ -286,6 +286,46 @@ namespace XPF
             return Size() == 0;
         }
 
+        //
+        // Erases all elements which match a specific criterion.
+        // Predicate - can be a lambda function returning bool if the element should be erased.
+        //           - bool ShouldErase(const T& Element) noexcept
+        //
+        template <typename P>
+        void EraseIf(P Predicate) noexcept
+        {
+            size_t index = 0;
+            while (index < Size())
+            {
+                if (Predicate(this->elements[index]))
+                {
+                    (void) Erase(index);
+                }
+                else
+                {
+                    index++;
+                }
+            }
+        }
+
+        //
+        // Finds the first element matching a criterion
+        // Predicate - can be a lambda function returning bool if the element is a match.
+        //           - bool IsMatch(const T& Element) noexcept
+        //
+        template <typename P>
+        VectorIterator<T, Allocator> FindIf(P Predicate) const noexcept
+        {
+            for (auto it = begin(); it != end(); it++)
+            {
+                if (Predicate(*it))
+                {
+                    return it;
+                }
+            }
+            return end();
+        }
+
         // 
         // Initializes an interator pointing to the first element in vector
         //

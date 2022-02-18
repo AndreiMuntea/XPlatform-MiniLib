@@ -65,6 +65,7 @@
 #include "inc/XPlatformRedBlackTree.hpp"
 #include "inc/XPlatformSet.hpp"
 #include "inc/XPlatformMap.hpp"
+#include "inc/XPlatformBitSet.hpp"
 
 
 #include "inc/XPlatformInitializerList.hpp"

@@ -38,7 +38,7 @@ namespace XPF
         // Constructors
         Pair() noexcept = default;
         Pair(const FirstType& FirstCopy, const SecondType& SecondCopy) noexcept : First{ FirstCopy }, Second{ SecondCopy }{};
-        Pair(FirstType&& FirstMove, SecondType& SecondMove) noexcept : First{ XPF::Forward<FirstType>(FirstMove) }, Second{ XPF::Forward<SecondType>(SecondMove) }{};
+        Pair(FirstType&& FirstMove, SecondType&& SecondMove) noexcept : First{ XPF::Forward<FirstType&&>(FirstMove) }, Second{ XPF::Forward<SecondType&&>(SecondMove) }{};
 
         ~Pair() noexcept = default;
 

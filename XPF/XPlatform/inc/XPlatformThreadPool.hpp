@@ -316,7 +316,7 @@ namespace XPF
             //
             //  Mark the state as uninitialized to block further inserts 
             //
-            workQueueLock.LockExclusive();
+            this->workQueueLock.LockExclusive();
             this->state = ThreadPoolState::Uninitialized;
             
             //
@@ -326,23 +326,23 @@ namespace XPF
             {
                 this->semaphore.Release();
             }
-            workQueueLock.UnlockExclusive();
+            this->workQueueLock.UnlockExclusive();
 
             //
             // Now wait for each thread to finish
             //
             for (xp_int8_t i = 0; i < NoThreads; ++i)
             {
-                if (threads[i].Joinable())
+                if (this->threads[i].Joinable())
                 {
-                    threads[i].Join();
+                    this->threads[i].Join();
                 }
             }
 
             //
             // Clean the rest of the items in queue.
             //
-            ProcessWorkList(workQueue);
+            ProcessWorkList(this->workQueue);
         }
 
     private:

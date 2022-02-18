@@ -357,4 +357,45 @@ namespace XPlatformTest
         }
         EXPECT_TRUE(list1.IsEmpty());
     }
+
+    TEST_F(TestListFixture, TestListFindIf)
+    {
+        XPF::List<DummyTestStruct> list;
+
+        auto it1 = list.FindIf([&](const DummyTestStruct& Element) { return Element.Number == 2; });
+        EXPECT_TRUE(it1 == list.end());
+
+        TestListPopulateListWithDummyData(list, TestListFixture::baseline, false, 100);
+
+        auto it2 = list.FindIf([&](const DummyTestStruct& Element) { return Element.Number == 2; });
+        EXPECT_FALSE(it2 == list.end());
+
+        auto it3 = list.FindIf([&](const DummyTestStruct& Element) { return Element.Number == 222; });
+        EXPECT_TRUE(it3 == list.end());
+    }
+
+    TEST_F(TestListFixture, TestListEraseIf)
+    {
+        XPF::List<DummyTestStruct> list;
+
+
+        TestListPopulateListWithDummyData(list, TestListFixture::baseline, false, 100);
+        list.EraseIf([&](const DummyTestStruct&) { return false; });
+
+        EXPECT_TRUE(list.Size() == 100);
+
+        auto it1 = list.FindIf([&](const DummyTestStruct& Element) { return Element.Number == 2; });
+        EXPECT_FALSE(it1 == list.end());
+
+        list.EraseIf([&](const DummyTestStruct& Element) { return Element.Number == 2; });
+        EXPECT_TRUE(list.Size() == 99);
+
+        auto it2 = list.FindIf([&](const DummyTestStruct& Element) { return Element.Number == 2; });
+        EXPECT_TRUE(it2 == list.end());
+
+        list.EraseIf([&](const DummyTestStruct&) { return true; });
+        EXPECT_TRUE(list.Size() == 0);
+        EXPECT_TRUE(list.begin() == list.end());
+        EXPECT_TRUE(list.IsEmpty());
+    }
 }

@@ -45,7 +45,7 @@ namespace XPF
             //
             if (this->limit <= 0)
             {
-                XPLATFORM_ASSERT(this->limit <= 0);
+                XPLATFORM_ASSERT(this->limit > 0);
                 this->limit = 0;
                 return;
             }
@@ -184,7 +184,7 @@ namespace XPF
                     }
                     __except (EXCEPTION_EXECUTE_HANDLER)
                     {
-                        YieldProcessor();
+                        XPLATFORM_YIELD_PROCESSOR();
                     }
                 #elif defined(XPLATFORM_LINUX_USER_MODE)
                     (void) sem_post(&this->semaphore);

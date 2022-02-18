@@ -163,6 +163,56 @@ namespace XPlatformTest
             auto it = map.Find(i);
             EXPECT_EQ((*it).Key(), i);
             EXPECT_EQ((*it).Value(), expectedValueAfter);
+
+            ++i;
         }
+    }
+
+    TEST_F(TestMapFixture, TestMapFindIf)
+    {
+        XPF::Map<int, DummyTestStruct> map;
+
+        auto it1 = map.FindIf([&](const XPF::MapKeyValuePair<int, DummyTestStruct>& Element) { return Element.Key() == 2; });
+        EXPECT_TRUE(it1 == map.end());
+
+        for (int i = 0; i < 100; ++i)
+        {
+            EXPECT_TRUE(map.Emplace(i, i, 'x', 0.3f));
+        }
+        EXPECT_TRUE(map.Size() == 100);
+
+        auto it2 = map.FindIf([&](const XPF::MapKeyValuePair<int, DummyTestStruct>& Element) { return Element.Key() == 2; });
+        EXPECT_FALSE(it2 == map.end());
+
+        auto it3 = map.FindIf([&](const XPF::MapKeyValuePair<int, DummyTestStruct>& Element) { return Element.Key() == 222; });
+        EXPECT_TRUE(it3 == map.end());
+    }
+
+    TEST_F(TestMapFixture, TestMapEraseIf)
+    {
+        XPF::Map<int, DummyTestStruct> map;
+
+        for (int i = 0; i < 100; ++i)
+        {
+            EXPECT_TRUE(map.Emplace(i, i, 'x', 0.3f));
+        }
+        EXPECT_TRUE(map.Size() == 100);
+
+        map.EraseIf([&](const XPF::MapKeyValuePair<int, DummyTestStruct>&) { return false; });
+        EXPECT_TRUE(map.Size() == 100);
+
+        auto it1 = map.FindIf([&](const XPF::MapKeyValuePair<int, DummyTestStruct>& Element) { return Element.Key() == 2; });
+        EXPECT_FALSE(it1 == map.end());
+
+        map.EraseIf([&](const XPF::MapKeyValuePair<int, DummyTestStruct>& Element) { return Element.Key() == 2; });
+        EXPECT_TRUE(map.Size() == 99);
+
+        auto it2 = map.FindIf([&](const XPF::MapKeyValuePair<int, DummyTestStruct>& Element) { return Element.Key() == 2; });
+        EXPECT_TRUE(it2 == map.end());
+
+        map.EraseIf([&](const XPF::MapKeyValuePair<int, DummyTestStruct>&) { return true; });
+        EXPECT_TRUE(map.Size() == 0);
+        EXPECT_TRUE(map.begin() == map.end());
+        EXPECT_TRUE(map.IsEmpty());
     }
 }

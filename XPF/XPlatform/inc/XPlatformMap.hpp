@@ -299,6 +299,43 @@ namespace XPF
             return this->rbTree.IsEmpty();
         }
 
+        //
+        // Erases all elements which match a specific criterion.
+        // Predicate - can be a lambda function returning bool if the element should be erased.
+        //           - bool ShouldErase(const MapKeyValuePair<Key, Value>& KeyValuePair) noexcept
+        //
+        template <typename P>
+        void EraseIf(P Predicate) noexcept
+        {
+            auto it = begin();
+            while (it != end())
+            {
+                auto currentIt = it; it++;
+                if (Predicate(*currentIt))
+                {
+                    (void) Erase(currentIt);
+                }
+            }
+        }
+
+        //
+        // Finds the first element matching a criterion
+        // Predicate - can be a lambda function returning bool if the element is a match.
+        //           - bool IsMatch(const MapKeyValuePair<Key, Value>& KeyValuePair) noexcept
+        //
+        template <typename P>
+        MapIterator<Key, Value, Allocator> FindIf(P Predicate) const noexcept
+        {
+            for (auto it = begin(); it != end(); it++)
+            {
+                if (Predicate(*it))
+                {
+                    return it;
+                }
+            }
+            return end();
+        }
+
         // 
         // Initializes an interator pointing to the first element in map
         //

@@ -215,6 +215,7 @@
     <Text Include="CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="test_sources\TestPlatformSTL\TestBitSet.cpp" />
     <ClCompile Include="test_sources\TestPlatformAPI\TestAtomicApi.cpp" />
     <ClCompile Include="test_sources\TestPlatformAPI\TestDefaultAllocator.cpp" />
     <ClCompile Include="test_sources\TestPlatformAPI\TestMemoryApi.cpp" />

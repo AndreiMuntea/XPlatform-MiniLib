@@ -69,13 +69,16 @@ namespace XPlatformTest
 
         for (xp_uint8_t i = 0; i < 50; ++i)
         {
-            // Release one thread
+            // Take number snapshot
+            auto initialNumber = number;
+
+            // Release semaphore
             s.Release();
 
-            // Wait for number to be increased
-            while (number != i + 1)
+            // Wait for number to be modified
+            while (initialNumber == number && initialNumber != 50)
             {
-                YieldProcessor();
+                XPLATFORM_YIELD_PROCESSOR();
             }
         }
 
@@ -83,5 +86,7 @@ namespace XPlatformTest
         {
             threads[i].Join();
         }
+
+        EXPECT_TRUE(number == 50);
     }
 }

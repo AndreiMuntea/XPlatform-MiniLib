@@ -208,6 +208,7 @@ namespace XPF
                     nextNode = parent;
                     parent = nextNode->Parent;
                 }
+                nextNode = parent;
             }
             else
             {
