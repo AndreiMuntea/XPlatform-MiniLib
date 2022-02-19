@@ -34,25 +34,27 @@ namespace XPlatformTest
 
     TEST_F(TestSemaphoreFixture, TestSemaphoreDefaultConstructor)
     {
-        XPF::Semaphore s{ 5 };
-        EXPECT_TRUE(s.SemaphoreLimit() == 5);
+        XPF::Semaphore s;
+        EXPECT_TRUE(s.Initialize(5));
+        s.Uninitialize();
     }
 
     TEST_F(TestSemaphoreFixture, TestSemaphoreReleaseAboveLimit)
     {
-        XPF::Semaphore s{ 5 };
-        EXPECT_TRUE(s.SemaphoreLimit() == 5);
+        XPF::Semaphore s;
+        EXPECT_TRUE(s.Initialize(5));
 
-        for (xp_uint8_t i = 0; i < s.SemaphoreLimit() + s.SemaphoreLimit(); ++i)
+        for (xp_uint8_t i = 0; i < 50; ++i)
         {
             s.Release();
         }
+        s.Uninitialize();
     }
 
     TEST_F(TestSemaphoreFixture, TestSemaphoreWaitRelease)
     {
         XPF::Thread threads[50];
-        XPF::Semaphore s{ 5 };
+        XPF::Semaphore s;
         xp_int32_t number = 0;
 
         TestSemaphoreContext context;
@@ -60,7 +62,7 @@ namespace XPlatformTest
         context.target = &number;
 
 
-        EXPECT_TRUE(s.SemaphoreLimit() == 5);
+        EXPECT_TRUE(s.Initialize(5));
 
         for (xp_uint8_t i = 0; i < 50; ++i)
         {
@@ -88,5 +90,6 @@ namespace XPlatformTest
         }
 
         EXPECT_TRUE(number == 50);
+        s.Uninitialize();
     }
 }

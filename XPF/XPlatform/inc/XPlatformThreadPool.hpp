@@ -65,9 +65,8 @@ namespace XPF
 
     enum class ThreadPoolState
     {
-        Uninitialized = 0,
-        Initialized = 1,
-        Running = 2,
+        Stopped = 1,
+        Started = 2,
     };
 
     template < xp_int8_t NoThreads, 
@@ -80,8 +79,8 @@ namespace XPF
         static_assert(2 <= NoThreads && NoThreads <= 4, "Invalid Number of Threads");
 
     public:
-        ThreadPool() noexcept : semaphore(NoThreads) { }
-        ~ThreadPool() noexcept { XPLATFORM_ASSERT(this->state == ThreadPoolState::Uninitialized); }
+        ThreadPool() noexcept = default;
+        ~ThreadPool() noexcept { XPLATFORM_ASSERT(this->state == ThreadPoolState::Stopped); }
 
         // Copy semantics -- deleted (We can't copy the threadpool)
         ThreadPool(const ThreadPool&) noexcept = delete;
@@ -117,7 +116,7 @@ namespace XPF
             //
             // Threadpool was stopped. We first check without having the lock taken.
             // 
-            if (this->state != ThreadPoolState::Running)
+            if (this->state == ThreadPoolState::Stopped)
             {
                 return false;
             }
@@ -126,7 +125,7 @@ namespace XPF
             // Now recheck the state with the lock taken to avoid races.
             //
             XPF::ExclusiveLockGuard guard{ this->workQueueLock };
-            if (this->state != ThreadPoolState::Running)
+            if (this->state == ThreadPoolState::Stopped)
             {
                 return false;
             }
@@ -155,47 +154,38 @@ namespace XPF
         _No_competing_thread_
         bool Start(void) noexcept 
         {
+            // Can't start the threadpool twice.
+            if (this->state != ThreadPoolState::Stopped)
+            {
+                XPLATFORM_ASSERT(false);
+                return false;
+            }
+
             //
             // The lock is not currently initialized.
             // We fail the start and bail out quickly.
             //
-            if (this->workQueueLock.State() == XPF::LockState::Uninitialized)
+            if (!this->workQueueLock.Initialize())
             {
-                this->state = ThreadPoolState::Uninitialized;
                 return false;
             }
-
-            //
-            // Something went wrong with the semaphore initialization.
-            // Bail out quickly.
-            //
-            if (this->semaphore.SemaphoreLimit() != NoThreads)
+            if (!this->semaphore.Initialize(NoThreads))
             {
-                this->state = ThreadPoolState::Uninitialized;
+                this->workQueueLock.Uninitialize();
                 return false;
             }
-
-            //
-            // We do the initialization lock free.
-            // This routine is prone to data races.
-            // Don't call it twice.
-            //
-            XPLATFORM_ASSERT(this->state == ThreadPoolState::Initialized);
-
-            //
-            // From this point onward, the threadpool is in running state.
-            //
-            this->state = ThreadPoolState::Running;
 
             //
             // Try to start the threads independently.
             // If some threads fail to start, we stop and report the failure.
             //
+            this->state = ThreadPoolState::Started;
+
             for (xp_uint8_t i = 0; i < NoThreads; ++i)
             {
                 if (!this->threads[i].Run(ThreadPoolRoutine, this))
                 {
-                    CleanupThreads();
+                    Stop();
                     return false;
                 }
             }
@@ -209,29 +199,46 @@ namespace XPF
         //
         void Stop(void) noexcept
         {
-            //
-            // The lock is not currently initialized.
-            // We bail out quickly.
-            //
-            if (this->workQueueLock.State() == XPF::LockState::Uninitialized)
+            // Can't stop the threadpool twice.
+            if (this->state != ThreadPoolState::Started)
             {
-                this->state = ThreadPoolState::Uninitialized;
-                return;
-            }
-            //
-            // Semaphore was not properly initialized.
-            // Return from here.
-            //
-            if (this->semaphore.SemaphoreLimit() != NoThreads)
-            {
-                this->state = ThreadPoolState::Uninitialized;
+                XPLATFORM_ASSERT(false);
                 return;
             }
 
             //
-            // We can cleanup the threads.
+            //  Mark the state as stopped to block further inserts 
             //
-            CleanupThreads();
+            this->workQueueLock.LockExclusive();
+            this->state = ThreadPoolState::Stopped;
+
+            //
+            // First release the semaphore to wake all threads
+            //
+            for (xp_int8_t i = 0; i < NoThreads; ++i)
+            {
+                this->semaphore.Release();
+            }
+            this->workQueueLock.UnlockExclusive();
+
+            //
+            // Now wait for each thread to finish
+            //
+            for (xp_int8_t i = 0; i < NoThreads; ++i)
+            {
+                this->threads[i].Join();
+            }
+
+            //
+            // Clean the rest of the items in queue.
+            //
+            ProcessWorkList(this->workQueue);
+
+            //
+            // Now cleanup other resources. 
+            //
+            this->semaphore.Uninitialize();
+            this->workQueueLock.Uninitialize();
         }
 
     private:
@@ -248,7 +255,7 @@ namespace XPF
                 return;
             }
 
-            while (threadpool->state == ThreadPoolState::Running)
+            while (threadpool->state == ThreadPoolState::Started)
             {
                 List<ThreadPoolWorkitem, Allocator> processingQueue;
 
@@ -283,7 +290,7 @@ namespace XPF
                 // If the threadpool has to stop we exit as quickly as possible.
                 // Check for each work item independently.
                 //
-                if (this->state == ThreadPoolState::Running)
+                if (this->state == ThreadPoolState::Started)
                 {
                     if (element.callbackRoutine != nullptr)
                     {
@@ -301,56 +308,12 @@ namespace XPF
             WorkList.Clear();
         }
 
-        //
-        // This method is called to properly dispose the resources.
-        //
-        _Requires_lock_not_held_(this->workQueueLock)
-        void 
-        CleanupThreads(
-            void
-        ) noexcept
-        {
-
-            XPLATFORM_ASSERT(this->state != ThreadPoolState::Uninitialized);
-
-            //
-            //  Mark the state as uninitialized to block further inserts 
-            //
-            this->workQueueLock.LockExclusive();
-            this->state = ThreadPoolState::Uninitialized;
-            
-            //
-            // First release the semaphore to wake all threads
-            //
-            for (xp_int8_t i = 0; i < NoThreads; ++i)
-            {
-                this->semaphore.Release();
-            }
-            this->workQueueLock.UnlockExclusive();
-
-            //
-            // Now wait for each thread to finish
-            //
-            for (xp_int8_t i = 0; i < NoThreads; ++i)
-            {
-                if (this->threads[i].Joinable())
-                {
-                    this->threads[i].Join();
-                }
-            }
-
-            //
-            // Clean the rest of the items in queue.
-            //
-            ProcessWorkList(this->workQueue);
-        }
-
     private:
         Thread threads[NoThreads];
         Semaphore semaphore;
         LockType workQueueLock;
         List<ThreadPoolWorkitem, Allocator> workQueue;
-        volatile ThreadPoolState state = ThreadPoolState::Initialized;
+        volatile ThreadPoolState state = ThreadPoolState::Stopped;
     };
 }
 

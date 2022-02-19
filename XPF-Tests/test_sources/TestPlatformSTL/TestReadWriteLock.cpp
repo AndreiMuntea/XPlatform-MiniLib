@@ -64,32 +64,35 @@ namespace XPlatformTest
     TEST_F(TestReadWriteLockFixture, TestReadWriteLockDefaultConstructor)
     {
         XPF::ReadWriteLock rwLock;
-        EXPECT_TRUE(rwLock.State() == XPF::LockState::Unlocked);
+        EXPECT_TRUE(rwLock.Initialize());
+        rwLock.Uninitialize();
     }
 
     TEST_F(TestReadWriteLockFixture, TestReadWriteLockAcquireReleaseShared)
     {
         XPF::ReadWriteLock rwLock;
-        EXPECT_TRUE(rwLock.State() == XPF::LockState::Unlocked);
+        EXPECT_TRUE(rwLock.Initialize());
 
         rwLock.LockShared();
         rwLock.UnlockShared();
+        rwLock.Uninitialize();
     }
 
     TEST_F(TestReadWriteLockFixture, TestReadWriteLockAcquireReleaseExclusive)
     {
         XPF::ReadWriteLock rwLock;
-        EXPECT_TRUE(rwLock.State() == XPF::LockState::Unlocked);
+        EXPECT_TRUE(rwLock.Initialize());
 
         rwLock.LockExclusive();
         rwLock.UnlockExclusive();
+        rwLock.Uninitialize();
     }
 
     TEST_F(TestReadWriteLockFixture, TestReadWriteLockSharedLocking)
     {
         XPF::ReadWriteLock rwLock;
         xp_int32_t acquired = 0;
-        EXPECT_TRUE(rwLock.State() == XPF::LockState::Unlocked);
+        EXPECT_TRUE(rwLock.Initialize());
 
         XPF::Thread threads[20];
         xp_int32_t threadsCount = sizeof(threads) / sizeof(threads[0]);
@@ -110,13 +113,15 @@ namespace XPlatformTest
         {
             threads[i].Join();
         }
+
+        rwLock.Uninitialize();
     }
 
     TEST_F(TestReadWriteLockFixture, TestReadWriteLockExclusiveLocking)
     {
         XPF::ReadWriteLock rwLock;
         xp_int32_t sum = 0;
-        EXPECT_TRUE(rwLock.State() == XPF::LockState::Unlocked);
+        EXPECT_TRUE(rwLock.Initialize());
 
         XPF::Thread threads[20];
         xp_int32_t threadsCount = sizeof(threads) / sizeof(threads[0]);
@@ -139,5 +144,7 @@ namespace XPlatformTest
         }
 
         EXPECT_TRUE(sum == ((threadsCount - 1) * threadsCount) / 2);
+
+        rwLock.Uninitialize();
     }
 }
