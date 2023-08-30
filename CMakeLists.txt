@@ -3,10 +3,10 @@
 #
 cmake_minimum_required (VERSION 3.8)
 
-project ("X-Platform")
+project ("xpf")
 
-# Requires minimum C++17
-set(CMAKE_CXX_STANDARD 17)
+# Requires minimum C++20 (for better constexpr support)
+set(CMAKE_CXX_STANDARD 20)
 
 # Setup testing
 include(CTest)
@@ -20,19 +20,28 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     else()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
     endif()
-
     # Treat warning as errors
-    add_compile_options(/WX)
-elseif (CMAKE_CXX_COMPILER_ID MATCHES  "GNU|Clang")
+    add_compile_options("/WX")
+
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     # Warning level
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-long-long -Wcast-align -pedantic -Waddress -Waddress-of-packed-member")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-long-long -pedantic -Waddress -Waddress-of-packed-member -Wno-unused-value -Wno-self-assign-overloaded")
+
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    # Warning level
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-long-long -pedantic -Waddress -Waddress-of-packed-member -Wno-unused-value -Wno-self-assign-overloaded")
+
 endif()
 
 # Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
+# Set the output directory to a known location
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 # Include sub-projects.
-add_subdirectory("lib/googletest")
-add_subdirectory ("XPF-Tests")
-add_subdirectory ("XPF")
+add_subdirectory("xpf_lib")
+add_subdirectory("xpf_tests")
+add_subdirectory("submodule/googletest")

@@ -10,11 +10,6 @@
 *.userosscache
 *.sln.docstates
 
-*.cmake
-*.tcl
-*.lib
-CmakeCache.txt
-
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
@@ -22,9 +17,6 @@ CmakeCache.txt
 mono_crash.*
 
 # Build results
-out/
-lib/
-CMakeFiles/
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -39,6 +31,8 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+out/
+googletest/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
@@ -309,7 +303,7 @@ node_modules/
 *.dsw
 *.dsp
 
-# Visual Studio 6 technical files 
+# Visual Studio 6 technical files
 *.ncb
 *.aps
 
