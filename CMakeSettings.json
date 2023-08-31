@@ -1,7 +1,7 @@
 ﻿{
     "configurations": [
         {
-            "name": "WinUm-x64-msvc-Debug",
+            "name": "WinUmDebug-x64",
             "generator": "Ninja",
             "configurationType": "Debug",
             "inheritEnvironments": [ "msvc_x64_x64" ],
@@ -12,7 +12,7 @@
             "ctestCommandArgs": ""
         },
         {
-            "name": "WinUm-x86-msvc-Debug",
+            "name": "WinUmDebug-Win32",
             "generator": "Ninja",
             "configurationType": "Debug",
             "buildRoot": "${projectDir}\\out\\build\\${name}",
@@ -23,7 +23,7 @@
             "inheritEnvironments": [ "msvc_x86" ]
         },
         {
-            "name": "WinUm-x64-msvc-Release",
+            "name": "WinUmRelease-x64",
             "generator": "Ninja",
             "configurationType": "RelWithDebInfo",
             "buildRoot": "${projectDir}\\out\\build\\${name}",
@@ -34,7 +34,7 @@
             "inheritEnvironments": [ "msvc_x64_x64" ]
         },
         {
-            "name": "WinUm-x86-msvc-Release",
+            "name": "WinUmRelease-Win32",
             "generator": "Ninja",
             "configurationType": "RelWithDebInfo",
             "buildRoot": "${projectDir}\\out\\build\\${name}",

@@ -56,6 +56,10 @@ This header is not available in Windows KM, thus an implementation is required, 
     }
 ```
 
+## To build for Windows KM
+In order to build for windows kernel mode, please see the xpf_lib/win_km_build directory.
+It contains a separate readme file with the instructions.
+
 
 ## Linter
 The code is compliant with cpplint. You can find in CMakeList.txt a command to run the linter.
