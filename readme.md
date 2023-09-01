@@ -16,10 +16,6 @@ clang and gcc are supported for linux.
 Other compilers and platforms can be added at a later date.
 
 
-## XPF-Test
-XPF-Test project contains unit tests using gtest project to be cross platform.
-It uses submodules to grab a googletest dependency.
-
 The project structure should look like:
 
     XPlatform-MiniLib
@@ -27,6 +23,15 @@ The project structure should look like:
       |---- xpf-tests
       |---- submodule
             |--- googletest
+
+## xpf-lib
+xpf-lib is the project which contains the actual library implementation.
+It is a minimalistic library, and is intended to be kept simple.
+
+
+## xpf-tests
+XPF-Test project contains unit tests using gtest project to be cross platform.
+It uses submodules to grab a googletest dependency.
 
 
 ## To use:
@@ -56,9 +61,14 @@ This header is not available in Windows KM, thus an implementation is required, 
     }
 ```
 
-## To build for Windows KM
+### To build for Windows KM
 In order to build for windows kernel mode, please see the xpf_lib/win_km_build directory.
 It contains a separate readme file with the instructions.
+
+### Use in your own project
+To use the cross platform lib in your project, you just need to include "xpf.hpp" header and link with the library.
+Alternatively you can change the cmake to build as a DLL rather than a static lib.
+Your choice!
 
 
 ## Linter

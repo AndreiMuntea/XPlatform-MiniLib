@@ -108,39 +108,38 @@
      *        Especially useful for Windows KM. Seems that the windows looks at "PAGE"
      *        page we can't really name them differently - otherwise they won't be paged.
      */
-    #define XPF_SECTION_PAGED                   __pragma(code_seg("PAGE"));         \
-                                                __pragma(data_seg("PAGERW"));       \
-                                                __pragma(const_seg("PAGERO"));      \
-                                                __pragma(bss_seg("PAGEBSS"));
+    #define XPF_SECTION_PAGED                   _Pragma("code_seg(  \"PAGE\"    )")     \
+                                                _Pragma("data_seg(  \"PAGERW\"  )")     \
+                                                _Pragma("const_seg( \"PAGERO\"  )")     \
+                                                _Pragma("bss_seg(   \"PAGEBSS\" )")
 
     /**
      * @brief Helper macro to restore default sections.
      */
-    #define XPF_SECTION_DEFAULT                 __pragma(code_seg())                \
-                                                __pragma(data_seg())                \
-                                                __pragma(const_seg())               \
-                                                __pragma(bss_seg())
+    #define XPF_SECTION_DEFAULT                 _Pragma("code_seg()"   )                \
+                                                _Pragma("data_seg()"   )                \
+                                                _Pragma("const_seg()"  )                \
+                                                _Pragma("bss_seg()"    )
 
 #elif defined XPF_COMPILER_CLANG || defined XPF_COMPILER_GCC
 
     /**
      * @brief On other compilers this translates to nothing.
-     *        We can improve here when we want to.
-     *        For now ignore this.
+     *        We can improve here when we want to. For now ignore this.
+     *        It is useful only on WIN-KM.
      */
     #define XPF_SECTION_PAGED
 
     /**
      * @brief On other compilers this translates to nothing.
-     *        We can improve here when we want to.
-     *        For now ignore this.
+     *        We can improve here when we want to.For now ignore this.
+     *        It is useful only on WIN-KM.
      */
     #define XPF_SECTION_DEFAULT
-
+ 
 #else
     #error Unsupported Compiler.
 #endif
-
 
 /**
  * @brief Platform specific includes.
@@ -208,22 +207,22 @@
     /**
      * @brief Macro definition for Verify.
      */
-    #define XPF_VERIFY                   NT_VERIFY
+    #define XPF_VERIFY                      NT_VERIFY
 
     /**
      * @brief Use the same calling convention as NT APIs.
      */
-    #define XPF_API                     NTAPI
+    #define XPF_API                         NTAPI
 
     /**
      * @brief Use the same alignment as default.
      */
-    #define XPF_DEFAULT_ALIGNMENT        size_t{MEMORY_ALLOCATION_ALIGNMENT}
+    #define XPF_DEFAULT_ALIGNMENT           size_t{MEMORY_ALLOCATION_ALIGNMENT}
 
     /**
      * @brief Macro definition for nothing.
      */
-    #define XPF_NOTHING()                { (void)(0); }
+    #define XPF_NOTHING()                   { (void)(0); }
 
     /**
      * @brief Asserts on debug that the code is indeed running at PASSIVE LEVEL.
@@ -247,7 +246,7 @@
     /**
      * @brief The platform convention for placement new is CLRCALL or CDECL.
      */
-    #define XPF_PLATFORM_CONVENTION     __CLRCALL_OR_CDECL
+    #define XPF_PLATFORM_CONVENTION         __CLRCALL_OR_CDECL
 
     /**
      *
@@ -272,22 +271,22 @@
         /**
          * @brief Macro definition for ASSERT.
          */
-        #define XPF_ASSERT(Expression)   ((void) 0)
+        #define XPF_ASSERT(Expression)      ((void) 0)
         /**
          * @brief Macro definition for VERIFY.
          */
-        #define XPF_VERIFY(Expression)   ((Expression) ? true : false)
+        #define XPF_VERIFY(Expression)      ((Expression) ? true : false)
 
     #elif defined XPF_CONFIGURATION_DEBUG
 
         /**
          * @brief Macro definition for ASSERT.
          */
-        #define XPF_ASSERT(Expression)   ((Expression) ? true : (DbgRaiseAssertionFailure(), false))
+        #define XPF_ASSERT(Expression)      ((Expression) ? true : (DbgRaiseAssertionFailure(), false))
         /**
          * @brief Macro definition for VERIFY.
          */
-        #define XPF_VERIFY               XPF_ASSERT
+        #define XPF_VERIFY                  XPF_ASSERT
     #else
 
         #error Unknown Configuration
@@ -296,37 +295,37 @@
     /**
      * @brief Use the same calling convention as NT APIs.
      */
-    #define XPF_API                     NTAPI
+    #define XPF_API                         NTAPI
 
     /**
      * @brief Use the same alignment as default.
      */
-    #define XPF_DEFAULT_ALIGNMENT        size_t{MEMORY_ALLOCATION_ALIGNMENT}
+    #define XPF_DEFAULT_ALIGNMENT           size_t{MEMORY_ALLOCATION_ALIGNMENT}
 
     /**
      * @brief Macro definition for nothing.
      */
-    #define XPF_NOTHING()                { (void)(0); }
+    #define XPF_NOTHING()                   { (void)(0); }
 
     /**
      * @brief On all other platforms this translates to nothig.
      */
-    #define XPF_MAX_PASSIVE_LEVEL        XPF_NOTHING
+    #define XPF_MAX_PASSIVE_LEVEL           XPF_NOTHING
 
     /**
      * @brief On all other platforms this translates to nothig.
      */
-    #define XPF_MAX_APC_LEVEL            XPF_NOTHING
+    #define XPF_MAX_APC_LEVEL               XPF_NOTHING
 
     /**
      * @brief On all other platforms this translates to nothig.
      */
-    #define XPF_MAX_DISPATCH_LEVEL       XPF_NOTHING
+    #define XPF_MAX_DISPATCH_LEVEL          XPF_NOTHING
 
     /**
      * @brief The platform convention for placement new is CLRCALL or CDECL.
      */
-    #define XPF_PLATFORM_CONVENTION     __CLRCALL_OR_CDECL
+    #define XPF_PLATFORM_CONVENTION         __CLRCALL_OR_CDECL
 
     /**
      *

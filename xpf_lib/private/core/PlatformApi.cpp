@@ -370,9 +370,9 @@ xpf::ApiCharToLower(
             // This function can only work properly at PASSIVE LEVEL.
             // However don't fail the operation and do best effort.
             // If the character is ANSI we can xor with 0x20.
+            // And leave all other characters intact.
             //
-            XPF_ASSERT(false);
-            if (Character >= L'a' && Character <= L'z')
+            if (Character >= L'A' && Character <= L'Z')
             {
                 Character = Character ^ 0x20;
             }
@@ -402,9 +402,9 @@ xpf::ApiCharToUpper(
             // This function can only work properly at PASSIVE LEVEL.
             // However don't fail the operation and do best effort.
             // If the character is ANSI we can xor with 0x20.
+            // And leave all other characters intact.
             //
-            XPF_ASSERT(false);
-            if (Character >= L'A' && Character <= L'Z')
+            if (Character >= L'a' && Character <= L'z')
             {
                 Character = Character ^ 0x20;
             }
