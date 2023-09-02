@@ -38,6 +38,7 @@ XPF_SECTION_PAGED;
  bool mXpfConditionHasGeneratedDeath = false;
 
 
+
 _Must_inspect_result_
 NTSTATUS XPF_API
 xpf_test::RunAllTests(
@@ -78,7 +79,7 @@ xpf_test::RunAllTests(
         // it is for the compiler to not optimize away the data declaration.
         // We need to account for section padding, so current test might actually be nullptr.
         //
-        xpf_test::TestScenario* currentTest = (xpf_test::TestScenario *)(*crtEntry);        // NOLINT(*)
+        xpf_test::TestScenario* currentTest = (xpf_test::TestScenario *)(*crtEntry);                                            // NOLINT(*)
         if (nullptr == currentTest)
         {
             continue;
@@ -103,13 +104,13 @@ xpf_test::RunAllTests(
 
         currentTest->StartTime = xpf::ApiCurrentTime();
         xpf_test::LogTestInfo("    > %llu (100 ns) test start time; \r\n",
-                              static_cast<unsigned long long>(currentTest->StartTime));                         // NOLINT(*)
+                              static_cast<unsigned long long>(currentTest->StartTime));                                         // NOLINT(*)
 
         currentTest->Callback(currentTest);
 
         currentTest->EndTime = xpf::ApiCurrentTime();
         xpf_test::LogTestInfo("    > %llu (100 ns) test end time; \r\n",
-                              static_cast<unsigned long long>(currentTest->EndTime));                           // NOLINT(*)
+                              static_cast<unsigned long long>(currentTest->EndTime));                                           // NOLINT(*)
 
         //
         // End test execution.
@@ -120,7 +121,7 @@ xpf_test::RunAllTests(
                               result.Buffer(),
                               currentTest->ScenarioName.Buffer(),
                               currentTest->ReturnStatus,
-                              static_cast<unsigned long long>(((currentTest->EndTime - currentTest->StartTime) / 10000)));     // NOLINT(*)
+                              static_cast<unsigned long long>(((currentTest->EndTime - currentTest->StartTime) / 10000)));      // NOLINT(*)
         xpf_test::LogTestInfo("[================================] \r\n");
 
         //

@@ -73,6 +73,11 @@ LogTestInfo(
 
     #if defined XPF_PLATFORM_WIN_UM || defined XPF_PLATFORM_LINUX_UM
         (void) vfprintf(stdout, Format, argList);
+    #elif defined XPF_PLATFORM_WIN_KM
+        (void) vDbgPrintEx(DPFLTR_DEFAULT_ID,
+                           DPFLTR_INFO_LEVEL,
+                           Format,
+                           argList);
     #else
         #error Unknown Platform
     #endif
@@ -236,23 +241,27 @@ operator=(
     #pragma section("xpfts$z", read)
 #endif
 
+ 
 /**
  * @brief       First section is "xpfts$a" -- we need this first as we need to define the $a section.
  */
+XPF_DECLSPEC_SELECTANY()
 XPF_ALLOC_SECTION("xpfts$a")
-static volatile xpf_test::TestScenario* gXpfStartMarker = nullptr;
+volatile xpf_test::TestScenario* gXpfStartMarker = nullptr;
 
 /**
  * @brief       Allocate something in between - "xpfts$t".
  */
+XPF_DECLSPEC_SELECTANY()
 XPF_ALLOC_SECTION("xpfts$t")
-static volatile xpf_test::TestScenario* gXpfTestMarker = nullptr;
+volatile xpf_test::TestScenario* gXpfTestMarker = nullptr;
 
 /**
  * @brief       Last section is "xpfts$z" -- we need this last as we need to define the $z section after the other 2.
  */
+XPF_DECLSPEC_SELECTANY()
 XPF_ALLOC_SECTION("xpfts$z")
-static volatile xpf_test::TestScenario* gXpfEndMarker = nullptr;
+volatile xpf_test::TestScenario* gXpfEndMarker = nullptr;
 
 
 
@@ -400,14 +409,15 @@ static volatile xpf_test::TestScenario* gXpfEndMarker = nullptr;
     /* Create the Test Scenario structure associated with this testcase. */                                                 \
     /* gxpftstScenario_<Namespace>_<Api> will be its actual name. */                                                        \
     /* This can go into the default section. We'll use it below. */                                                         \
-    static volatile xpf_test::TestScenario gxpftstScenario##Namespace##Api(XPF_TEST_STRINGIFY_CONCAT(Namespace, Api),       \
+    volatile xpf_test::TestScenario gxpftstScenario##Namespace##Api(XPF_TEST_STRINGIFY_CONCAT(Namespace, Api),              \
                                                                            Namespace::Api);                                 \
                                                                                                                             \
     /* In xpftst$t section we can only put pointers, so we declare another variable which stores the addres */              \
     /* of the gxpftstScenario_<Namespace>_<Api> declared above. This pointer will be allocated in the */                    \
     /* proper test section. Its name will be gxpftstMarker_<Namespace>_<Api> */                                             \
+    XPF_DECLSPEC_SELECTANY()                                                                                                \
     XPF_ALLOC_SECTION("xpfts$t")                                                                                            \
-    static volatile xpf_test::TestScenario* gxpftstMarker##Namespace##Api = &gxpftstScenario##Namespace##Api;               \
+    volatile xpf_test::TestScenario* gxpftstMarker##Namespace##Api = &gxpftstScenario##Namespace##Api;                      \
                                                                                                                             \
     /* And now the caller must provide the implementation for the api. */                                                   \
     /* Scenario is only accessed via test macro. So the compiler might not perceive it as used. */                          \

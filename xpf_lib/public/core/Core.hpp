@@ -125,6 +125,11 @@
      */
     #define XPF_ALLOC_SECTION(Section)         __declspec(allocate(Section))
 
+    /**
+     * @brief Tells the compiler that the declared global data item (variable or object) is a pick-any.
+     */
+    #define XPF_DECLSPEC_SELECTANY()            __declspec(selectany)
+
 #elif defined XPF_COMPILER_CLANG || defined XPF_COMPILER_GCC
 
     /**
@@ -147,6 +152,12 @@
      */
     #define XPF_ALLOC_SECTION(Section)         __attribute__((section(Section)))       \
                                                __attribute__((used))
+
+    /**
+     * @brief Tells the compiler that the declared global data item (variable or object) is a pick-any.
+     */
+    #define XPF_DECLSPEC_SELECTANY()            __attribute__((weak))
+
 #else
     #error Unsupported Compiler.
 #endif
