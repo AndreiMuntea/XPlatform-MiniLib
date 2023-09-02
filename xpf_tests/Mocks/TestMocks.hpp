@@ -40,7 +40,11 @@ Base(
 {
     m_BufferSize = BufferSize;
     m_Buffer = xpf::ApiAllocateMemory(m_BufferSize);
-    EXPECT_TRUE(m_Buffer != nullptr);
+
+    if (nullptr == m_Buffer)
+    {
+        xpf::ApiPanic(STATUS_INSUFFICIENT_RESOURCES);
+    }
 }
 
 /**
@@ -51,9 +55,12 @@ virtual ~Base(
 ) noexcept(true)
 {
     xpf::ApiFreeMemory(&m_Buffer);
-    EXPECT_TRUE(m_Buffer == nullptr);
-
     m_BufferSize = 0;
+
+    if (nullptr != m_Buffer)
+    {
+        xpf::ApiPanic(STATUS_INVALID_BUFFER_SIZE);
+    }
 }
 
 /**

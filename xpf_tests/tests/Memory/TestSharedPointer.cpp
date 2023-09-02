@@ -19,174 +19,174 @@
 /**
  * @brief       This tests the default constructor and destructor of shared pointer.
  */
-TEST(TestSharedPointer, DefaultConstructorDestructor)
+XPF_TEST_SCENARIO(TestSharedPointer, DefaultConstructorDestructor)
 {
     xpf::SharedPointer<int> ptr;
-    EXPECT_TRUE(ptr.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(ptr.IsEmpty());
 
     auto ptrSize = sizeof(void*);           // reference counter
-    EXPECT_TRUE(sizeof(ptr) == ptrSize);
+    XPF_TEST_EXPECT_TRUE(sizeof(ptr) == ptrSize);
 }
 
 /**
  * @brief       This tests the make shared method.
  */
-TEST(TestSharedPointer, MakeShared)
+XPF_TEST_SCENARIO(TestSharedPointer, MakeShared)
 {
     const auto ptr1 = xpf::MakeShared<int>(100);
-    EXPECT_FALSE(ptr1.IsEmpty());
-    EXPECT_EQ(100, (*ptr1));
+    XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
 
     auto ptr2 = xpf::MakeShared<int>(50);
-    EXPECT_FALSE(ptr2.IsEmpty());
-    EXPECT_EQ(50, (*ptr2));
+    XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(50 == (*ptr2));
 }
 
 /**
  * @brief       This tests the reset method.
  */
-TEST(TestSharedPointer, Reset)
+XPF_TEST_SCENARIO(TestSharedPointer, Reset)
 {
     auto ptr1 = xpf::MakeShared<int>(100);
-    EXPECT_FALSE(ptr1.IsEmpty());
-    EXPECT_EQ(100, (*ptr1));
+    XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
 
     ptr1.Reset();
-    EXPECT_TRUE(ptr1.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(ptr1.IsEmpty());
 
     ptr1.Reset();
-    EXPECT_TRUE(ptr1.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(ptr1.IsEmpty());
 }
 
 /**
  * @brief       This tests the move constructor.
  */
-TEST(TestSharedPointer, MoveConstructor)
+XPF_TEST_SCENARIO(TestSharedPointer, MoveConstructor)
 {
     auto ptr1 = xpf::MakeShared<int>(100);
-    EXPECT_FALSE(ptr1.IsEmpty());
-    EXPECT_EQ(100, (*ptr1));
+    XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
 
     const auto ptr2{ xpf::Move(ptr1) };
-    EXPECT_FALSE(ptr2.IsEmpty());
-    EXPECT_EQ(100, (*ptr2));
+    XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(100 == (*ptr2));
 
-    EXPECT_TRUE(ptr1.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(ptr1.IsEmpty());
 }
 
 /**
  * @brief       This tests the move assignment.
  */
-TEST(TestSharedPointer, MoveAssignment)
+XPF_TEST_SCENARIO(TestSharedPointer, MoveAssignment)
 {
     auto ptr1 = xpf::MakeShared<int>(100);
-    EXPECT_FALSE(ptr1.IsEmpty());
-    EXPECT_EQ(100, (*ptr1));
+    XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
 
     auto ptr2 = xpf::MakeShared<int>(50);
-    EXPECT_FALSE(ptr2.IsEmpty());
-    EXPECT_EQ(50, (*ptr2));
+    XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(50 == (*ptr2));
 
     ptr1 = xpf::Move(ptr1);
-    EXPECT_FALSE(ptr1.IsEmpty());
-    EXPECT_EQ(100, (*ptr1));
+    XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
 
     ptr1 = xpf::Move(ptr2);
-    EXPECT_FALSE(ptr1.IsEmpty());
-    EXPECT_EQ(50, (*ptr1));
+    XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(50 == (*ptr1));
 
-    EXPECT_TRUE(ptr2.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(ptr2.IsEmpty());
 }
 
 /**
  * @brief       This tests the copy constructor.
  */
-TEST(TestSharedPointer, CopyConstructor)
+XPF_TEST_SCENARIO(TestSharedPointer, CopyConstructor)
 {
     auto ptr1 = xpf::MakeShared<int>(100);
-    EXPECT_FALSE(ptr1.IsEmpty());
-    EXPECT_EQ(100, (*ptr1));
+    XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
 
     auto ptr2{ ptr1 };
-    EXPECT_FALSE(ptr2.IsEmpty());
-    EXPECT_EQ(100, (*ptr2));
+    XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(100 == (*ptr2));
 
-    EXPECT_FALSE(ptr1.IsEmpty());
-    EXPECT_EQ(100, (*ptr1));
+    XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
 
 
     xpf::SharedPointer<int> emptyPtr;
-    EXPECT_TRUE(emptyPtr.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(emptyPtr.IsEmpty());
 
     xpf::SharedPointer<int> copiedEmptyPtr(emptyPtr);
-    EXPECT_TRUE(copiedEmptyPtr.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(copiedEmptyPtr.IsEmpty());
 }
 
 /**
  * @brief       This tests the copy assignment.
  */
-TEST(TestSharedPointer, CopyAssignment)
+XPF_TEST_SCENARIO(TestSharedPointer, CopyAssignment)
 {
     auto ptr1 = xpf::MakeShared<int>(100);
-    EXPECT_FALSE(ptr1.IsEmpty());
-    EXPECT_EQ(100, (*ptr1));
+    XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
 
     auto ptr2 = xpf::MakeShared<int>(50);
-    EXPECT_FALSE(ptr2.IsEmpty());
-    EXPECT_EQ(50, (*ptr2));
+    XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(50 == (*ptr2));
 
     ptr1 = ptr1;
-    EXPECT_FALSE(ptr1.IsEmpty());
-    EXPECT_EQ(100, (*ptr1));
+    XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
 
     ptr1 = ptr2;
-    EXPECT_FALSE(ptr1.IsEmpty());
-    EXPECT_EQ(50, (*ptr1));
+    XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(50 == (*ptr1));
 
-    EXPECT_FALSE(ptr2.IsEmpty());
-    EXPECT_EQ(50, (*ptr2));
+    XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(50 == (*ptr2));
 
     xpf::SharedPointer<int> emptyPtr;
-    EXPECT_TRUE(emptyPtr.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(emptyPtr.IsEmpty());
 
     xpf::SharedPointer<int> copiedEmptyPtr = xpf::MakeShared<int>(50);
-    EXPECT_FALSE(copiedEmptyPtr.IsEmpty());
-    EXPECT_EQ(50, (*copiedEmptyPtr));
+    XPF_TEST_EXPECT_TRUE(!copiedEmptyPtr.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(50 == (*copiedEmptyPtr));
 
     copiedEmptyPtr = emptyPtr;
-    EXPECT_TRUE(copiedEmptyPtr.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(copiedEmptyPtr.IsEmpty());
 }
 
 /**
  * @brief       This tests the dynamic cast with same types.
  */
-TEST(TestSharedPointer, DynamicSharedPointerCastSameType)
+XPF_TEST_SCENARIO(TestSharedPointer, DynamicSharedPointerCastSameType)
 {
     auto ptr1 = xpf::MakeShared<int>(100);
-    EXPECT_FALSE(ptr1.IsEmpty());
-    EXPECT_EQ(100, (*ptr1));
+    XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
 
     auto ptr2 = xpf::DynamicSharedPointerCast<int>(ptr1);
-    EXPECT_FALSE(ptr2.IsEmpty());
-    EXPECT_EQ(100, (*ptr2));
+    XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(100 == (*ptr2));
 
-    EXPECT_FALSE(ptr1.IsEmpty());
-    EXPECT_EQ(100, (*ptr1));
+    XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
 }
 
 /**
  * @brief       This tests the dynamic cast with different types.
  */
-TEST(TestSharedPointer, DynamicSharedPointerCastDifferentType)
+XPF_TEST_SCENARIO(TestSharedPointer, DynamicSharedPointerCastDifferentType)
 {
     auto ptr1 = xpf::MakeShared<xpf::mocks::Derived>(100);
-    EXPECT_FALSE(ptr1.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
 
     auto ptr2 = xpf::DynamicSharedPointerCast<xpf::mocks::Base>(ptr1);
-    EXPECT_FALSE(ptr2.IsEmpty());
-    EXPECT_FALSE(ptr1.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
 
     auto ptr3 = xpf::DynamicSharedPointerCast<xpf::mocks::Derived>(ptr2);
-    EXPECT_FALSE(ptr3.IsEmpty());
-    EXPECT_FALSE(ptr2.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(!ptr3.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
 }

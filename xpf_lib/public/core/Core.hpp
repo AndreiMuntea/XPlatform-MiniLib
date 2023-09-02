@@ -116,10 +116,14 @@
     /**
      * @brief Helper macro to restore default sections.
      */
-    #define XPF_SECTION_DEFAULT                 _Pragma("code_seg()"   )                \
-                                                _Pragma("data_seg()"   )                \
-                                                _Pragma("const_seg()"  )                \
-                                                _Pragma("bss_seg()"    )
+    #define XPF_SECTION_DEFAULT                 _Pragma("code_seg()")                   \
+                                                _Pragma("data_seg()")                   \
+                                                _Pragma("const_seg()")                  \
+                                                _Pragma("bss_seg()")
+    /**
+     * @brief This will be used to allocate in the given section.
+     */
+    #define XPF_ALLOC_SECTION(Section)         __declspec(allocate(Section))
 
 #elif defined XPF_COMPILER_CLANG || defined XPF_COMPILER_GCC
 
@@ -136,7 +140,13 @@
      *        It is useful only on WIN-KM.
      */
     #define XPF_SECTION_DEFAULT
- 
+
+    /**
+     * @brief       This will be used to allocate in the given section.
+     *              We'll also mark the variable as being used to prevent its removal by the zealous linker.
+     */
+    #define XPF_ALLOC_SECTION(Section)         __attribute__((section(Section)))       \
+                                               __attribute__((used))
 #else
     #error Unsupported Compiler.
 #endif
@@ -177,6 +187,8 @@
     #include <cstdlib>
     #include <cassert>
     #include <cstdint>
+    #include <cstdio>
+    #include <climits>
     #include <csignal>
     #include <cwctype>
     #include <cstring>
@@ -271,7 +283,7 @@
         /**
          * @brief Macro definition for ASSERT.
          */
-        #define XPF_ASSERT(Expression)      ((void) 0)
+        #define XPF_ASSERT(Expression)      (((void) 0), true)
         /**
          * @brief Macro definition for VERIFY.
          */
@@ -282,7 +294,8 @@
         /**
          * @brief Macro definition for ASSERT.
          */
-        #define XPF_ASSERT(Expression)      ((Expression) ? true : (DbgRaiseAssertionFailure(), false))
+        #define XPF_ASSERT(Expression)      ((Expression) ? true                                                                \
+                                                          : (::RaiseException(ERROR_UNHANDLED_EXCEPTION, 0, 0, NULL), false))
         /**
          * @brief Macro definition for VERIFY.
          */
@@ -350,7 +363,7 @@
         /**
          * @brief Macro definition for ASSERT.
          */
-        #define XPF_ASSERT(Expression)   ((void) 0)
+        #define XPF_ASSERT(Expression)  (((void) 0), true)
         /**
          * @brief Macro definition for VERIFY.
          */
@@ -361,7 +374,7 @@
         /**
          * @brief Macro definition for ASSERT.
          */
-        #define XPF_ASSERT(Expression)   ((Expression) ? true : (assert(Expression), false))
+        #define XPF_ASSERT(Expression)   ((Expression) ? true : (::raise(SIGSEGV), false))
         /**
          * @brief Macro definition for VERIFY.
          */
@@ -427,6 +440,10 @@
  */
 #define XPF_CONTAINING_RECORD(address, type, field)     ((type *)((uint8_t*)(address) - (size_t)(&((type *)0)->field)))         // NOLINT(*)
 
+ /**
+  * @brief Useful macro for unreferenced parameter.
+  */
+#define XPF_UNREFERENCED_PARAMETER(Argument)            { (void)(Argument); }
 
 /**
  *

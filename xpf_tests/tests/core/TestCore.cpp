@@ -19,12 +19,12 @@
  * @brief       This tests that asserts does inded dies on debug.
  *
  */
-TEST(TestCore, AssertDeathOnDebug)
+XPF_TEST_SCENARIO(TestCore, AssertDeathOnDebug)
 {
     #if defined XPF_CONFIGURATION_DEBUG
-        EXPECT_DEATH(XPF_ASSERT(false), "");
+        XPF_TEST_EXPECT_DEATH(XPF_ASSERT(false));
     #else
-        EXPECT_NO_THROW(XPF_ASSERT(false));
+        XPF_TEST_EXPECT_NO_DEATH(XPF_ASSERT(false));
     #endif
 }
 
@@ -33,12 +33,12 @@ TEST(TestCore, AssertDeathOnDebug)
  * @brief       This tests that verify does inded dies on debug.
  *
  */
-TEST(TestCore, VerifyDeathOnDebug)
+XPF_TEST_SCENARIO(TestCore, VerifyDeathOnDebug)
 {
     #if defined XPF_CONFIGURATION_DEBUG
-        EXPECT_DEATH(XPF_VERIFY(false), "");
+        XPF_TEST_EXPECT_DEATH(XPF_VERIFY(false));
     #else
-        EXPECT_NO_THROW(XPF_VERIFY(false));
+        XPF_TEST_EXPECT_NO_DEATH(XPF_VERIFY(false));
     #endif
 }
 
@@ -47,14 +47,15 @@ TEST(TestCore, VerifyDeathOnDebug)
  * @brief        This tests that asserts are evaluated only on debug.
  *
  */
-TEST(TestCore, AssertEvaluateOnDebug)
+XPF_TEST_SCENARIO(TestCore, AssertEvaluateOnDebug)
 {
     int value = 0;
 
     #if defined XPF_CONFIGURATION_DEBUG
-        EXPECT_DEATH(XPF_ASSERT(value != 0), "");
+        XPF_TEST_EXPECT_DEATH(XPF_ASSERT(value != 0));
     #else
-        EXPECT_NO_THROW(XPF_ASSERT(value != 0));
+        XPF_UNREFERENCED_PARAMETER(value);
+        XPF_TEST_EXPECT_NO_DEATH(XPF_ASSERT(value != 0));
     #endif
 }
 
@@ -63,17 +64,17 @@ TEST(TestCore, AssertEvaluateOnDebug)
  * @brief        This tests that verify expressions are evaluated only on debug.
  *
  */
-TEST(TestCore, VerifyEvaluateOnDebug)
+XPF_TEST_SCENARIO(TestCore, VerifyEvaluateOnDebug)
 {
     int value = 0;
 
     if (XPF_VERIFY(value == 0))
     {
-        EXPECT_TRUE(true);
+        XPF_TEST_EXPECT_TRUE(true);
     }
     else
     {
-        EXPECT_TRUE(false);
+        XPF_TEST_EXPECT_TRUE(false);
     }
 }
 
@@ -82,48 +83,48 @@ TEST(TestCore, VerifyEvaluateOnDebug)
  * @brief       This tests the numeric limits.
  *
  */
-TEST(TestCore, NumericLimits)
+XPF_TEST_SCENARIO(TestCore, NumericLimits)
 {
-    EXPECT_EQ(std::numeric_limits<uint8_t>::max(),  xpf::NumericLimits<uint8_t>::MaxValue());
-    EXPECT_EQ(std::numeric_limits<int8_t>::max(),   xpf::NumericLimits<int8_t>::MaxValue());
+    XPF_TEST_EXPECT_TRUE(UCHAR_MAX ==  xpf::NumericLimits<uint8_t>::MaxValue());
+    XPF_TEST_EXPECT_TRUE(CHAR_MAX  ==  xpf::NumericLimits<int8_t>::MaxValue());
 
-    EXPECT_EQ(std::numeric_limits<uint16_t>::max(), xpf::NumericLimits<uint16_t>::MaxValue());
-    EXPECT_EQ(std::numeric_limits<int16_t>::max(),  xpf::NumericLimits<int16_t>::MaxValue());
+    XPF_TEST_EXPECT_TRUE(UINT16_MAX == xpf::NumericLimits<uint16_t>::MaxValue());
+    XPF_TEST_EXPECT_TRUE(INT16_MAX  == xpf::NumericLimits<int16_t>::MaxValue());
 
-    EXPECT_EQ(std::numeric_limits<uint32_t>::max(), xpf::NumericLimits<uint32_t>::MaxValue());
-    EXPECT_EQ(std::numeric_limits<int32_t>::max(),  xpf::NumericLimits<int32_t>::MaxValue());
+    XPF_TEST_EXPECT_TRUE(UINT32_MAX == xpf::NumericLimits<uint32_t>::MaxValue());
+    XPF_TEST_EXPECT_TRUE(INT32_MAX  == xpf::NumericLimits<int32_t>::MaxValue());
 
-    EXPECT_EQ(std::numeric_limits<uint64_t>::max(), xpf::NumericLimits<uint64_t>::MaxValue());
-    EXPECT_EQ(std::numeric_limits<int64_t>::max(),  xpf::NumericLimits<int64_t>::MaxValue());
+    XPF_TEST_EXPECT_TRUE(UINT64_MAX == xpf::NumericLimits<uint64_t>::MaxValue());
+    XPF_TEST_EXPECT_TRUE(INT64_MAX  == xpf::NumericLimits<int64_t>::MaxValue());
 }
 
 /**
  * @brief       This tests the string length api.
  *
  */
-TEST(TestCore, StringLength)
+XPF_TEST_SCENARIO(TestCore, StringLength)
 {
     //
     // Test for char8_t.
     //
     const char* nullChar8TString = nullptr;
-    EXPECT_EQ(size_t{ 0 }, xpf::ApiStringLength(nullChar8TString));
+    XPF_TEST_EXPECT_TRUE(size_t{ 0 } == xpf::ApiStringLength(nullChar8TString));
 
     const char zeroChar8TString[] = { '\0' };
-    EXPECT_EQ(size_t{ 0 }, xpf::ApiStringLength(zeroChar8TString));
+    XPF_TEST_EXPECT_TRUE(size_t{ 0 } == xpf::ApiStringLength(zeroChar8TString));
 
     const char randomChar8TString[] = "1234 abcd";
-    EXPECT_EQ(size_t{ 9 }, xpf::ApiStringLength(randomChar8TString));
+    XPF_TEST_EXPECT_TRUE(size_t{ 9 } == xpf::ApiStringLength(randomChar8TString));
 
     //
     // Test for wchar_t.
     //
     constexpr const wchar_t* nullChar16TString = nullptr;
-    EXPECT_EQ(size_t{ 0 }, xpf::ApiStringLength(nullChar16TString));
+    XPF_TEST_EXPECT_TRUE(size_t{ 0 } == xpf::ApiStringLength(nullChar16TString));
 
     constexpr const wchar_t zeroChar16TString[] = { '\0' };
-    EXPECT_EQ(size_t{ 0 }, xpf::ApiStringLength(zeroChar16TString));
+    XPF_TEST_EXPECT_TRUE(size_t{ 0 } == xpf::ApiStringLength(zeroChar16TString));
 
     constexpr const wchar_t randomChar16TString[] = L"1234 abcd";
-    EXPECT_EQ(size_t{ 9 }, xpf::ApiStringLength(randomChar16TString));
+    XPF_TEST_EXPECT_TRUE(size_t{ 9 } == xpf::ApiStringLength(randomChar16TString));
 }

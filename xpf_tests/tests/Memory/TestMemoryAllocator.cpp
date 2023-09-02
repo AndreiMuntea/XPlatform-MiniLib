@@ -21,39 +21,37 @@
  * @brief       This tests the construction and destruction of a character
  *              using xpf::MemoryAllocator class.
  */
-TEST(TestMemoryAllocator, TriviallyDestructibleCharacter)
+XPF_TEST_SCENARIO(TestMemoryAllocator, TriviallyDestructibleCharacter)
 {
-    EXPECT_TRUE(xpf::IsTriviallyDestructible<char>());
+    XPF_TEST_EXPECT_TRUE(xpf::IsTriviallyDestructible<char>());
 
     char* character = reinterpret_cast<char*>(xpf::MemoryAllocator::AllocateMemory(sizeof(char)));
-    EXPECT_TRUE(nullptr != character);
-    _Analysis_assume_(nullptr != character);
+    XPF_TEST_EXPECT_TRUE(nullptr != character);
 
     xpf::MemoryAllocator::Construct(character, 'X');
-    EXPECT_EQ(*character, 'X');
+    XPF_TEST_EXPECT_TRUE(*character == 'X');
 
     xpf::MemoryAllocator::Destruct(character);
 
     xpf::MemoryAllocator::FreeMemory(reinterpret_cast<void**>(&character));
-    EXPECT_TRUE(nullptr == character);
+    XPF_TEST_EXPECT_TRUE(nullptr == character);
 }
 
 /**
  * @brief       This tests the construction and destruction of a non trivial class
  *              using xpf::MemoryAllocator class.
  */
-TEST(TestMemoryAllocator, NonTriviallyDestructibleObject)
+XPF_TEST_SCENARIO(TestMemoryAllocator, NonTriviallyDestructibleObject)
 {
-    EXPECT_FALSE(xpf::IsTriviallyDestructible<xpf::mocks::Base>());
+    XPF_TEST_EXPECT_TRUE(!xpf::IsTriviallyDestructible<xpf::mocks::Base>());
 
     auto object = xpf::MemoryAllocator::AllocateMemory(sizeof(xpf::mocks::Base));
-    EXPECT_TRUE(nullptr != object);
-    _Analysis_assume_(nullptr != object);
+    XPF_TEST_EXPECT_TRUE(nullptr != object);
 
     auto baseObject = reinterpret_cast<xpf::mocks::Base*>(object);
     xpf::MemoryAllocator::Construct(baseObject, 100);
     xpf::MemoryAllocator::Destruct(baseObject);
 
     xpf::MemoryAllocator::FreeMemory(reinterpret_cast<void**>(&baseObject));
-    EXPECT_TRUE(nullptr == baseObject);
+    XPF_TEST_EXPECT_TRUE(nullptr == baseObject);
 }

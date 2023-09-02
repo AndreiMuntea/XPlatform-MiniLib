@@ -21,8 +21,6 @@ The project structure should look like:
     XPlatform-MiniLib
       |---- xpf-lib
       |---- xpf-tests
-      |---- submodule
-            |--- googletest
 
 ## xpf-lib
 xpf-lib is the project which contains the actual library implementation.
@@ -30,13 +28,14 @@ It is a minimalistic library, and is intended to be kept simple.
 
 
 ## xpf-tests
-XPF-Test project contains unit tests using gtest project to be cross platform.
-It uses submodules to grab a googletest dependency.
+XPF-Test project contains unit tests. Originally it used google test.
+But because we can't run unit tests in KM using google test, a minimalistic cross platform
+test framework was developed. You can see it under xpf_tests/Framework directory.
 
 
 ## To use:
 In order to compile the project, open it in Visual Studio, or Visual Studio Code.
-Can be ran directly from Visual Studio (after solving the googletest dependency).
+Can be ran directly from Visual Studio.
 
 Or it can be ran from command line using cmake from top level directory:
 

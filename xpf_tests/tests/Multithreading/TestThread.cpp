@@ -38,8 +38,6 @@ MockThreadCallback(
 ) noexcept(true)
 {
     auto mockContext = reinterpret_cast<MockTestThreadContext*>(Context);
-    EXPECT_TRUE(mockContext != nullptr);
-
     if (nullptr != mockContext)
     {
         xpf::ApiAtomicIncrement(&mockContext->Increment);
@@ -49,53 +47,51 @@ MockThreadCallback(
 /**
  * @brief       This tests the default constructor and destructor of thread.
  */
-TEST(TestThread, DefaultConstructorDestructor)
+XPF_TEST_SCENARIO(TestThread, DefaultConstructorDestructor)
 {
     xpf::thread::Thread thread;
-    EXPECT_TRUE(nullptr == thread.ThreadHandle());
-    EXPECT_FALSE(thread.IsJoinable());
+    XPF_TEST_EXPECT_TRUE(nullptr == thread.ThreadHandle());
+    XPF_TEST_EXPECT_TRUE(!thread.IsJoinable());
 }
 
 /**
  * @brief       This tests one simple callback.
  */
-TEST(TestThread, OneCallbackRun)
+XPF_TEST_SCENARIO(TestThread, OneCallbackRun)
 {
     xpf::thread::Thread thread;
     MockTestThreadContext context;
 
     NTSTATUS status = thread.Run(&MockThreadCallback, &context);
-    EXPECT_TRUE(NT_SUCCESS(status));
-    _Analysis_assume_(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
-    EXPECT_TRUE(thread.IsJoinable());
+    XPF_TEST_EXPECT_TRUE(thread.IsJoinable());
     thread.Join();
 
-    EXPECT_FALSE(thread.IsJoinable());
-    EXPECT_EQ(uint64_t{ 1 }, context.Increment);
+    XPF_TEST_EXPECT_TRUE(!thread.IsJoinable());
+    XPF_TEST_EXPECT_TRUE(uint64_t{ 1 } == context.Increment);
 }
 
 /**
  * @brief       This tests that join is automatically calleed when thread is destroyed.
  */
-TEST(TestThread, JoinOnDestroy)
+XPF_TEST_SCENARIO(TestThread, JoinOnDestroy)
 {
     MockTestThreadContext context;
 
     {
         xpf::thread::Thread thread;
         NTSTATUS status = thread.Run(&MockThreadCallback, &context);
-        EXPECT_TRUE(NT_SUCCESS(status));
-        _Analysis_assume_(NT_SUCCESS(status));
+        XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
     }
 
-    EXPECT_EQ(uint64_t{ 1 }, context.Increment);
+    XPF_TEST_EXPECT_TRUE(uint64_t{ 1 } == context.Increment);
 }
 
 /**
  * @brief       This tests that multiple threads can run.
  */
-TEST(TestThread, MultipleCallbackRun)
+XPF_TEST_SCENARIO(TestThread, MultipleCallbackRun)
 {
     MockTestThreadContext context;
     xpf::thread::Thread threads[10];
@@ -103,8 +99,7 @@ TEST(TestThread, MultipleCallbackRun)
     for (size_t i = 0; i < XPF_ARRAYSIZE(threads); ++i)
     {
         NTSTATUS status = threads[i].Run(&MockThreadCallback, &context);
-        EXPECT_TRUE(NT_SUCCESS(status));
-        _Analysis_assume_(NT_SUCCESS(status));
+        XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
     }
 
     for (size_t i = 0; i < XPF_ARRAYSIZE(threads); ++i)
@@ -112,43 +107,39 @@ TEST(TestThread, MultipleCallbackRun)
         threads[i].Join();
     }
 
-    EXPECT_EQ(uint64_t{ XPF_ARRAYSIZE(threads) }, context.Increment);
+    XPF_TEST_EXPECT_TRUE(uint64_t{ XPF_ARRAYSIZE(threads) } == context.Increment);
 }
 
 /**
  * @brief       This tests running after a callback was run
  */
-TEST(TestThread, RunOnSameObject)
+XPF_TEST_SCENARIO(TestThread, RunOnSameObject)
 {
     xpf::thread::Thread thread;
     MockTestThreadContext context;
 
     NTSTATUS status = thread.Run(&MockThreadCallback, &context);
-    EXPECT_TRUE(NT_SUCCESS(status));
-    _Analysis_assume_(NT_SUCCESS(status));
-
-    EXPECT_TRUE(thread.IsJoinable());
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(thread.IsJoinable());
 
     //
-    // A callback is already running.
+    // A callback is already running - expect false.
     //
     status = thread.Run(&MockThreadCallback, &context);
-    EXPECT_FALSE(NT_SUCCESS(status));
-    _Analysis_assume_(!NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(!NT_SUCCESS(status));
 
     //
     // Wait to finish.
     //
     thread.Join();
-    EXPECT_FALSE(thread.IsJoinable());
+    XPF_TEST_EXPECT_TRUE(!thread.IsJoinable());
 
     //
     // Now we can enqueue.
     //
     status = thread.Run(&MockThreadCallback, &context);
-    EXPECT_TRUE(NT_SUCCESS(status));
-    _Analysis_assume_(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     thread.Join();
-    EXPECT_EQ(uint64_t{ 2 }, context.Increment);
+    XPF_TEST_EXPECT_TRUE(uint64_t{ 2 } == context.Increment);
 }

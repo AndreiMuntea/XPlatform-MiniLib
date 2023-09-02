@@ -50,7 +50,6 @@ MockThreadBusyLockCallback(
 ) noexcept(true)
 {
     auto mockContext = reinterpret_cast<MockTestBusyLockContext*>(Context);
-    EXPECT_TRUE(mockContext != nullptr);
 
     if (nullptr != mockContext)
     {
@@ -73,7 +72,7 @@ MockThreadBusyLockCallback(
 /**
  * @brief       This tests the default constructor and destructor of busy lock.
  */
-TEST(TestBusyLock, DefaultConstructorDestructor)
+XPF_TEST_SCENARIO(TestBusyLock, DefaultConstructorDestructor)
 {
     xpf::BusyLock lock;
 }
@@ -81,7 +80,7 @@ TEST(TestBusyLock, DefaultConstructorDestructor)
 /**
  * @brief       This tests the Acquire and then Release exclusive methods.
  */
-TEST(TestBusyLock, AcquireReleaseExclusive)
+XPF_TEST_SCENARIO(TestBusyLock, AcquireReleaseExclusive)
 {
     xpf::BusyLock lock;
 
@@ -102,7 +101,7 @@ TEST(TestBusyLock, AcquireReleaseExclusive)
 /**
  * @brief       This tests the Acquire and then Release shared methods.
  */
-TEST(TestBusyLock, AcquireReleaseShared)
+XPF_TEST_SCENARIO(TestBusyLock, AcquireReleaseShared)
 {
     xpf::BusyLock lock;
 
@@ -130,7 +129,7 @@ TEST(TestBusyLock, AcquireReleaseShared)
  *              Then we check that we can't acquire the thread until
  *              We release one acquisition.
  */
-TEST(TestBusyLock, AcquireSharedMaxTimes)
+XPF_TEST_SCENARIO(TestBusyLock, AcquireSharedMaxTimes)
 {
     MockTestBusyLockContext context;
     NTSTATUS status = STATUS_UNSUCCESSFUL;
@@ -151,15 +150,14 @@ TEST(TestBusyLock, AcquireSharedMaxTimes)
     context.IsBusyLockTaken = false;
 
     status = thread.Run(&MockThreadBusyLockCallback, &context);
-    EXPECT_TRUE(NT_SUCCESS(status));
-    _Analysis_assume_(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     //
     // The lock shouldn't be taken.
     //
     for (size_t i = 0; i < 100; ++i)
     {
-        EXPECT_FALSE(context.IsBusyLockTaken);
+        XPF_TEST_EXPECT_TRUE(!context.IsBusyLockTaken);
         xpf::ApiYieldProcesor();
     }
 
@@ -194,7 +192,7 @@ TEST(TestBusyLock, AcquireSharedMaxTimes)
  * @brief       This tests that if we try to acquire exclusive twice,
  *              the execution will block.
  */
-TEST(TestBusyLock, AcquireExclusiveTwice)
+XPF_TEST_SCENARIO(TestBusyLock, AcquireExclusiveTwice)
 {
     MockTestBusyLockContext context;
     NTSTATUS status = STATUS_UNSUCCESSFUL;
@@ -209,15 +207,14 @@ TEST(TestBusyLock, AcquireExclusiveTwice)
     context.IsBusyLockTaken = false;
 
     status = thread.Run(&MockThreadBusyLockCallback, &context);
-    EXPECT_TRUE(NT_SUCCESS(status));
-    _Analysis_assume_(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     //
     // The busylock shouldn't be taken.
     //
     for (size_t i = 0; i < 100; ++i)
     {
-        EXPECT_FALSE(context.IsBusyLockTaken);
+        XPF_TEST_EXPECT_TRUE(!context.IsBusyLockTaken);
         xpf::ApiYieldProcesor();
     }
 
@@ -244,7 +241,7 @@ TEST(TestBusyLock, AcquireExclusiveTwice)
  * @brief       This tests that if we try to acquire shared,
  *              after getting an exclusive lock, the execution will block.
  */
-TEST(TestBusyLock, AcquireExclusiveBlocksShared)
+XPF_TEST_SCENARIO(TestBusyLock, AcquireExclusiveBlocksShared)
 {
     MockTestBusyLockContext context;
     NTSTATUS status = STATUS_UNSUCCESSFUL;
@@ -259,15 +256,14 @@ TEST(TestBusyLock, AcquireExclusiveBlocksShared)
     context.IsBusyLockTaken = false;
 
     status = thread.Run(&MockThreadBusyLockCallback, &context);
-    EXPECT_TRUE(NT_SUCCESS(status));
-    _Analysis_assume_(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     //
     // The busylock shouldn't be taken.
     //
     for (size_t i = 0; i < 100; ++i)
     {
-        EXPECT_FALSE(context.IsBusyLockTaken);
+        XPF_TEST_EXPECT_TRUE(!context.IsBusyLockTaken);
         xpf::ApiYieldProcesor();
     }
 
@@ -295,7 +291,7 @@ TEST(TestBusyLock, AcquireExclusiveBlocksShared)
  *              while the lock is hold shared, the execution blocks
  *              until all references are released.
  */
-TEST(TestBusyLock, AcquireExclusiveWaitsUntilSharedIsReleased)
+XPF_TEST_SCENARIO(TestBusyLock, AcquireExclusiveWaitsUntilSharedIsReleased)
 {
     MockTestBusyLockContext context;
     NTSTATUS status = STATUS_UNSUCCESSFUL;
@@ -313,8 +309,7 @@ TEST(TestBusyLock, AcquireExclusiveWaitsUntilSharedIsReleased)
     context.IsBusyLockTaken = false;
 
     status = thread.Run(&MockThreadBusyLockCallback, &context);
-    EXPECT_TRUE(NT_SUCCESS(status));
-    _Analysis_assume_(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     //
     // The busylock shouldn't be taken until all references are released.
@@ -323,7 +318,7 @@ TEST(TestBusyLock, AcquireExclusiveWaitsUntilSharedIsReleased)
     {
         for (size_t j = 0; j < 10; ++j)
         {
-            EXPECT_FALSE(context.IsBusyLockTaken);
+            XPF_TEST_EXPECT_TRUE(!context.IsBusyLockTaken);
             xpf::ApiYieldProcesor();
         }
         context.BusyLock.UnLockShared();

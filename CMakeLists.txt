@@ -26,15 +26,16 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     # Warning level
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-long-long -pedantic -Waddress -Waddress-of-packed-member -Wno-unused-value -Wno-self-assign-overloaded")
+    # Link with pthread
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     # Warning level
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-long-long -pedantic -Waddress -Waddress-of-packed-member -Wno-unused-value -Wno-self-assign-overloaded")
+    # Link with pthread
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 
 endif()
-
-# Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 # Set the output directory to a known location
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -44,4 +45,3 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 # Include sub-projects.
 add_subdirectory("xpf_lib")
 add_subdirectory("xpf_tests")
-add_subdirectory("submodule/googletest")

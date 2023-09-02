@@ -50,12 +50,8 @@ MockThreadPoolIncrementCallback(
 ) noexcept(true)
 {
     auto mockContext = reinterpret_cast<MockTestThreadPoolContext*>(Context);
-    EXPECT_TRUE(mockContext != nullptr);
-
     if (nullptr != mockContext)
     {
-        EXPECT_TRUE(mockContext->Threadpool.HasValue());
-
         for (size_t i = 0; i < mockContext->Iterations; ++i)
         {
             xpf::ApiAtomicIncrement(&mockContext->Increment);
@@ -75,18 +71,17 @@ MockThreadPoolEnqueueCallback(
 ) noexcept(true)
 {
     auto mockContext = reinterpret_cast<MockTestThreadPoolContext*>(Context);
-    EXPECT_TRUE(mockContext != nullptr);
-
     if (nullptr != mockContext)
     {
-        EXPECT_TRUE(mockContext->Threadpool.HasValue());
         for (size_t i = 0; i < 1000; ++i)
         {
             NTSTATUS status = (*mockContext->Threadpool).Enqueue(MockThreadPoolIncrementCallback,
                                                                  MockThreadPoolIncrementCallback,
                                                                  Context);
-            EXPECT_TRUE(NT_SUCCESS(status));
-            _Analysis_assume_(NT_SUCCESS(status));
+            if (!NT_SUCCESS(status))
+            {
+                xpf::ApiPanic(status);
+            }
         }
     }
 }
@@ -95,29 +90,25 @@ MockThreadPoolEnqueueCallback(
 /**
  * @brief       This tests the creation of the threadpool.
  */
-TEST(TestThreadPool, Create)
+XPF_TEST_SCENARIO(TestThreadPool, Create)
 {
     NTSTATUS status = STATUS_UNSUCCESSFUL;
     xpf::Optional<xpf::ThreadPool> threadpool;
 
     status = xpf::ThreadPool::Create(&threadpool);
-
-    EXPECT_TRUE(NT_SUCCESS(status));
-    _Analysis_assume_(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 }
 
 /**
  * @brief       This tests the enqueue of one work item.
  */
-TEST(TestThreadPool, EnqueueRundown)
+XPF_TEST_SCENARIO(TestThreadPool, EnqueueRundown)
 {
     NTSTATUS status = STATUS_UNSUCCESSFUL;
     MockTestThreadPoolContext threadpoolContext;
 
     status = xpf::ThreadPool::Create(&threadpoolContext.Threadpool);
-
-    EXPECT_TRUE(NT_SUCCESS(status));
-    _Analysis_assume_(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     //
     // Enqueue one work item.
@@ -125,14 +116,13 @@ TEST(TestThreadPool, EnqueueRundown)
     status = (*threadpoolContext.Threadpool).Enqueue(MockThreadPoolIncrementCallback,
                                                      MockThreadPoolIncrementCallback,
                                                      &threadpoolContext);
-    EXPECT_TRUE(NT_SUCCESS(status));
-    _Analysis_assume_(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     //
     // Rundown should wait until the item is processsed.
     //
     (*threadpoolContext.Threadpool).Rundown();
-    EXPECT_EQ(uint64_t{ threadpoolContext.Iterations }, threadpoolContext.Increment);
+    XPF_TEST_EXPECT_TRUE(uint64_t{ threadpoolContext.Iterations } == threadpoolContext.Increment);
 
     //
     // Further insert is blocked.
@@ -140,8 +130,7 @@ TEST(TestThreadPool, EnqueueRundown)
     status = (*threadpoolContext.Threadpool).Enqueue(MockThreadPoolIncrementCallback,
                                                      MockThreadPoolIncrementCallback,
                                                      &threadpoolContext);
-    EXPECT_FALSE(NT_SUCCESS(status));
-    _Analysis_assume_(!NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(!NT_SUCCESS(status));
 }
 
 
@@ -151,15 +140,13 @@ TEST(TestThreadPool, EnqueueRundown)
  *              will enqueue 1000 work items => 1000 work items.
  *              Each work item will do 10000 increments => 100 000 000 operations.
  */
-TEST(TestThreadPool, Stress)
+XPF_TEST_SCENARIO(TestThreadPool, Stress)
 {
     NTSTATUS status = STATUS_UNSUCCESSFUL;
     MockTestThreadPoolContext threadpoolContext;
 
     status = xpf::ThreadPool::Create(&threadpoolContext.Threadpool);
-
-    EXPECT_TRUE(NT_SUCCESS(status));
-    _Analysis_assume_(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     //
     // Enqueue 10 work items.
@@ -169,8 +156,7 @@ TEST(TestThreadPool, Stress)
         status = (*threadpoolContext.Threadpool).Enqueue(MockThreadPoolEnqueueCallback,
                                                          MockThreadPoolEnqueueCallback,
                                                          &threadpoolContext);
-        EXPECT_TRUE(NT_SUCCESS(status));
-        _Analysis_assume_(NT_SUCCESS(status));
+        XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
     }
 
     //

@@ -25,15 +25,13 @@ xpf::ApiPanic(
     _In_ NTSTATUS Status
 ) noexcept(true)
 {
-    XPF_ASSERT(false);
-
     #if defined XPF_PLATFORM_WIN_KM
         ::ExRaiseStatus(Status);
     #elif defined XPF_PLATFORM_WIN_UM
         ::RaiseException(Status, 0, 0, NULL);
     #elif defined XPF_PLATFORM_LINUX_UM
-        XPF_VERIFY(!NT_SUCCESS(Status));
-        ::abort();
+        XPF_UNREFERENCED_PARAMETER(Status);
+        ::raise(SIGSEGV);
     #else
         #error Unknown Platform!
     #endif

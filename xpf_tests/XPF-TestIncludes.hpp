@@ -16,15 +16,12 @@
 
 /**
  *
- * @brief We include the gtest library first.
- *        This will also contain the new/delete implementation
- *        by including the platform header (on win MSVC - vcruntime_new.h)
+ * @brief We depend on the xpf-library.
  */
-#include <gtest/gtest.h>
+#include <xpf_lib/xpf.hpp>
 
 /**
  *
- * @brief And then the xpf-library.
- *        Must come after gtest dependecy.
+ * @brief And our own testing framework after the xpf lib.
  */
-#include <xpf_lib/xpf.hpp>
+#include "Framework/XPF-TestFramework.hpp"

@@ -49,12 +49,9 @@ MockThreadReadWriteLockCallback(
 ) noexcept(true)
 {
     auto mockContext = reinterpret_cast<MockTestReadWriteLockContext*>(Context);
-    EXPECT_TRUE(mockContext != nullptr);
 
     if (nullptr != mockContext)
     {
-        EXPECT_TRUE(mockContext->Lock.HasValue());
-
         if (mockContext->AcquireExclusive)
         {
             (*mockContext->Lock).LockExclusive();
@@ -73,31 +70,27 @@ MockThreadReadWriteLockCallback(
 /**
  * @brief       This tests the creation of a read write lock
  */
-TEST(TestReadwriteLock, Create)
+XPF_TEST_SCENARIO(TestReadwriteLock, Create)
 {
     NTSTATUS status = STATUS_UNSUCCESSFUL;
     xpf::Optional<xpf::ReadWriteLock> rwLock;
 
     status = xpf::ReadWriteLock::Create(&rwLock);
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
-    EXPECT_TRUE(NT_SUCCESS(status));
-    _Analysis_assume_(NT_SUCCESS(status));
-
-    EXPECT_TRUE(rwLock.HasValue());
+    XPF_TEST_EXPECT_TRUE(rwLock.HasValue());
 }
 
 /**
  * @brief       This tests the Acquire and then Release exclusive methods.
  */
-TEST(TestReadwriteLock, AcquireReleaseExclusive)
+XPF_TEST_SCENARIO(TestReadwriteLock, AcquireReleaseExclusive)
 {
     NTSTATUS status = STATUS_UNSUCCESSFUL;
     xpf::Optional<xpf::ReadWriteLock> rwLock;
 
     status = xpf::ReadWriteLock::Create(&rwLock);
-
-    EXPECT_TRUE(NT_SUCCESS(status));
-    _Analysis_assume_(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     //
     // Classic way.
@@ -116,15 +109,13 @@ TEST(TestReadwriteLock, AcquireReleaseExclusive)
 /**
  * @brief       This tests the Acquire and then Release shared methods.
  */
-TEST(TestReadwriteLock, AcquireReleaseShared)
+XPF_TEST_SCENARIO(TestReadwriteLock, AcquireReleaseShared)
 {
     NTSTATUS status = STATUS_UNSUCCESSFUL;
     xpf::Optional<xpf::ReadWriteLock> rwLock;
 
     status = xpf::ReadWriteLock::Create(&rwLock);
-
-    EXPECT_TRUE(NT_SUCCESS(status));
-    _Analysis_assume_(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     //
     // Classic way.
@@ -149,16 +140,14 @@ TEST(TestReadwriteLock, AcquireReleaseShared)
  * @brief       This tests that if we try to acquire exclusive twice,
  *              the execution will block.
  */
-TEST(TestReadwriteLock, AcquireExclusiveTwice)
+XPF_TEST_SCENARIO(TestReadwriteLock, AcquireExclusiveTwice)
 {
     MockTestReadWriteLockContext context;
     NTSTATUS status = STATUS_UNSUCCESSFUL;
     xpf::thread::Thread thread;
 
     status = xpf::ReadWriteLock::Create(&context.Lock);
-
-    EXPECT_TRUE(NT_SUCCESS(status));
-    _Analysis_assume_(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     (*context.Lock).LockExclusive();
 
@@ -169,15 +158,14 @@ TEST(TestReadwriteLock, AcquireExclusiveTwice)
     context.IsLockTaken = false;
 
     status = thread.Run(&MockThreadReadWriteLockCallback, &context);
-    EXPECT_TRUE(NT_SUCCESS(status));
-    _Analysis_assume_(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     //
     // The lock shouldn't be taken.
     //
     for (size_t i = 0; i < 100; ++i)
     {
-        EXPECT_FALSE(context.IsLockTaken);
+        XPF_TEST_EXPECT_TRUE(!context.IsLockTaken);
         xpf::ApiYieldProcesor();
     }
 
@@ -204,16 +192,14 @@ TEST(TestReadwriteLock, AcquireExclusiveTwice)
  * @brief       This tests that if we try to acquire shared,
  *              after getting an exclusive lock, the execution will block.
  */
-TEST(TestReadwriteLock, AcquireExclusiveBlocksShared)
+XPF_TEST_SCENARIO(TestReadwriteLock, AcquireExclusiveBlocksShared)
 {
     MockTestReadWriteLockContext context;
     NTSTATUS status = STATUS_UNSUCCESSFUL;
     xpf::thread::Thread thread;
 
     status = xpf::ReadWriteLock::Create(&context.Lock);
-
-    EXPECT_TRUE(NT_SUCCESS(status));
-    _Analysis_assume_(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     (*context.Lock).LockExclusive();
 
@@ -224,15 +210,14 @@ TEST(TestReadwriteLock, AcquireExclusiveBlocksShared)
     context.IsLockTaken = false;
 
     status = thread.Run(&MockThreadReadWriteLockCallback, &context);
-    EXPECT_TRUE(NT_SUCCESS(status));
-    _Analysis_assume_(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     //
     // The lock shouldn't be taken.
     //
     for (size_t i = 0; i < 100; ++i)
     {
-        EXPECT_FALSE(context.IsLockTaken);
+        XPF_TEST_EXPECT_TRUE(!context.IsLockTaken);
         xpf::ApiYieldProcesor();
     }
 
@@ -260,16 +245,14 @@ TEST(TestReadwriteLock, AcquireExclusiveBlocksShared)
  *              while the lock is hold shared, the execution blocks
  *              until all references are released.
  */
-TEST(TestReadwriteLock, AcquireExclusiveWaitsUntilSharedIsReleased)
+XPF_TEST_SCENARIO(TestReadwriteLock, AcquireExclusiveWaitsUntilSharedIsReleased)
 {
     MockTestReadWriteLockContext context;
     NTSTATUS status = STATUS_UNSUCCESSFUL;
     xpf::thread::Thread thread;
 
     status = xpf::ReadWriteLock::Create(&context.Lock);
-
-    EXPECT_TRUE(NT_SUCCESS(status));
-    _Analysis_assume_(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     for (size_t i = 0; i < 20; ++i)
     {
@@ -283,8 +266,7 @@ TEST(TestReadwriteLock, AcquireExclusiveWaitsUntilSharedIsReleased)
     context.IsLockTaken = false;
 
     status = thread.Run(&MockThreadReadWriteLockCallback, &context);
-    EXPECT_TRUE(NT_SUCCESS(status));
-    _Analysis_assume_(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     //
     // The lock shouldn't be taken until all references are released.
@@ -293,7 +275,7 @@ TEST(TestReadwriteLock, AcquireExclusiveWaitsUntilSharedIsReleased)
     {
         for (size_t j = 0; j < 10; ++j)
         {
-            EXPECT_FALSE(context.IsLockTaken);
+            XPF_TEST_EXPECT_TRUE(!context.IsLockTaken);
             xpf::ApiYieldProcesor();
         }
         (*context.Lock).UnLockShared();

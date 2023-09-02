@@ -46,8 +46,6 @@ MockAtomicListStressCallback(
     MockTestAtomicListElement elements[100];
 
     auto mockContext = reinterpret_cast<xpf::AtomicList*>(Context);
-    EXPECT_TRUE(mockContext != nullptr);
-
     if (nullptr != mockContext)
     {
         for (size_t i = 0; i < 10000; ++i)
@@ -71,19 +69,19 @@ MockAtomicListStressCallback(
 /**
  * @brief       This tests the default constructor of atomic list.
  */
-TEST(TestAtomicList, DefaultConstructorDestructor)
+XPF_TEST_SCENARIO(TestAtomicList, DefaultConstructorDestructor)
 {
     xpf::AtomicList atomicList;
-    EXPECT_TRUE(atomicList.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(atomicList.IsEmpty());
 }
 
 /**
  * @brief       This tests the Insert method for head.
  */
-TEST(TestAtomicList, Insert)
+XPF_TEST_SCENARIO(TestAtomicList, Insert)
 {
     xpf::AtomicList atomicList;
-    EXPECT_TRUE(atomicList.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(atomicList.IsEmpty());
 
     atomicList.Insert(nullptr);
 
@@ -111,7 +109,7 @@ TEST(TestAtomicList, Insert)
     xpf::XPF_SINGLE_LIST_ENTRY* listHead = nullptr;
 
     atomicList.Flush(&listHead);
-    EXPECT_TRUE(atomicList.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(atomicList.IsEmpty());
 
     //
     // Grab the first element.
@@ -119,34 +117,34 @@ TEST(TestAtomicList, Insert)
     MockTestAtomicListElement* crtElement = nullptr;
 
     crtElement = XPF_CONTAINING_RECORD(listHead, MockTestAtomicListElement, ListEntry);
-    EXPECT_EQ(int8_t{ 3 }, crtElement->DummyValue);
+    XPF_TEST_EXPECT_TRUE(int8_t{ 3 } == crtElement->DummyValue);
 
     //
     // Grab the second element.
     //
     listHead = listHead->Next;
     crtElement = XPF_CONTAINING_RECORD(listHead, MockTestAtomicListElement, ListEntry);
-    EXPECT_EQ(int8_t{ 2 }, crtElement->DummyValue);
+    XPF_TEST_EXPECT_TRUE(int8_t{ 2 } == crtElement->DummyValue);
 
     //
     // Grab the third element.
     //
     listHead = listHead->Next;
     crtElement = XPF_CONTAINING_RECORD(listHead, MockTestAtomicListElement, ListEntry);
-    EXPECT_EQ(int8_t{ 1 }, crtElement->DummyValue);
+    XPF_TEST_EXPECT_TRUE(int8_t{ 1 } == crtElement->DummyValue);
 }
 
 /**
  * @brief       This tests the Link and flush in a stress scenario
  */
-TEST(TestAtomicList, LinkUnlinkStress)
+XPF_TEST_SCENARIO(TestAtomicList, LinkUnlinkStress)
 {
     xpf::thread::Thread threads[10];
     xpf::AtomicList atomicList;
 
     for (size_t i = 0; i < XPF_ARRAYSIZE(threads); ++i)
     {
-        EXPECT_TRUE(NT_SUCCESS(threads[i].Run(MockAtomicListStressCallback, &atomicList)));
+        XPF_TEST_EXPECT_TRUE(NT_SUCCESS(threads[i].Run(MockAtomicListStressCallback, &atomicList)));
     }
 
     for (size_t i = 0; i < XPF_ARRAYSIZE(threads); ++i)

@@ -43,15 +43,10 @@ MockSignalCallback(
 ) noexcept(true)
 {
     auto mockContext = reinterpret_cast<MockTestSignalContext*>(Context);
-    EXPECT_TRUE(mockContext != nullptr);
 
     if (nullptr != mockContext)
     {
-        EXPECT_TRUE(mockContext->Signal.HasValue());
-
-        bool waitSatisfied = (*mockContext->Signal).Wait();
-        EXPECT_TRUE(waitSatisfied);
-
+        (*mockContext->Signal).Wait();
         xpf::ApiAtomicIncrement(&mockContext->Increment);
     }
 }
@@ -59,32 +54,28 @@ MockSignalCallback(
  /**
   * @brief       This tests the creation of the event.
   */
-TEST(TestSignal, Create)
+XPF_TEST_SCENARIO(TestSignal, Create)
 {
     NTSTATUS status = STATUS_UNSUCCESSFUL;
     xpf::Optional<xpf::Signal> signal;
 
     status = xpf::Signal::Create(&signal, false);
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
-    EXPECT_TRUE(NT_SUCCESS(status));
-    _Analysis_assume_(NT_SUCCESS(status));
-
-    EXPECT_TRUE(signal.HasValue());
-    EXPECT_TRUE(nullptr != (*signal).SignalHandle());
+    XPF_TEST_EXPECT_TRUE(signal.HasValue());
+    XPF_TEST_EXPECT_TRUE(nullptr != (*signal).SignalHandle());
 }
 
 /**
  * @brief       This tests that multiple threads will be signaled by a manual reset event.
  */
-TEST(TestSignal, ManualReset)
+XPF_TEST_SCENARIO(TestSignal, ManualReset)
 {
     NTSTATUS status = STATUS_UNSUCCESSFUL;
     MockTestSignalContext context;
 
     status = xpf::Signal::Create(&context.Signal, true);
-
-    EXPECT_TRUE(NT_SUCCESS(status));
-    _Analysis_assume_(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     xpf::thread::Thread threads[10];
 
@@ -94,9 +85,7 @@ TEST(TestSignal, ManualReset)
     for (size_t i = 0; i < XPF_ARRAYSIZE(threads); ++i)
     {
         status = threads[i].Run(MockSignalCallback, &context);
-
-        EXPECT_TRUE(NT_SUCCESS(status));
-        _Analysis_assume_(NT_SUCCESS(status));
+        XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
     }
 
     //
@@ -115,21 +104,19 @@ TEST(TestSignal, ManualReset)
     //
     // This should be true.
     //
-    EXPECT_EQ(XPF_ARRAYSIZE(threads), context.Increment);
+    XPF_TEST_EXPECT_TRUE(XPF_ARRAYSIZE(threads) == context.Increment);
 }
 
 /**
  * @brief       This tests that only one thread will be signaled by an auto reset event.
  */
-TEST(TestSignal, AutoReset)
+XPF_TEST_SCENARIO(TestSignal, AutoReset)
 {
     NTSTATUS status = STATUS_UNSUCCESSFUL;
     MockTestSignalContext context;
 
     status = xpf::Signal::Create(&context.Signal, false);
-
-    EXPECT_TRUE(NT_SUCCESS(status));
-    _Analysis_assume_(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     xpf::thread::Thread threads[10];
 
@@ -141,9 +128,7 @@ TEST(TestSignal, AutoReset)
     for (size_t i = 0; i < XPF_ARRAYSIZE(threads); ++i)
     {
         status = threads[i].Run(MockSignalCallback, &context);
-
-        EXPECT_TRUE(NT_SUCCESS(status));
-        _Analysis_assume_(NT_SUCCESS(status));
+        XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
     }
 
     for (size_t i = 1; i <= XPF_ARRAYSIZE(threads); ++i)
@@ -166,7 +151,7 @@ TEST(TestSignal, AutoReset)
         //
         for (size_t spin = 0; spin < 100; ++spin)
         {
-            EXPECT_EQ(uint64_t{ i }, context.Increment);
+            XPF_TEST_EXPECT_TRUE(uint64_t{ i } == context.Increment);
             xpf::ApiYieldProcesor();
         }
     }
@@ -182,5 +167,5 @@ TEST(TestSignal, AutoReset)
     //
     // This should be true.
     //
-    EXPECT_EQ(XPF_ARRAYSIZE(threads), context.Increment);
+    XPF_TEST_EXPECT_TRUE(XPF_ARRAYSIZE(threads) == context.Increment);
 }

@@ -13,6 +13,7 @@
 
 #include "xpf_tests/XPF-TestIncludes.hpp"
 
+
 /**
  *
  * @brief Main entry point for XPF-Library Tests.
@@ -21,15 +22,72 @@
  *
  * @param[in] Argv - The array of command line arguments.
  *
- * @return The result of RUN_ALL_TESTS from gtest function.
+ * @return The result of RUN_ALL_TESTS from xpf_tests function.
  */
 int
 XPF_PLATFORM_CONVENTION
-wmain(
+main(
     _In_ int Argc,
-    _In_ wchar_t* Argv[]
+    _In_ char* Argv[]
 )
 {
-    ::testing::InitGoogleTest(&Argc, Argv);
-    return RUN_ALL_TESTS();
+    //
+    // For now these are not used anywhere.
+    //
+    XPF_UNREFERENCED_PARAMETER(Argc);
+    XPF_UNREFERENCED_PARAMETER(Argv);
+
+    return xpf_test::RunAllTests();
+}
+
+
+/**
+ *
+ * @brief Placement new declaration - required for cpp support.
+ *
+ * @param[in] BlockSize - Unused.
+ * 
+ * @param[in,out] Location - Unused. Will be returned.
+ *
+ * @return Location
+ *
+ * @note It is the caller responsibility to provide an implementation
+ *       for this API. If "new" header is available, it can be included,
+ *       otherwise, a simple implementation can be provided.
+ */
+void*
+XPF_PLATFORM_CONVENTION
+operator new(
+    size_t BlockSize,
+    void* Location
+) noexcept(true)
+{
+    XPF_VERIFY(0 != BlockSize);
+    XPF_VERIFY(nullptr != Location);
+    return Location;
+}
+
+/**
+ *
+ * @brief Placement delete declaration  - required for cpp support.
+ *
+ * @param[in] Pointer - Unused.
+ *
+ * @param[in] Location - Unused.
+ *
+ * @return void.
+ *
+ * @note It is the caller responsibility to provide an implementation
+ *       for this API. If "new" header is available, it can be included,
+ *       otherwise, a simple implementation can be provided.
+ */
+extern void
+XPF_PLATFORM_CONVENTION
+operator delete(
+    void* Pointer,
+    void* Location
+) noexcept(true)
+{
+    XPF_VERIFY(nullptr != Pointer);
+    XPF_VERIFY(nullptr != Location);
 }
