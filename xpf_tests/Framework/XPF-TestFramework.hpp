@@ -209,17 +209,20 @@ operator=(
 /**
  * @brief       First section is "xpfts$a" -- we need this first as we need to define the $a section.
  */
-XPF_ALLOC_SECTION("xpfts$a") static volatile xpf_test::TestScenario* gXpfStartMarker = nullptr;
+XPF_ALLOC_SECTION("xpfts$a")
+static volatile xpf_test::TestScenario* gXpfStartMarker = nullptr;
 
 /**
  * @brief       Allocate something in between - "xpfts$t".
  */
-XPF_ALLOC_SECTION("xpfts$t") static volatile xpf_test::TestScenario* gXpfTestMarker = nullptr;
+XPF_ALLOC_SECTION("xpfts$t")
+static volatile xpf_test::TestScenario* gXpfTestMarker = nullptr;
 
 /**
  * @brief       Last section is "xpfts$z" -- we need this last as we need to define the $z section after the other 2.
  */
-XPF_ALLOC_SECTION("xpfts$z") static volatile xpf_test::TestScenario* gXpfEndMarker = nullptr;
+XPF_ALLOC_SECTION("xpfts$z")
+static volatile xpf_test::TestScenario* gXpfEndMarker = nullptr;
 
 
 
