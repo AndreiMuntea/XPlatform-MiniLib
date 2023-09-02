@@ -51,6 +51,35 @@ RunAllTests(
     void
 ) noexcept(true);
 
+/**
+ * @brief This rotuine is used to log to the default console.
+ *        It is platform dependant.
+ *
+ * @param[in] Format - The format specifier - see printf doc for this.
+ * 
+ * @return void
+ */
+
+inline void
+LogTestInfo(
+    _In_ const char* Format,
+    ...
+) noexcept(true)
+{
+    va_list argList;
+    xpf::ApiZeroMemory(&argList, sizeof(argList));
+
+    va_start(argList, Format);
+
+    #if defined XPF_PLATFORM_WIN_UM || defined XPF_PLATFORM_LINUX_UM
+        (void) vfprintf(stdout, Format, argList);
+    #else
+        #error Unknown Platform
+    #endif
+
+    va_end(argList);
+}
+
 
 /**
  * @brief   Forward definition for the TestScenario class.
@@ -168,6 +197,7 @@ operator=(
  * @brief       On Linux User Mode we'll register a signal handler.
  *              This will set this global variable to signal whether death was
  *              signaled or not.
+ *              On Windows platforms this will be signaled from a SEH handler.
  *
  * @note        It's the responsibility of each test to reset this global properly
  *              before registering the signal handler.
@@ -253,7 +283,10 @@ static volatile xpf_test::TestScenario* gXpfEndMarker = nullptr;
                 XPF_ASSERT(false);                                                                                      \
                                                                                                                         \
                 /* This will be changed to an actual log. */                                                            \
-                printf("    [!] [%s::%d] Condition %s is not met! \r\n", File, Line, XPF_TEST_STRINGIFY(Condition));    \
+                xpf_test::LogTestInfo("    [!] [%s::%d] Condition %s is not met! \r\n",                                 \
+                                      File,                                                                             \
+                                      Line,                                                                             \
+                                      XPF_TEST_STRINGIFY(Condition));                                                   \
                                                                                                                         \
                 /* Mark the test as failed. */                                                                          \
                 _XpfArgScenario->ReturnStatus = STATUS_UNSUCCESSFUL;                                                    \

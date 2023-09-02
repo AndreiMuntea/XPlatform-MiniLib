@@ -27,8 +27,10 @@
 XPF_SECTION_PAGED;
 
 /**
- * @brief       This is a global variable used for tracking if the test
- *              crashed or not.
+ * @brief       On Linux User Mode we'll register a signal handler.
+ *              This will set this global variable to signal whether death was
+ *              signaled or not.
+ *              On Windows platforms this will be signaled from a SEH handler.
  *
  * @note        It's the responsibility of each test to reset this global properly
  *              before registering the signal handler.
@@ -63,7 +65,7 @@ xpf_test::RunAllTests(
     uint64_t startDelta = xpf::ApiCurrentTime();
     uint64_t noTests = 0;
     uint64_t passedTests = 0;
-    printf("Starting test execution... \r\n");
+    xpf_test::LogTestInfo("Starting test execution... \r\n");
 
     //
     // Now we can iterate over the section. Start at gXpfStartMarker and go until gXpfEndMarker.
@@ -95,31 +97,31 @@ xpf_test::RunAllTests(
         //
         // Start test execution.
         //
-        printf("\r\n[================================] \r\n");
-        printf("[*] Executing test '%s': \r\n",
-               currentTest->ScenarioName.Buffer());
+        xpf_test::LogTestInfo("\r\n[================================] \r\n");
+        xpf_test::LogTestInfo("[*] Executing test '%s': \r\n",
+                              currentTest->ScenarioName.Buffer());
 
         currentTest->StartTime = xpf::ApiCurrentTime();
-        printf("    > %llu (100 ns) test start time; \r\n",
-               currentTest->StartTime);
+        xpf_test::LogTestInfo("    > %llu (100 ns) test start time; \r\n",
+                              static_cast<unsigned long long>(currentTest->StartTime));                         // NOLINT(*)
 
         currentTest->Callback(currentTest);
 
         currentTest->EndTime = xpf::ApiCurrentTime();
-        printf("    > %llu (100 ns) test end time; \r\n",
-               currentTest->EndTime);
+        xpf_test::LogTestInfo("    > %llu (100 ns) test end time; \r\n",
+                              static_cast<unsigned long long>(currentTest->EndTime));                           // NOLINT(*)
 
         //
         // End test execution.
         //
         xpf::StringView<char> result = (NT_SUCCESS(currentTest->ReturnStatus)) ? "SUCCESS"
                                                                                : "FAILURE";
-        printf("[*] [%s] Test %s finished with status 0x%08x. Delta %llu (ms). \r\n",
-               result.Buffer(),
-               currentTest->ScenarioName.Buffer(),
-               currentTest->ReturnStatus,
-               (currentTest->EndTime - currentTest->StartTime) / 10000);
-        printf("[================================] \r\n");
+        xpf_test::LogTestInfo("[*] [%s] Test %s finished with status 0x%08x. Delta %llu (ms). \r\n",
+                              result.Buffer(),
+                              currentTest->ScenarioName.Buffer(),
+                              currentTest->ReturnStatus,
+                              static_cast<unsigned long long>(((currentTest->EndTime - currentTest->StartTime) / 10000)));     // NOLINT(*)
+        xpf_test::LogTestInfo("[================================] \r\n");
 
         //
         // Count the success.
@@ -140,9 +142,9 @@ xpf_test::RunAllTests(
     // But we still return success.
     //
     uint64_t endDelta = xpf::ApiCurrentTime();
-    printf("\r\nFinished execution of %llu tests in %llu (ms).\r\n",
-           noTests,
-           (endDelta - startDelta) / 10000);
+    xpf_test::LogTestInfo("\r\nFinished execution of %llu tests in %llu (ms).\r\n",
+                          static_cast<unsigned long long>(noTests),                                                            // NOLINT(*)
+                          static_cast<unsigned long long>((endDelta - startDelta) / 10000));                                   // NOLINT(*)
 
     //
     // Log statistics about failures. In windows KM it's a bit more
@@ -150,10 +152,10 @@ xpf_test::RunAllTests(
     // so to not complicate things we'll  take the precision loss
     // of using decimals to compute the percent.
     //
-    printf("Passed tests: %llu out of %llu (%llu%%). \r\n\r\n",
-           passedTests,
-           noTests,
-           (noTests > 0) ? ((passedTests * 100) / noTests) : 100);
+    xpf_test::LogTestInfo("Passed tests: %llu out of %llu (%llu%%). \r\n\r\n",
+                          static_cast<unsigned long long>(passedTests),                                                        // NOLINT(*)
+                          static_cast<unsigned long long>(noTests),                                                            // NOLINT(*)
+                          static_cast<unsigned long long>((noTests > 0) ? ((passedTests * 100) / noTests) : 100));             // NOLINT(*)
 
     return (passedTests != noTests) ? STATUS_UNSUCCESSFUL
                                     : STATUS_SUCCESS;
