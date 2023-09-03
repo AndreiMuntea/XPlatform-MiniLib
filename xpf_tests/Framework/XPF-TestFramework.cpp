@@ -89,7 +89,7 @@ xpf_test::RunAllTests(
         NTSTATUS testResult = STATUS_SUCCESS;
 
         uint64_t testStartTime = xpf::ApiCurrentTime();
-        (reinterpret_cast<xpf_test::TestScenarioCallback>(*crtEntry))(&testResult);
+        ((const xpf_test::TestScenarioCallback)(*crtEntry))(&testResult);                                              // NOLINT(*)
         uint64_t testEndTime = xpf::ApiCurrentTime();
         
         xpf_test::LogTestInfo("    > %llu (100 ns) test start time; \r\n",

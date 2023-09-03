@@ -133,7 +133,12 @@
     /**
      * @brief Tells the compiler that the symbol is exported
      */
-    #define XPF_DECLSPEC_EXPORT()            __declspec(dllexport)
+    #define XPF_DECLSPEC_EXPORT()               __declspec(dllexport)
+
+    /**
+     * @brief Grab the function signature
+     */
+    #define XPF_FUNCSIG()                       __FUNCSIG__
 
 #elif defined XPF_COMPILER_CLANG || defined XPF_COMPILER_GCC
 
@@ -167,6 +172,11 @@
      * @brief Tells the compiler that the symbol is exported
      */
     #define XPF_DECLSPEC_EXPORT()               __attribute__((visibility("default")))
+
+    /**
+     * @brief Grab the function signature
+     */
+    #define XPF_FUNCSIG()                       __PRETTY_FUNCTION__ 
 
 #else
     #error Unsupported Compiler.

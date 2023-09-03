@@ -312,7 +312,7 @@ const xpf_test::TestScenarioCallback* gXpfEndMarker = nullptr;
     void XPF_API Namespace::Api::TestImpl(NTSTATUS* _XpfArgScenario) noexcept(true)                                         \
     {                                                                                                                       \
         xpf_test::LogTestInfo("[*] Executing scenario '%s'! \r\n",                                                          \
-                              __FUNCSIG__);                                                                                 \
+                              XPF_FUNCSIG());                                                                               \
         Namespace::Api::Wrapper(_XpfArgScenario);                                                                           \
     }                                                                                                                       \
                                                                                                                             \
@@ -320,7 +320,7 @@ const xpf_test::TestScenarioCallback* gXpfEndMarker = nullptr;
     /* of the gxpftstScenario_<Namespace>_<Api> declared above. This pointer will be allocated in the */                    \
     /* proper test section. Its name will be gxpftstMarker_<Namespace>_<Api> */                                             \
     XPF_DECLSPEC_EXPORT()                                                                                                   \
-    XPF_ALLOC_SECTION("xpfts$t")                                                                                           \
+    XPF_ALLOC_SECTION("xpfts$t")                                                                                            \
     const xpf_test::TestScenarioCallback* gxpftstMarker##Namespace##Api =                                                   \
                                                         (xpf_test::TestScenarioCallback*)(&Namespace::Api::TestImpl);       \
                                                                                                                             \
