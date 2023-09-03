@@ -302,18 +302,16 @@ const xpf_test::TestScenarioCallback* gXpfEndMarker = nullptr;
     {                                                                                                                       \
         namespace Api                                                                                                       \
         {                                                                                                                   \
-            void XPF_API Wrapper([[maybe_unused]] NTSTATUS* _XpfArgScenario) noexcept(true);                                \
-                                                                                                                            \
-            void XPF_API TestImpl(NTSTATUS* _XpfArgScenario) noexcept(true);                                                \
-                                                                                                                            \
+            void XPF_API TestImpl([[maybe_unused]] NTSTATUS* _XpfArgScenario) noexcept(true);                               \
+            void XPF_API Test(NTSTATUS* _XpfArgScenario) noexcept(true);                                                    \
         };                                                                                                                  \
     };                                                                                                                      \
                                                                                                                             \
-    void XPF_API Namespace::Api::TestImpl(NTSTATUS* _XpfArgScenario) noexcept(true)                                         \
+    void XPF_API Namespace::Api::Test(NTSTATUS* _XpfArgScenario) noexcept(true)                                             \
     {                                                                                                                       \
         xpf_test::LogTestInfo("[*] Executing scenario '%s'! \r\n",                                                          \
                               XPF_FUNCSIG());                                                                               \
-        Namespace::Api::Wrapper(_XpfArgScenario);                                                                           \
+        Namespace::Api::TestImpl(_XpfArgScenario);                                                                          \
     }                                                                                                                       \
                                                                                                                             \
     /* In xpftst$t section we can only put pointers, so we declare another variable which stores the addres */              \
@@ -322,10 +320,10 @@ const xpf_test::TestScenarioCallback* gXpfEndMarker = nullptr;
     XPF_DECLSPEC_EXPORT()                                                                                                   \
     XPF_ALLOC_SECTION("xpfts$t")                                                                                            \
     const xpf_test::TestScenarioCallback* gxpftstMarker##Namespace##Api =                                                   \
-                                                        (xpf_test::TestScenarioCallback*)(&Namespace::Api::TestImpl);       \
+                                                        (xpf_test::TestScenarioCallback*)(&Namespace::Api::Test);           \
                                                                                                                             \
     /* And now the caller must provide the implementation for the api. */                                                   \
     /* Scenario is only accessed via test macro. So the compiler might not perceive it as used. */                          \
     /* CPP [[maybe_unused]] comes to rescue to not suppress warnings. */                                                    \
     /* Mangle the name to <_XpfArgScenario> so it won't conflict with user's variable. */                                   \
-    void XPF_API Namespace::Api::Wrapper([[maybe_unused]] NTSTATUS* _XpfArgScenario) noexcept(true)
+    void XPF_API Namespace::Api::TestImpl([[maybe_unused]] NTSTATUS* _XpfArgScenario) noexcept(true)
