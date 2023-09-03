@@ -17,6 +17,8 @@
  * @license     See top-level directory LICENSE file.
  */
 
+
+
 #include "xpf_tests/Framework/XPF-TestFramework.hpp"
 #include "xpf_tests/XPF-TestIncludes.hpp"
 
@@ -25,6 +27,8 @@
   *        So simply page all code here.
   */
 XPF_SECTION_PAGED;
+
+
 
 /**
  * @brief       On Linux User Mode we'll register a signal handler.
@@ -36,7 +40,6 @@ XPF_SECTION_PAGED;
  *              before registering the signal handler.
  */
  bool mXpfConditionHasGeneratedDeath = false;
-
 
 
 _Must_inspect_result_
@@ -74,24 +77,8 @@ xpf_test::RunAllTests(
     //
     for (auto crtEntry = &gXpfStartMarker; crtEntry != &gXpfEndMarker; crtEntry++)
     {
-        //
-        // Remove the volatile qualifier. It's safe to do it as the only reason we added
-        // it is for the compiler to not optimize away the data declaration.
-        // We need to account for section padding, so current test might actually be nullptr.
-        //
-        xpf_test::TestScenario* currentTest = (xpf_test::TestScenario *)(*crtEntry);                                            // NOLINT(*)
-        if (nullptr == currentTest)
+        if (nullptr == (*crtEntry))
         {
-            continue;
-        }
-
-        //
-        // We got a null callback? Assert here and investigate. It shouldn't happen.
-        // Bug in the framework.
-        //
-        if (nullptr == currentTest->Callback)
-        {
-            XPF_ASSERT(false);
             continue;
         }
 
@@ -99,35 +86,33 @@ xpf_test::RunAllTests(
         // Start test execution.
         //
         xpf_test::LogTestInfo("\r\n[================================] \r\n");
-        xpf_test::LogTestInfo("[*] Executing test '%s': \r\n",
-                              currentTest->ScenarioName.Buffer());
+        NTSTATUS testResult = STATUS_SUCCESS;
 
-        currentTest->StartTime = xpf::ApiCurrentTime();
+        uint64_t testStartTime = xpf::ApiCurrentTime();
+        (reinterpret_cast<xpf_test::TestScenarioCallback>(*crtEntry))(&testResult);
+        uint64_t testEndTime = xpf::ApiCurrentTime();
+        
         xpf_test::LogTestInfo("    > %llu (100 ns) test start time; \r\n",
-                              static_cast<unsigned long long>(currentTest->StartTime));                                         // NOLINT(*)
+                              static_cast<unsigned long long>(testStartTime));                                         // NOLINT(*)
 
-        currentTest->Callback(currentTest);
-
-        currentTest->EndTime = xpf::ApiCurrentTime();
         xpf_test::LogTestInfo("    > %llu (100 ns) test end time; \r\n",
-                              static_cast<unsigned long long>(currentTest->EndTime));                                           // NOLINT(*)
+                              static_cast<unsigned long long>(testEndTime));                                           // NOLINT(*)
 
         //
         // End test execution.
         //
-        xpf::StringView<char> result = (NT_SUCCESS(currentTest->ReturnStatus)) ? "SUCCESS"
-                                                                               : "FAILURE";
-        xpf_test::LogTestInfo("[*] [%s] Test %s finished with status 0x%08x. Delta %llu (ms). \r\n",
+        xpf::StringView<char> result = (NT_SUCCESS(testResult)) ? "SUCCESS"
+                                                                : "FAILURE";
+        xpf_test::LogTestInfo("[*] [%s] Test finished with status 0x%08x. Delta %llu (ms). \r\n",
                               result.Buffer(),
-                              currentTest->ScenarioName.Buffer(),
-                              currentTest->ReturnStatus,
-                              static_cast<unsigned long long>(((currentTest->EndTime - currentTest->StartTime) / 10000)));      // NOLINT(*)
+                              testResult,
+                              static_cast<unsigned long long>(((testEndTime - testStartTime) / 10000)));                // NOLINT(*)
         xpf_test::LogTestInfo("[================================] \r\n");
 
         //
         // Count the success.
         //
-        if (NT_SUCCESS(currentTest->ReturnStatus))
+        if (NT_SUCCESS(testResult))
         {
             passedTests++;
         }

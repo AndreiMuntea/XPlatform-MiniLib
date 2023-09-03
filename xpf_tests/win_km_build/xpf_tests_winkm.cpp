@@ -17,21 +17,17 @@ XPF_SECTION_PAGED;
  */
 EXTERN_C_START;
 
-
-
-NTSTATUS FLTAPI
+VOID
 DriverExit(
-    _In_ FLT_FILTER_UNLOAD_FLAGS Flags
+    _In_ struct _DRIVER_OBJECT* DriverObject
 )
 {
-    XPF_UNREFERENCED_PARAMETER(Flags);
+    XPF_UNREFERENCED_PARAMETER(DriverObject);
 
     //
     // We should always be called at passive.
     //
     XPF_MAX_PASSIVE_LEVEL();
-
-    return STATUS_SUCCESS;
 }
 
 
@@ -58,6 +54,7 @@ DriverEntry(
     // So we do it the first thing in Driver entry.
     //
     ExInitializeDriverRuntime(DrvRtPoolNxOptIn);
+    DriverObject->DriverUnload = DriverExit;
 
     //
     // Initialize cpp support - Must be done before running the tests.

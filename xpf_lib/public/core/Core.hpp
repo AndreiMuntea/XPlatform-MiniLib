@@ -130,6 +130,11 @@
      */
     #define XPF_DECLSPEC_SELECTANY()            __declspec(selectany)
 
+    /**
+     * @brief Tells the compiler that the symbol is exported
+     */
+    #define XPF_DECLSPEC_EXPORT()            __declspec(dllexport)
+
 #elif defined XPF_COMPILER_CLANG || defined XPF_COMPILER_GCC
 
     /**
@@ -157,6 +162,11 @@
      * @brief Tells the compiler that the declared global data item (variable or object) is a pick-any.
      */
     #define XPF_DECLSPEC_SELECTANY()            __attribute__((weak))
+
+    /**
+     * @brief Tells the compiler that the symbol is exported
+     */
+    #define XPF_DECLSPEC_EXPORT()               __attribute__((visibility("default")))
 
 #else
     #error Unsupported Compiler.
@@ -222,15 +232,32 @@
  */
 #if defined XPF_PLATFORM_WIN_KM
 
-    /**
-     * @brief Macro definition for ASSERT.
-     */
-    #define XPF_ASSERT                   NT_ASSERT
+    #if defined XPF_CONFIGURATION_RELEASE
 
-    /**
-     * @brief Macro definition for Verify.
-     */
-    #define XPF_VERIFY                      NT_VERIFY
+        /**
+         * @brief Macro definition for ASSERT.
+         */
+        #define XPF_ASSERT(Expression)      (((void) 0), true)
+        /**
+         * @brief Macro definition for VERIFY.
+         */
+        #define XPF_VERIFY(Expression)      ((Expression) ? true : false)
+
+    #elif defined XPF_CONFIGURATION_DEBUG
+
+        /**
+         * @brief Macro definition for ASSERT.
+         */
+        #define XPF_ASSERT(Expression)      ((Expression) ? true                                                                \
+                                                          : (::ExRaiseStatus(STATUS_UNHANDLED_EXCEPTION), false))
+        /**
+         * @brief Macro definition for VERIFY.
+         */
+        #define XPF_VERIFY                  XPF_ASSERT
+    #else
+
+        #error Unknown Configuration
+    #endif
 
     /**
      * @brief Use the same calling convention as NT APIs.

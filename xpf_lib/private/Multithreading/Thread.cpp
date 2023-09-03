@@ -75,8 +75,7 @@ XpfInternalThreadRunCallback(
     }
 
     //
-    // The newly created system thread runs at PASSIVE_LEVEL inside a critical region.
-    // Bail early if this invariant is invalidated.
+    // The newly created system thread runs at PASSIVE_LEVEL.
     //
     if (PASSIVE_LEVEL != ::KeGetCurrentIrql())
     {
@@ -84,31 +83,18 @@ XpfInternalThreadRunCallback(
         return;
     }
 
-    //
-    // Critical region => APCs are disabled but special kernel APCs are enabled.
-    // If APCs are not disabled we will not run and we will bail early.
-    // If special kernel APCs are disabled, again, we will not run.
-    //
-    if ((FALSE == ::KeAreApcsDisabled()) ||
-        (FALSE != ::KeAreAllApcsDisabled()))
-    {
-        XPF_ASSERT(false);
-        return;
-    }
-
+    ::KeEnterCriticalRegion();
     if (context->UserCallback)
     {
         context->UserCallback(context->UserCallbackArgument);
     }
+    ::KeLeaveCriticalRegion();
 
     //
     // Validate the invariants. We should still be at passive level.
-    // APCs should be disabled and special kernel APCs enabled.
     // This will help on debug.
     //
     XPF_ASSERT(PASSIVE_LEVEL == ::KeGetCurrentIrql());
-    XPF_ASSERT(FALSE != ::KeAreApcsDisabled);
-    XPF_ASSERT(FALSE == ::KeAreAllApcsDisabled);
 }
 
 #elif defined XPF_PLATFORM_LINUX_UM

@@ -56,8 +56,7 @@ RunAllTests(
  *        It is platform dependant.
  *
  * @param[in] Format - The format specifier - see printf doc for this.
- * 
- * @return void
+ *
  */
 
 inline void
@@ -87,115 +86,10 @@ LogTestInfo(
 
 
 /**
- * @brief   Forward definition for the TestScenario class.
- *          This is provided below, but it's used by the TestScenarioCallback.
- */
-class TestScenario;
-
-
-/**
  * @brief   Definition for test scenario callback type which will be executed.
  */
-typedef void (XPF_API* TestScenarioCallback) (xpf_test::TestScenario* _XpfArgScenario) noexcept(true);
+typedef void(XPF_API* TestScenarioCallback)([[maybe_unused]] NTSTATUS* _XpfArgScenario) noexcept(true);
 
-
-/**
- * @brief   Definition for test scenario structure.
- *          One of this will be declared for each test.
- *          It holds extra metadata for each test.
- */
-class TestScenario final
-{
- public:
-/**
- * @brief Default constructor.
- */
-TestScenario(
-    _In_ _Const_ const xpf::StringView<char>& ScenarioName,
-    _In_ xpf_test::TestScenarioCallback Callback
-) noexcept(true)
-{
-    this->ScenarioName = ScenarioName;
-    this->Callback = Callback;
-}
-
-/**
- * @brief Default destructor.
- */
-~TestScenario(
-    void
-) noexcept(true) = default;
-
-
-/**
- * @brief Default copy constructor.
- * 
- * @param[in] Other - The other object to construct from.
- */
-TestScenario(
-    _In_ _Const_ const TestScenario& Other
-) noexcept(true) = default;
-
-/**
- * @brief Default move constructor.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-TestScenario(
-    _Inout_ TestScenario&& Other
-) noexcept(true) = default;
-
-/**
- * @brief Default copy assignment.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-TestScenario&
-operator=(
-    _In_ _Const_ const TestScenario& Other
-) noexcept(true) = default;
-
-/**
- * @brief Default move assignment.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-TestScenario&
-operator=(
-    _Inout_ TestScenario&& Other
-) noexcept(true) = default;
-
- public:
-     /**
-      * @brief   Stores the name of the scenario.
-      *          This will be a combination of namespace and api name.
-      */
-     xpf::StringView<char> ScenarioName;
-    /**
-      * @brief   The actual function which will be executed.
-      */
-     xpf_test::TestScenarioCallback Callback = nullptr;
-     /**
-      * @brief   Stores the starting time of the scenario.
-      */
-     uint64_t StartTime = 0;
-     /**
-      * @brief   Stores the end time of the scenario.
-      */
-     uint64_t EndTime = 0;
-     /**
-      * @brief   Stores the exist status of the scenario.
-      *          This is sucessfull only if the scenario was properly finished and encountered
-      *          no errors.
-      */
-     NTSTATUS ReturnStatus = STATUS_SUCCESS;
-};  // class TestScenario
 };  // namespace xpf_test
 
 /**
@@ -209,6 +103,7 @@ operator=(
  */
  extern bool mXpfConditionHasGeneratedDeath;
 
+ 
 /**
  * 
  * @brief       Create two new sections, one before and one after ".xpfTsT".
@@ -239,30 +134,32 @@ operator=(
     #pragma section("xpfts$a", read)
     #pragma section("xpfts$t", read)
     #pragma section("xpfts$z", read)
+    #pragma comment(linker, "/merge:xpfts=.rdata")
 #endif
-
  
 /**
  * @brief       First section is "xpfts$a" -- we need this first as we need to define the $a section.
  */
 XPF_DECLSPEC_SELECTANY()
+XPF_DECLSPEC_EXPORT()
 XPF_ALLOC_SECTION("xpfts$a")
-volatile xpf_test::TestScenario* gXpfStartMarker = nullptr;
+const xpf_test::TestScenarioCallback* gXpfStartMarker = nullptr;
 
 /**
  * @brief       Allocate something in between - "xpfts$t".
  */
 XPF_DECLSPEC_SELECTANY()
+XPF_DECLSPEC_EXPORT()
 XPF_ALLOC_SECTION("xpfts$t")
-volatile xpf_test::TestScenario* gXpfTestMarker = nullptr;
+const xpf_test::TestScenarioCallback* gXpfTestMarker = nullptr;
 
 /**
  * @brief       Last section is "xpfts$z" -- we need this last as we need to define the $z section after the other 2.
  */
 XPF_DECLSPEC_SELECTANY()
+XPF_DECLSPEC_EXPORT()
 XPF_ALLOC_SECTION("xpfts$z")
-volatile xpf_test::TestScenario* gXpfEndMarker = nullptr;
-
+const xpf_test::TestScenarioCallback* gXpfEndMarker = nullptr;
 
 
 /**
@@ -298,7 +195,7 @@ volatile xpf_test::TestScenario* gXpfEndMarker = nullptr;
                                       XPF_TEST_STRINGIFY(Condition));                                                   \
                                                                                                                         \
                 /* Mark the test as failed. */                                                                          \
-                _XpfArgScenario->ReturnStatus = STATUS_UNSUCCESSFUL;                                                    \
+                (*_XpfArgScenario) = STATUS_UNSUCCESSFUL;                                                               \
             }                                                                                                           \
         }
 
@@ -403,24 +300,32 @@ volatile xpf_test::TestScenario* gXpfEndMarker = nullptr;
     /* The actual implementation will be provided by the user. */                                                           \
     namespace Namespace                                                                                                     \
     {                                                                                                                       \
-        void XPF_API Api(xpf_test::TestScenario* _XpfArgScenario) noexcept(true);                                           \
+        namespace Api                                                                                                       \
+        {                                                                                                                   \
+            void XPF_API Wrapper([[maybe_unused]] NTSTATUS* _XpfArgScenario) noexcept(true);                                \
+                                                                                                                            \
+            void XPF_API TestImpl(NTSTATUS* _XpfArgScenario) noexcept(true);                                                \
+                                                                                                                            \
+        };                                                                                                                  \
     };                                                                                                                      \
                                                                                                                             \
-    /* Create the Test Scenario structure associated with this testcase. */                                                 \
-    /* gxpftstScenario_<Namespace>_<Api> will be its actual name. */                                                        \
-    /* This can go into the default section. We'll use it below. */                                                         \
-    volatile xpf_test::TestScenario gxpftstScenario##Namespace##Api(XPF_TEST_STRINGIFY_CONCAT(Namespace, Api),              \
-                                                                    Namespace::Api);                                        \
+    void XPF_API Namespace::Api::TestImpl(NTSTATUS* _XpfArgScenario) noexcept(true)                                         \
+    {                                                                                                                       \
+        xpf_test::LogTestInfo("[*] Executing scenario '%s'! \r\n",                                                          \
+                              __FUNCSIG__);                                                                                 \
+        Namespace::Api::Wrapper(_XpfArgScenario);                                                                           \
+    }                                                                                                                       \
                                                                                                                             \
     /* In xpftst$t section we can only put pointers, so we declare another variable which stores the addres */              \
     /* of the gxpftstScenario_<Namespace>_<Api> declared above. This pointer will be allocated in the */                    \
     /* proper test section. Its name will be gxpftstMarker_<Namespace>_<Api> */                                             \
-    XPF_DECLSPEC_SELECTANY()                                                                                                \
-    XPF_ALLOC_SECTION("xpfts$t")                                                                                            \
-    volatile xpf_test::TestScenario* gxpftstMarker##Namespace##Api = &gxpftstScenario##Namespace##Api;                      \
+    XPF_DECLSPEC_EXPORT()                                                                                                   \
+    XPF_ALLOC_SECTION("xpfts$t")                                                                                           \
+    const xpf_test::TestScenarioCallback* gxpftstMarker##Namespace##Api =                                                   \
+                                                        (xpf_test::TestScenarioCallback*)(&Namespace::Api::TestImpl);       \
                                                                                                                             \
     /* And now the caller must provide the implementation for the api. */                                                   \
     /* Scenario is only accessed via test macro. So the compiler might not perceive it as used. */                          \
     /* CPP [[maybe_unused]] comes to rescue to not suppress warnings. */                                                    \
     /* Mangle the name to <_XpfArgScenario> so it won't conflict with user's variable. */                                   \
-    void XPF_API Namespace::Api([[maybe_unused]] xpf_test::TestScenario* _XpfArgScenario) noexcept(true)
+    void XPF_API Namespace::Api::Wrapper([[maybe_unused]] NTSTATUS* _XpfArgScenario) noexcept(true)
