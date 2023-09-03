@@ -176,7 +176,7 @@
     /**
      * @brief Grab the function signature
      */
-    #define XPF_FUNCSIG()                       __PRETTY_FUNCTION__ 
+    #define XPF_FUNCSIG()                       __PRETTY_FUNCTION__
 
 #else
     #error Unsupported Compiler.
@@ -488,10 +488,25 @@
  */
 #define XPF_CONTAINING_RECORD(address, type, field)     ((type *)((uint8_t*)(address) - (size_t)(&((type *)0)->field)))         // NOLINT(*)
 
- /**
-  * @brief Useful macro for unreferenced parameter.
-  */
+/**
+ * @brief Useful macro for unreferenced parameter.
+ */
 #define XPF_UNREFERENCED_PARAMETER(Argument)            { (void)(Argument); }
+
+
+/**
+ * @brief Useful macro for EXTERN_C definition. This doesn't seem
+ *        to be defined the same in all compilers.
+ *        Must be used with XPF_EXTERN_C_END
+ */
+#define XPF_EXTERN_C_START()                            extern "C" {
+ /**
+  * @brief Useful macro for EXTERN_C definition. This doesn't seem
+  *        to be defined the same in all compilers.
+  *        Must be used with XPF_EXTERN_C_START
+  */
+#define XPF_EXTERN_C_END()                              };  // extern "C"
+
 
 /**
  *

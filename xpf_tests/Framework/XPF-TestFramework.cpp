@@ -39,7 +39,7 @@ XPF_SECTION_PAGED;
  * @note        It's the responsibility of each test to reset this global properly
  *              before registering the signal handler.
  */
- bool mXpfConditionHasGeneratedDeath = false;
+bool mXpfConditionHasGeneratedDeath = false;
 
 
 _Must_inspect_result_
@@ -91,7 +91,7 @@ xpf_test::RunAllTests(
         uint64_t testStartTime = xpf::ApiCurrentTime();
         ((const xpf_test::TestScenarioCallback)(*crtEntry))(&testResult);                                              // NOLINT(*)
         uint64_t testEndTime = xpf::ApiCurrentTime();
-        
+
         xpf_test::LogTestInfo("    > %llu (100 ns) test start time; \r\n",
                               static_cast<unsigned long long>(testStartTime));                                         // NOLINT(*)
 

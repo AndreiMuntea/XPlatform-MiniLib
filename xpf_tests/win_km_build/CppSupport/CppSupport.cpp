@@ -18,6 +18,13 @@
 
 #include "xpf_tests/win_km_build/CppSupport/CppSupport.hpp"
 
+/**
+ * @brief CPP support was not yet initialized.
+ *        ensure these APIs are not name mangled
+ *        so the KM compiler will recognize them.
+ *
+ */
+XPF_EXTERN_C_START();
 
 /**
  * @brief   By default everything goes into paged object section.
@@ -25,6 +32,7 @@
  *          It is safe to place everything in paged area. 
  */
 XPF_SECTION_PAGED;
+
 
 //
 // ************************************************************************************************
@@ -74,10 +82,13 @@ static XPF_CPP_DESTRUCTOR gXpfCppDestructorList;
  */
 XPF_SECTION_DEFAULT;
 
-
-#pragma section(".CRT$XCA", read)
-#pragma section(".CRT$XCZ", read)
-
+/**
+ * @brief   MSVC requires these sections to be defined before usage.
+ */
+#if defined XPF_COMPILER_MSVC
+    #pragma section(".CRT$XCA", read)
+    #pragma section(".CRT$XCZ", read)
+#endif  // XPF_COMPILER_MSVC
 
 /**
  * @brief These data sections are required by CRT.
@@ -96,8 +107,16 @@ XPF_ALLOC_SECTION(".CRT$XCA") PVFV __crtXca[] = { nullptr };
 XPF_ALLOC_SECTION(".CRT$XCZ") PVFV __crtXcz[] = { nullptr };
 
 
-#pragma data_seg()
-#pragma comment(linker, "/merge:.CRT=.rdata")
+/**
+ * @brief   MSVC requires these sections to be merged with the .rdata section.
+ *          Otherwise a linker error will occur sayint that there are potentially
+ *          unhandled static initializers caused by the .CRT sections being present
+ *          in the binary. We need them to be merged.
+ */
+#if defined XPF_COMPILER_MSVC
+    #pragma data_seg()
+    #pragma comment(linker, "/merge:.CRT=.rdata")
+#endif  // XPF_COMPILER_MSVC
 
 
 /**
@@ -193,8 +212,8 @@ atexit(
 _Use_decl_annotations_
 NTSTATUS
 XPF_API
-XpfTestInitializeCppSupport(
-    VOID
+XpfInitializeCppSupport(
+    void
 )
 {
     //
@@ -244,10 +263,10 @@ XpfTestInitializeCppSupport(
     return STATUS_SUCCESS;
 }
 
-VOID
+void
 XPF_API
-XpfTestDeinitializeCppSupport(
-    VOID
+XpfDeinitializeCppSupport(
+    void
 )
 {
     XPF_CPP_DESTRUCTOR* destructorEntry = nullptr;
@@ -316,6 +335,27 @@ XpfTestDeinitializeCppSupport(
     ::InitializeListHead(&gXpfCppDestructorList.Entry);
 }
 
+
+/**
+ * @brief CPP support is initialized :)
+ */
+XPF_EXTERN_C_END();
+
+
+//
+// ************************************************************************************************
+// This is the section of placement new and delete implementation.
+// ************************************************************************************************
+//
+
+
+/**
+ * @brief   New and delete must be available at DISPATCH as well.
+ *          So these are actually in the default code section.
+ *          We can't page them.
+ */
+XPF_SECTION_DEFAULT;
+
 /**
  *
  * @brief Placement new declaration - required for cpp support.
@@ -337,8 +377,11 @@ operator new(
     void* Location
 ) noexcept(true)
 {
+    XPF_MAX_DISPATCH_LEVEL();
+
     XPF_VERIFY(0 != BlockSize);
     XPF_VERIFY(nullptr != Location);
+
     return Location;
 }
 
@@ -363,6 +406,8 @@ operator delete(
     void* Location
 ) noexcept(true)
 {
+    XPF_MAX_DISPATCH_LEVEL();
+
     XPF_VERIFY(nullptr != Pointer);
     XPF_VERIFY(nullptr != Location);
 }
@@ -388,6 +433,8 @@ operator delete(
     size_t Size
 ) noexcept(true)
 {
+    XPF_MAX_DISPATCH_LEVEL();
+
     XPF_VERIFY(nullptr != Pointer);
     XPF_VERIFY(0 != Size);
 }

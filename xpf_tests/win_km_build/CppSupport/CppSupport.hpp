@@ -19,7 +19,16 @@
 
 #pragma once
 
-#include "xpf_tests/XPF-TestIncludes.hpp"
+
+#include <xpf_lib/xpf.hpp>
+
+/**
+ * @brief CPP support was not yet initialized.
+ *        ensure these APIs are not name mangled
+ *        so the KM compiler will recognize them.
+ *
+ */
+XPF_EXTERN_C_START();
 
 
 /**
@@ -36,8 +45,8 @@
 _Must_inspect_result_
 NTSTATUS
 XPF_API
-XpfTestInitializeCppSupport(
-    VOID
+XpfInitializeCppSupport(
+    void
 );
 
 /**
@@ -48,10 +57,14 @@ XpfTestInitializeCppSupport(
  * 
  * @return Nothing.
  */
-VOID
+void
 XPF_API
-XpfTestDeinitializeCppSupport(
-    VOID
+XpfDeinitializeCppSupport(
+    void
 );
 
-
+/**
+ * @brief Don't add anything after this macro.
+ *        Stop the C-Specific section here.
+ */
+XPF_EXTERN_C_END();

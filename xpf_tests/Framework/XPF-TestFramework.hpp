@@ -101,9 +101,9 @@ typedef void(XPF_API* TestScenarioCallback)([[maybe_unused]] NTSTATUS* _XpfArgSc
  * @note        It's the responsibility of each test to reset this global properly
  *              before registering the signal handler.
  */
- extern bool mXpfConditionHasGeneratedDeath;
+extern bool mXpfConditionHasGeneratedDeath;
 
- 
+
 /**
  * 
  * @brief       Create two new sections, one before and one after ".xpfTsT".
@@ -136,7 +136,7 @@ typedef void(XPF_API* TestScenarioCallback)([[maybe_unused]] NTSTATUS* _XpfArgSc
     #pragma section("xpfts$z", read)
     #pragma comment(linker, "/merge:xpfts=.rdata")
 #endif
- 
+
 /**
  * @brief       First section is "xpfts$a" -- we need this first as we need to define the $a section.
  */
@@ -235,10 +235,7 @@ const xpf_test::TestScenarioCallback* gXpfEndMarker = nullptr;
      *
      * @return void.
      */
-    inline void
-    XpfDeathTestSignalHandler(
-        _In_ int SignalNumber
-    ) noexcept(true)
+    inline void XpfDeathTestSignalHandler(_In_ int SignalNumber) noexcept(true)
     {
         if (SignalNumber == SIGSEGV)
         {
@@ -263,7 +260,7 @@ const xpf_test::TestScenarioCallback* gXpfEndMarker = nullptr;
         /* And now reset the signal handler. */                                                                     \
         XPF_TEST_EXPECT_TRUE_INTERNAL(SIG_ERR != signal(SIGSEGV, SIG_DFL), File, Line);                             \
     }
-#else 
+#else
     #error Unknown Platform
 #endif
 
