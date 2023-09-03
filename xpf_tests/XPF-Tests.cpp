@@ -81,7 +81,7 @@ operator new(
  *       for this API. If "new" header is available, it can be included,
  *       otherwise, a simple implementation can be provided.
  */
-extern void
+void
 XPF_PLATFORM_CONVENTION
 operator delete(
     void* Pointer,
@@ -90,4 +90,29 @@ operator delete(
 {
     XPF_VERIFY(nullptr != Pointer);
     XPF_VERIFY(nullptr != Location);
+}
+
+/**
+ *
+ * @brief Placement delete declaration  - required for cpp support.
+ *
+ * @param[in] Pointer - Unused.
+ *
+ * @param[in] Size - Unused.
+ *
+ * @return void.
+ *
+ * @note It is the caller responsibility to provide an implementation
+ *       for this API. If "new" header is available, it can be included,
+ *       otherwise, a simple implementation can be provided.
+ */
+void
+XPF_PLATFORM_CONVENTION
+operator delete(
+    void* Pointer,
+    size_t Size
+) noexcept(true)
+{
+    XPF_VERIFY(nullptr != Pointer);
+    XPF_VERIFY(0 != Size);
 }

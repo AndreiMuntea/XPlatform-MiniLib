@@ -195,7 +195,8 @@ xpf::Signal::Destroy(
         //
         if (nullptr != this->m_SignalHandle.Handle)
         {
-            xpf::CriticalMemoryAllocator::FreeMemory(&this->m_SignalHandle.Handle);
+            xpf::CriticalMemoryAllocator::FreeMemory(
+                reinterpret_cast<void**>(&this->m_SignalHandle.Handle));
             this->m_SignalHandle.Handle = nullptr;
         }
 

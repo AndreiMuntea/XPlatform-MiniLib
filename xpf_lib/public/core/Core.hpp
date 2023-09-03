@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright ï¿½ Andrei-Marius MUNTEA 2020-2023.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -496,4 +496,25 @@ XPF_PLATFORM_CONVENTION
 operator delete(
     void* Pointer,
     void* Location
+) noexcept(true);
+
+/**
+ *
+ * @brief Placement delete declaration  - required for cpp support.
+ *
+ * @param[in] Pointer - Unused.
+ *
+ * @param[in] Size - Unused.
+ *
+ * @return void.
+ *
+ * @note It is the caller responsibility to provide an implementation
+ *       for this API. If "new" header is available, it can be included,
+ *       otherwise, a simple implementation can be provided.
+ */
+extern void
+XPF_PLATFORM_CONVENTION
+operator delete(
+    void* Pointer,
+    size_t Size
 ) noexcept(true);

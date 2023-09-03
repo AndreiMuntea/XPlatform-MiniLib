@@ -218,7 +218,7 @@ RundownGuard(
     //
     // First we enter the critical region (if needed).
     //
-    #if defined XPF__PLATFORM_WIN_KM
+    #if defined XPF_PLATFORM_WIN_KM
         if (::KeGetCurrentIrql() < DISPATCH_LEVEL)
         {
             ::KeEnterCriticalRegion();

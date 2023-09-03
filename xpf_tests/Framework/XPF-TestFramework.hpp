@@ -410,7 +410,7 @@ volatile xpf_test::TestScenario* gXpfEndMarker = nullptr;
     /* gxpftstScenario_<Namespace>_<Api> will be its actual name. */                                                        \
     /* This can go into the default section. We'll use it below. */                                                         \
     volatile xpf_test::TestScenario gxpftstScenario##Namespace##Api(XPF_TEST_STRINGIFY_CONCAT(Namespace, Api),              \
-                                                                           Namespace::Api);                                 \
+                                                                    Namespace::Api);                                        \
                                                                                                                             \
     /* In xpftst$t section we can only put pointers, so we declare another variable which stores the addres */              \
     /* of the gxpftstScenario_<Namespace>_<Api> declared above. This pointer will be allocated in the */                    \
