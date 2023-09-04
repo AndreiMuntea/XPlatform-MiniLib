@@ -215,6 +215,9 @@
     #include <sched.h>
     #include <sys/time.h>
     #include <pthread.h>
+    #include <errno.h>
+    #include <iconv.h>
+    #include <wchar.h>
     #include <cstdlib>
     #include <cassert>
     #include <cstdint>

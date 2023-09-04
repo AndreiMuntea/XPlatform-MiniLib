@@ -294,6 +294,14 @@ Resize(
     }
 
     //
+    // If capacity is 0, we're done. The vector is empty.
+    //
+    if (0 == Capacity)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    //
     // Ensure the new capacity won't overflow.
     //
     const size_t sizeInBytes = Capacity * sizeof(Type);

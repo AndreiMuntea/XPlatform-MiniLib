@@ -177,7 +177,8 @@ xpf::thread::Thread::Run(
     #elif defined XPF_PLATFORM_WIN_KM
         HANDLE threadHandle = NULL;
 
-        OBJECT_ATTRIBUTES attributes = {0};
+        OBJECT_ATTRIBUTES attributes;
+        xpf::ApiZeroMemory(&attributes, sizeof(attributes));
         InitializeObjectAttributes(&attributes, NULL, OBJ_KERNEL_HANDLE, NULL, NULL);
 
         //

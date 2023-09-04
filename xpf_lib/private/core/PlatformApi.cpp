@@ -240,7 +240,8 @@ xpf::ApiSleep(
         // Specifies the absolute or relative time, in units of 100 nanoseconds,
         // for which the wait is to occur. A negative value indicates relative time
         //
-        LARGE_INTEGER interval = { 0 };
+        LARGE_INTEGER interval;
+        xpf::ApiZeroMemory(&interval, sizeof(interval));
 
         //
         // 1 millisecond = 1000000 nanoseconds
@@ -295,12 +296,16 @@ xpf::ApiCurrentTime(
 ) noexcept(true)
 {
     #if defined XPF_PLATFORM_WIN_KM
-        LARGE_INTEGER largeInteger = { 0 };
+        LARGE_INTEGER largeInteger;
+        xpf::ApiZeroMemory(&largeInteger, sizeof(largeInteger));
+
         KeQuerySystemTime(&largeInteger);
 
         return static_cast<uint64_t>(largeInteger.QuadPart);
     #elif defined XPF_PLATFORM_WIN_UM
-        FILETIME fileTime = { 0 };
+        FILETIME fileTime;
+        xpf::ApiZeroMemory(&fileTime, sizeof(fileTime));
+
         ::GetSystemTimeAsFileTime(&fileTime);
 
         ULARGE_INTEGER largeInteger = { 0 };

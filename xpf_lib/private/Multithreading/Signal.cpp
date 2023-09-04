@@ -356,7 +356,8 @@ xpf::Signal::Wait(
         // Specifies the absolute or relative time, in units of 100 nanoseconds,
         // for which the wait is to occur. A negative value indicates relative time
         //
-        LARGE_INTEGER interval = { 0 };
+        LARGE_INTEGER interval;
+        xpf::ApiZeroMemory(&interval, sizeof(interval));
 
         //
         // 1 millisecond = 1000000 nanoseconds
