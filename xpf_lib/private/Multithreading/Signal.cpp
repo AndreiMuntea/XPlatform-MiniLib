@@ -237,10 +237,14 @@ xpf::Signal::Set(
 
     #if defined XPF_PLATFORM_WIN_UM
         XPF_ASSERT(nullptr != this->m_SignalHandle.Handle);
+        _Analysis_assume_(nullptr != this->m_SignalHandle.Handle);
+
         (VOID) ::SetEvent(this->m_SignalHandle.Handle);
 
     #elif defined XPF_PLATFORM_WIN_KM
         XPF_ASSERT(nullptr != this->m_SignalHandle.Handle);
+        _Analysis_assume_(nullptr != this->m_SignalHandle.Handle);
+
         (VOID) ::KeSetEvent(this->m_SignalHandle.Handle,
                             IO_NO_INCREMENT,
                             FALSE);
@@ -299,10 +303,14 @@ xpf::Signal::Reset(
 
     #if defined XPF_PLATFORM_WIN_UM
         XPF_ASSERT(nullptr != this->m_SignalHandle.Handle);
+        _Analysis_assume_(nullptr != this->m_SignalHandle.Handle);
+
         (VOID) ::ResetEvent(this->m_SignalHandle.Handle);
 
     #elif defined XPF_PLATFORM_WIN_KM
         XPF_ASSERT(nullptr != this->m_SignalHandle.Handle);
+        _Analysis_assume_(nullptr != this->m_SignalHandle.Handle);
+
         (VOID) ::KeResetEvent(this->m_SignalHandle.Handle);
 
     #elif defined XPF_PLATFORM_LINUX_UM
@@ -347,6 +355,8 @@ xpf::Signal::Wait(
 
     #if defined XPF_PLATFORM_WIN_UM
         XPF_ASSERT(nullptr != this->m_SignalHandle.Handle);
+        _Analysis_assume_(nullptr != this->m_SignalHandle.Handle);
+
         const DWORD waitResult = ::WaitForSingleObject(this->m_SignalHandle.Handle,
                                                        TimeoutInMilliSeconds);
         waitSatisfied = (WAIT_OBJECT_0 == waitResult) ? true
@@ -370,6 +380,8 @@ xpf::Signal::Wait(
         // We don't handle indepenedent statuses here. Only care about SUCCESS or not.
         //
         XPF_ASSERT(nullptr != this->m_SignalHandle.Handle);
+        _Analysis_assume_(nullptr != this->m_SignalHandle.Handle);
+
         const NTSTATUS status = ::KeWaitForSingleObject(this->m_SignalHandle.Handle,
                                                         Executive,
                                                         KernelMode,

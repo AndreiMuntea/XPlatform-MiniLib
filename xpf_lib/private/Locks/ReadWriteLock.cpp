@@ -232,6 +232,7 @@ xpf::ReadWriteLock::LockExclusive(
     // Assert here and investigate.
     //
     XPF_ASSERT(nullptr != this->m_Lock);
+    _Analysis_assume_(nullptr != this->m_Lock);
 
     //
     // We need access to RW_LOCK structure. R-CAST here to ease the access.
@@ -293,6 +294,7 @@ xpf::ReadWriteLock::UnLockExclusive(
     // Assert here and investigate.
     //
     XPF_ASSERT(nullptr != this->m_Lock);
+    _Analysis_assume_(nullptr != this->m_Lock);
 
     //
     // We need access to RW_LOCK structure. R-CAST here to ease the access.
@@ -328,6 +330,7 @@ xpf::ReadWriteLock::LockShared(
     // Assert here and investigate.
     //
     XPF_ASSERT(nullptr != this->m_Lock);
+    _Analysis_assume_(nullptr != this->m_Lock);
 
     //
     // We need access to RW_LOCK structure. R-CAST here to ease the access.
@@ -388,6 +391,7 @@ xpf::ReadWriteLock::UnLockShared(
     // Assert here and investigate.
     //
     XPF_ASSERT(nullptr != this->m_Lock);
+    _Analysis_assume_(nullptr != this->m_Lock);
 
     //
     // We need access to RW_LOCK structure. R-CAST here to ease the access.
