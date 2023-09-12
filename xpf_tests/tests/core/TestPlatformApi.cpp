@@ -391,3 +391,18 @@ XPF_TEST_SCENARIO(TestPlatformApi, AtomicCompareExchange)
                                                                         int64_t{ -5 }));
     XPF_TEST_EXPECT_TRUE(int64_t{ 100 } == i64Value);
 }
+
+/**
+ * @brief       This tests the random number method.
+ *
+ */
+XPF_TEST_SCENARIO(TestPlatformApi, RandomUuid)
+{
+    uuid_t first;
+    xpf::ApiRandomUuid(&first);
+
+    uuid_t second;
+    xpf::ApiRandomUuid(&second);
+
+    XPF_TEST_EXPECT_TRUE(false == xpf::ApiAreUuidsEqual(first, second));
+}

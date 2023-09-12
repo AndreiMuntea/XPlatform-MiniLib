@@ -35,7 +35,7 @@ namespace xpf
  * 
  *        This means that there can be up to 2 ^ 15 readers at the same time.
  */
-class BusyLock final : public virtual SharedLock
+class BusyLock final : public SharedLock
 {
  public:
 /**

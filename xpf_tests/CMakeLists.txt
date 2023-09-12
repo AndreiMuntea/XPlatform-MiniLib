@@ -13,6 +13,8 @@ include_directories(${CMAKE_CURRENT_LIST_DIR})
 
 # Add source to this project's executable.
 add_executable( XPF_Tests "XPF-Tests.cpp"
+                          "Framework/XPF-TestFramework.cpp"
+
                           "tests/core/TestCore.cpp"
                           "tests/core/TestPlatformApi.cpp"
 
@@ -32,13 +34,15 @@ add_executable( XPF_Tests "XPF-Tests.cpp"
                           "tests/Multithreading/TestThread.cpp"
                           "tests/Multithreading/TestSignal.cpp"
                           "tests/Multithreading/TestRundownProtection.cpp"
-                          "tests/Multithreading/TestThreadPool.cpp" "Framework/XPF-TestFramework.hpp" "Framework/XPF-TestFramework.cpp")
+                          "tests/Multithreading/TestThreadPool.cpp"
+
+                          "tests/Utility/TestEventFramework.cpp")
 
 # Link test executable against xpf-lib
 target_link_libraries( XPF_Tests xpf_lib )
 
 # Add tests
-add_test( NAME    XPF_Tests
+add_test( NAME    XPF_LIB_Tests
           COMMAND XPF_Tests )
 
 # Run the linter on tests - can be enabled when needed.

@@ -467,4 +467,32 @@ ApiEqualCharacters(
     _In_ wchar_t Right,
     _In_ bool CaseSensitive
 ) noexcept(true);
+
+/**
+ * @brief Generates a random 128-bit unique identifier.
+ * 
+ * @param NewUuid - The Newly Generated uuid.
+ */
+void
+XPF_API
+ApiRandomUuid(
+    _Out_ uuid_t* NewUuid
+) noexcept(true);
+
+/**
+ * @brief Checks if two uuid_t variables are equal or not.
+ * 
+ * @param[in] First - first UUID to be compared.
+ * 
+ * @param[in] Second - second UUID to be compared.
+ *
+ * @return true if First == Second,
+ *         false otherwise.
+ */
+bool
+XPF_API
+ApiAreUuidsEqual(
+    _In_ const uuid_t First,
+    _In_ const uuid_t Second
+) noexcept(true);
 };  // namespace xpf

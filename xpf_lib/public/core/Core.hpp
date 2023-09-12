@@ -213,11 +213,12 @@
 
     #include <unistd.h>
     #include <sched.h>
-    #include <sys/time.h>
     #include <pthread.h>
     #include <errno.h>
     #include <iconv.h>
     #include <wchar.h>
+    #include <sys/time.h>
+    #include <uuid/uuid.h>
     #include <cstdlib>
     #include <cassert>
     #include <cstdint>
@@ -326,6 +327,8 @@
      using int16_t = INT16;
      using int32_t = INT32;
      using int64_t = INT64;
+
+     using uuid_t  = UUID;
 
 #elif defined XPF_PLATFORM_WIN_UM
 
@@ -573,3 +576,21 @@ operator delete(
     void* Pointer,
     size_t Size
 ) noexcept(true);
+
+
+/**
+ * @brief Asserts for data types to have a known fixed size.
+ *        This is a compile time-assert.
+ */
+
+static_assert(sizeof(uint8_t)  == 1, "uint8_t  should be 1 byte(s)!");
+static_assert(sizeof(uint16_t) == 2, "uint16_t should be 2 byte(s)!");
+static_assert(sizeof(uint32_t) == 4, "uint32_t should be 4 byte(s)!");
+static_assert(sizeof(uint64_t) == 8, "uint64_t should be 8 byte(s)!");
+
+static_assert(sizeof(int8_t)  == 1, "int8_t  should be 1 byte(s)!");
+static_assert(sizeof(int16_t) == 2, "int16_t should be 2 byte(s)!");
+static_assert(sizeof(int32_t) == 4, "int32_t should be 4 byte(s)!");
+static_assert(sizeof(int64_t) == 8, "int64_t should be 8 byte(s)!");
+
+static_assert(sizeof(uuid_t)  == 16, "uuid_t should be 16 byte(s)!");

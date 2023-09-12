@@ -439,3 +439,92 @@ xpf::ApiEqualCharacters(
 
     return (Left == Right);
 }
+
+void
+XPF_API
+xpf::ApiRandomUuid(
+    _Out_ uuid_t* NewUuid
+) noexcept(true)
+{
+    NTSTATUS status = STATUS_UNSUCCESSFUL;
+
+    uuid_t newUuid;
+    xpf::ApiZeroMemory(&newUuid, sizeof(newUuid));
+
+    #if defined XPF_PLATFORM_WIN_UM
+        HCRYPTPROV prov;
+        xpf::ApiZeroMemory(&prov, sizeof(prov));
+
+        if (FALSE != ::CryptAcquireContextW(&prov, NULL, NULL, PROV_RSA_FULL, 0))
+        {
+            for (size_t i = 0; i < sizeof(newUuid); )
+            {
+                BYTE newByte = 0;
+                status = (FALSE != ::CryptGenRandom(prov, sizeof(newByte), &newByte)) ? STATUS_SUCCESS
+                                                                                      : STATUS_UNSUCCESSFUL;
+                if (!NT_SUCCESS(status))
+                {
+                    break;
+                }
+
+                if ((newByte >= '0' && newByte <= '9') ||
+                    (newByte >= 'A' && newByte <= 'F') ||
+                    (newByte >= 'a' && newByte <= 'f'))
+                {
+                    uint8_t* destination = reinterpret_cast<uint8_t*>(&newUuid);
+                    xpf::ApiCopyMemory(&destination[i], &newByte, sizeof(newByte));
+                    ++i;
+                }
+            }
+
+            const BOOL releaseStatus = ::CryptReleaseContext(prov, 0);
+            XPF_VERIFY(FALSE != releaseStatus);
+        }
+
+    #elif defined XPF_PLATFORM_WIN_KM
+        //
+        // This can only be called at passive, if not, take the long route below.
+        //
+        if (::KeGetCurrentIrql() == PASSIVE_LEVEL)
+        {
+            status = ExUuidCreate(&newUuid);
+        }
+    #elif defined XPF_PLATFORM_LINUX_UM
+        uuid_generate_random(newUuid);
+        status = STATUS_SUCCESS;
+    #else
+        #error Unknown Platform
+    #endif
+
+    //
+    // On fail, take the long route.
+    //
+    if (!NT_SUCCESS(status))
+    {
+        for (size_t i = 0; i < sizeof(newUuid); i++)
+        {
+            BYTE newByte = (xpf::ApiCurrentTime() % 'F') + 'A';
+
+            uint8_t* destination = reinterpret_cast<uint8_t*>(&newUuid);
+            xpf::ApiCopyMemory(&destination[i], &newByte, sizeof(newByte));
+        }
+    }
+
+    xpf::ApiCopyMemory(NewUuid, &newUuid, sizeof(newUuid));
+}
+
+bool
+XPF_API
+xpf::ApiAreUuidsEqual(
+    _In_ const uuid_t First,
+    _In_ const uuid_t Second
+) noexcept(true)
+{
+    #if defined XPF_PLATFORM_WIN_UM || defined XPF_PLATFORM_WIN_KM
+        return (FALSE != IsEqualIID(First, Second));
+    #elif defined XPF_PLATFORM_LINUX_UM
+        return (0 == uuid_compare(First, Second));
+    #else
+        #error Unknown Platform
+    #endif
+}

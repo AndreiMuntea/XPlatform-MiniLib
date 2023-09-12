@@ -25,15 +25,15 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     # Warning level
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-long-long -pedantic -Waddress -Waddress-of-packed-member -Wno-unused-value -Wno-self-assign-overloaded")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-long-long -pedantic -Waddress -Waddress-of-packed-member -Wno-unused-value -Wno-self-assign-overloaded -Wno-unused-command-line-argument")
     # Link with pthread
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -luuid")
 
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     # Warning level
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-long-long -pedantic -Waddress -Waddress-of-packed-member -Wno-unused-value -Wno-self-assign-overloaded")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-long-long -pedantic -Waddress -Waddress-of-packed-member -Wno-unused-value -Wno-self-assign-overloaded -Wno-unused-command-line-argument")
     # Link with pthread
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -luuid")
 
 endif()
 

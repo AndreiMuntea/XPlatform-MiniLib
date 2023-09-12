@@ -41,3 +41,5 @@
 #include "public/Multithreading/Signal.hpp"
 #include "public/Multithreading/RundownProtection.hpp"
 #include "public/Multithreading/ThreadPool.hpp"
+
+#include "public/Utility/EventFramework.hpp"
