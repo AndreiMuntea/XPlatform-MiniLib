@@ -1,5 +1,5 @@
 /**
- * @file        xpf_lib/public/EventFramework/EventFramework.hpp
+ * @file        xpf_lib/public/Utility/EventFramework.hpp
  *
  * @brief       This implements a simple and fast event framework.
  *              It can have multiple listeners registered.
@@ -188,6 +188,8 @@ virtual ~IEventListener(
  * @param[in,out] Bus   - The event bus where this particular event has been thrown to.
  *                        It has strong guarantees that the bus will be valid until the OnEvent() is called.
  *                        Can be safely used to throw new events from the OnEvent() method itself.
+ *
+ * @return - void.
  */
 virtual void
 XPF_API
@@ -294,6 +296,11 @@ struct EventData
 };  // struct EventData;
 
 
+/**
+ * @brief       This is the event bus class.
+ *              You can register listeners, unregister listeners
+ *              and throw events on it.
+ */
 class EventBus final
 {
  private:
@@ -394,6 +401,8 @@ UnregisterListener(
 /**
  * @brief Waits for all outstanding events to finish.
  *        Prevents further enqueues of events.
+ *
+ * @return void
  */
 void
 XPF_API
@@ -505,6 +514,17 @@ AsyncCallback(
      xpf::AtomicList m_Listeners;
 
     /**
+     * @brief       This stores the number of currently enqueued async items.
+     *              When this exceeds the threshold, we start stealing threads.
+     */
+     alignas(uint32_t) volatile  uint32_t m_EnqueuedAsyncItems = 0;
+    /**
+     * @brief       This is the async threshold. When this is reached, we'll favor stealing threads.
+     */
+     static constexpr uint32_t ASYNC_THRESHOLD = 1024;
+
+
+    /**
      * @brief   Default MemoryAllocator is our friend as it requires access to the private
      *          default constructor. It is used in the Create() method to ensure that
      *          no partially constructed objects are created but instead they will be
@@ -513,4 +533,4 @@ AsyncCallback(
 
      friend class xpf::MemoryAllocator;
 };  // class EventBus
-};  // namespace xpf;
+};  // namespace xpf

@@ -156,26 +156,26 @@ MockEventListener(
 ) = default;
 
 /**
- * @brief Copy constructor - can be implemented when needed.
+ * @brief Copy constructor - default
  * 
  * @param[in] Other - The other object to construct from.
  */
 MockEventListener(
     _In_ _Const_ const MockEventListener& Other
-) noexcept(true) = delete;
+) noexcept(true) = default;
 
 /**
- * @brief Move constructor - can be implemented when needed.
+ * @brief Move constructor - default
  * 
  * @param[in,out] Other - The other object to construct from.
  *                        Will be invalidated after this call.
  */
 MockEventListener(
     _Inout_ MockEventListener&& Other
-) noexcept(true) = delete;
+) noexcept(true) = default;
 
 /**
- * @brief Copy assignment - can be implemented when needed.
+ * @brief Copy assignment - default
  * 
  * @param[in] Other - The other object to construct from.
  * 
@@ -184,10 +184,10 @@ MockEventListener(
 MockEventListener&
 operator=(
     _In_ _Const_ const MockEventListener& Other
-) noexcept(true) = delete;
+) noexcept(true) = default;
 
 /**
- * @brief Move assignment - can be implemented when needed.
+ * @brief Move assignment - default
  * 
  * @param[in,out] Other - The other object to construct from.
  *                        Will be invalidated after this call.
@@ -197,7 +197,7 @@ operator=(
 MockEventListener&
 operator=(
     _Inout_ MockEventListener&& Other
-) noexcept(true) = delete;
+) noexcept(true) = default;
 
 
 /**
@@ -212,6 +212,8 @@ operator=(
  * @param[in,out] Bus   - The event bus where this particular event has been thrown to.
  *                        It has strong guarantees that the bus will be valid until the OnEvent() is called.
  *                        Can be safely used to throw new events from the OnEvent() method itself.
+ *
+ * @return void.
  */
 inline void
 XPF_API

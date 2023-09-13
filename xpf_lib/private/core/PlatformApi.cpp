@@ -503,10 +503,19 @@ xpf::ApiRandomUuid(
     {
         for (size_t i = 0; i < sizeof(newUuid); i++)
         {
-            BYTE newByte = (xpf::ApiCurrentTime() % 'F') + 'A';
+            const uint64_t currentTime = xpf::ApiCurrentTime();
+            uint8_t lastByte = currentTime % 0xFF;
+
+            const bool isHexDigit = ((lastByte >= '0' && lastByte <= '9') ||
+                                     (lastByte >= 'A' && lastByte <= 'F') ||
+                                     (lastByte >= 'a' && lastByte <= 'f'));
+            if (!isHexDigit)
+            {
+                lastByte = '0' + (lastByte % 10);
+            }
 
             uint8_t* destination = reinterpret_cast<uint8_t*>(&newUuid);
-            xpf::ApiCopyMemory(&destination[i], &newByte, sizeof(newByte));
+            xpf::ApiCopyMemory(&destination[i], &lastByte, sizeof(lastByte));
         }
     }
 

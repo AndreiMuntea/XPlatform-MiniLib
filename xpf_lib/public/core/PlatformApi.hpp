@@ -472,6 +472,8 @@ ApiEqualCharacters(
  * @brief Generates a random 128-bit unique identifier.
  * 
  * @param NewUuid - The Newly Generated uuid.
+ *
+ * @return void.
  */
 void
 XPF_API

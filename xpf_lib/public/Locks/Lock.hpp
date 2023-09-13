@@ -125,7 +125,7 @@ UnLockExclusive(
  * @brief This is the base class for a shared lock.
  *        All other shared lock classes must inherit this one.
  */
-class SharedLock : public virtual ExclusiveLock
+class SharedLock : public ExclusiveLock
 {
  public:
 /**
@@ -138,9 +138,9 @@ SharedLock(
 /**
  * @brief Default destructor.
  */
-virtual ~SharedLock(
+~SharedLock(
     void
-) noexcept(true) = default;
+) = default;
 
 /**
  * @brief Copy constructor - deleted.

@@ -54,7 +54,14 @@ xpf::EventBus::Dispatch(
     //
     if (DispatchType == xpf::EventDispatchType::kAuto)
     {
-        DispatchType = xpf::EventDispatchType::kAsync;
+        if (this->m_EnqueuedAsyncItems >= this->ASYNC_THRESHOLD)
+        {
+            DispatchType = xpf::EventDispatchType::kSync;
+        }
+        else
+        {
+            DispatchType = xpf::EventDispatchType::kAsync;
+        }
     }
 
     if (DispatchType == xpf::EventDispatchType::kSync)
@@ -150,11 +157,13 @@ xpf::EventBus::EnqueueAsync(
     eventData->Event = Event;
     eventData->Bus = this;
 
+    xpf::ApiAtomicIncrement(&this->m_EnqueuedAsyncItems);
     const NTSTATUS status = (*this->m_AsyncPool).Enqueue(this->AsyncCallback,
                                                          this->AsyncCallback,
                                                          eventData);
     if (!NT_SUCCESS(status))
     {
+        xpf::ApiAtomicDecrement(&this->m_EnqueuedAsyncItems);
         goto CleanUp;
     }
 
@@ -162,7 +171,7 @@ CleanUp:
     if (!NT_SUCCESS(status))
     {
         xpf::MemoryAllocator::Destruct(eventData);
-        (*this->m_Allocator).FreeMemory(reinterpret_cast<void**>(eventData));
+        (*this->m_Allocator).FreeMemory(reinterpret_cast<void**>(&eventData));
     }
     return status;
 }
@@ -331,7 +340,6 @@ xpf::EventBus::Rundown(
     }
 }
 
-
 _Must_inspect_result_
 NTSTATUS
 XPF_API
@@ -492,11 +500,12 @@ xpf::EventBus::AsyncCallback(
     // The threadpool will wait for all outstanding items to be processed.
     //
     eventData->Bus->NotifyListeners(eventData->Event);
+    xpf::ApiAtomicDecrement(&eventData->Bus->m_EnqueuedAsyncItems);
 
     //
     // And now do the actual cleanup. First call the destructor.
     // And then free the memory.
     //
     xpf::MemoryAllocator::Destruct(eventData);
-    allocator.FreeMemory(reinterpret_cast<void**>(eventData));
+    allocator.FreeMemory(reinterpret_cast<void**>(&eventData));
 }
