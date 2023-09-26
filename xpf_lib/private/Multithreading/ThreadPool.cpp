@@ -258,7 +258,7 @@ xpf::ThreadPool::Create(
     //
     if ((nullptr == ThreadPoolToCreate) || (ThreadPoolToCreate->HasValue()))
     {
-        XPF_ASSERT(false);
+        XPF_DEATH_ON_FAILURE(false);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -274,7 +274,7 @@ xpf::ThreadPool::Create(
     //
     if (!ThreadPoolToCreate->HasValue())
     {
-        XPF_ASSERT(false);
+        XPF_DEATH_ON_FAILURE(false);
         return STATUS_NO_DATA_DETECTED;
     }
 
@@ -316,7 +316,7 @@ xpf::ThreadPool::Create(
     //
     // Then the initial number of threads.
     //
-    XPF_ASSERT(newThreadpool.INITIAL_THREAD_QUOTA != 0);
+    XPF_DEATH_ON_FAILURE(newThreadpool.INITIAL_THREAD_QUOTA != 0);
     for (size_t i = 0; i < newThreadpool.INITIAL_THREAD_QUOTA; ++i)
     {
         status = newThreadpool.CreateThreadContext();
@@ -325,13 +325,13 @@ xpf::ThreadPool::Create(
             goto Exit;
         }
     }
-    XPF_ASSERT(newThreadpool.m_NumberOfThreads == newThreadpool.INITIAL_THREAD_QUOTA);
+    XPF_DEATH_ON_FAILURE(newThreadpool.m_NumberOfThreads == newThreadpool.INITIAL_THREAD_QUOTA);
 
     //
     // Now we set the round robin index to the first element in the list.
     //
     newThreadpool.m_RoundRobinIndex = newThreadpool.m_ThreadsList.Head();
-    XPF_ASSERT(nullptr != newThreadpool.m_RoundRobinIndex);
+    XPF_DEATH_ON_FAILURE(nullptr != newThreadpool.m_RoundRobinIndex);
 
     //
     // All good. Signal success.
@@ -342,11 +342,11 @@ Exit:
     if (!NT_SUCCESS(status))
     {
         ThreadPoolToCreate->Reset();
-        XPF_ASSERT(!ThreadPoolToCreate->HasValue());
+        XPF_DEATH_ON_FAILURE(!ThreadPoolToCreate->HasValue());
     }
     else
     {
-        XPF_ASSERT(ThreadPoolToCreate->HasValue());
+        XPF_DEATH_ON_FAILURE(ThreadPoolToCreate->HasValue());
     }
     return status;
 }
@@ -577,7 +577,7 @@ xpf::ThreadPool::ThreadPoolMainCallback(
     //
     if (nullptr == threadContext)
     {
-        XPF_ASSERT(false);
+        XPF_DEATH_ON_FAILURE(false);
         return;
     }
 
@@ -638,7 +638,7 @@ xpf::ThreadPool::ThreadPoolProcessWorkItems(
     //
     if (nullptr == threadContext)
     {
-        XPF_ASSERT(false);
+        XPF_DEATH_ON_FAILURE(false);
         goto CleanUp;
     }
 

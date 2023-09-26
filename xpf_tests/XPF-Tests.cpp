@@ -62,8 +62,8 @@ operator new(
     void* Location
 ) noexcept(true)
 {
-    XPF_VERIFY(0 != BlockSize);
-    XPF_VERIFY(nullptr != Location);
+    XPF_DEATH_ON_FAILURE(0 != BlockSize);
+    XPF_DEATH_ON_FAILURE(nullptr != Location);
     return Location;
 }
 
@@ -88,8 +88,8 @@ operator delete(
     void* Location
 ) noexcept(true)
 {
-    XPF_VERIFY(nullptr != Pointer);
-    XPF_VERIFY(nullptr != Location);
+    XPF_DEATH_ON_FAILURE(nullptr != Pointer);
+    XPF_DEATH_ON_FAILURE(nullptr != Location);
 }
 
 /**
@@ -113,6 +113,6 @@ operator delete(
     size_t Size
 ) noexcept(true)
 {
-    XPF_VERIFY(nullptr != Pointer);
-    XPF_VERIFY(0 != Size);
+    XPF_DEATH_ON_FAILURE(nullptr != Pointer);
+    XPF_DEATH_ON_FAILURE(0 != Size);
 }

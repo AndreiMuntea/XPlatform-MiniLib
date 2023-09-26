@@ -70,11 +70,11 @@ XpfTesEventDispatchTpMethod(
             NTSTATUS status = STATUS_UNSUCCESSFUL;
 
             status = XpfTesEventDispatchHelper(eventId, 5, eventBus, xpf::EventDispatchType::kAsync);
-            XPF_VERIFY(NT_SUCCESS(status));
+            XPF_DEATH_ON_FAILURE(NT_SUCCESS(status));
             status = XpfTesEventDispatchHelper(eventId, 5, eventBus, xpf::EventDispatchType::kAuto);
-            XPF_VERIFY(NT_SUCCESS(status));
+            XPF_DEATH_ON_FAILURE(NT_SUCCESS(status));
             status = XpfTesEventDispatchHelper(eventId, 5, eventBus, xpf::EventDispatchType::kSync);
-            XPF_VERIFY(NT_SUCCESS(status));
+            XPF_DEATH_ON_FAILURE(NT_SUCCESS(status));
         }
     }
 }

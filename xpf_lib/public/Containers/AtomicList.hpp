@@ -80,7 +80,7 @@ AtomicList(
     void
 ) noexcept(true)
 {
-    XPF_ASSERT(this->m_ListHead == nullptr);
+    XPF_DEATH_ON_FAILURE(this->m_ListHead == nullptr);
 }
 
 /**

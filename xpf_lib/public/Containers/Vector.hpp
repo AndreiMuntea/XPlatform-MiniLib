@@ -182,8 +182,7 @@ operator[](
 
     if (Index >= this->m_Size)
     {
-        XPF_ASSERT(Index < this->m_Size);
-        xpf::ApiPanic(STATUS_INVALID_BUFFER_SIZE);
+        XPF_DEATH_ON_FAILURE(Index < this->m_Size);
     }
     return buffer[Index];
 }
@@ -206,8 +205,7 @@ operator[](
 
     if (Index >= this->m_Size)
     {
-        XPF_ASSERT(Index < this->m_Size);
-        xpf::ApiPanic(STATUS_INVALID_BUFFER_SIZE);
+        XPF_DEATH_ON_FAILURE(Index < this->m_Size);
     }
     return buffer[Index];
 }

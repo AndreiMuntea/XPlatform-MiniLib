@@ -177,7 +177,7 @@ atexit(
     //
     if (nullptr == destructorEntry)
     {
-        XPF_ASSERT(nullptr != destructorEntry);
+        XPF_DEATH_ON_FAILURE(nullptr != destructorEntry);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -240,7 +240,7 @@ XpfInitializeCppSupport(
     if ((nullptr == __crtXca) || (nullptr == __crtXcz) ||
         xpf::AlgoPointerToValue(__crtXca) >= xpf::AlgoPointerToValue(__crtXcz))
     {
-        XPF_ASSERT(false);
+        XPF_DEATH_ON_FAILURE(false);
         return STATUS_NOT_SUPPORTED;
     }
 
@@ -292,7 +292,7 @@ XpfDeinitializeCppSupport(
         listEntry = ::RemoveTailList(&gXpfCppDestructorList.Entry);
         if (nullptr == listEntry)
         {
-            XPF_ASSERT(nullptr != listEntry);
+            XPF_DEATH_ON_FAILURE(nullptr != listEntry);
             continue;
         }
 
@@ -302,7 +302,7 @@ XpfDeinitializeCppSupport(
         destructorEntry = XPF_CONTAINING_RECORD(listEntry, XPF_CPP_DESTRUCTOR, Entry);
         if (nullptr == destructorEntry)
         {
-            XPF_ASSERT(nullptr != destructorEntry);
+            XPF_DEATH_ON_FAILURE(nullptr != destructorEntry);
             continue;
         }
 
@@ -379,8 +379,8 @@ operator new(
 {
     XPF_MAX_DISPATCH_LEVEL();
 
-    XPF_VERIFY(0 != BlockSize);
-    XPF_VERIFY(nullptr != Location);
+    XPF_DEATH_ON_FAILURE(0 != BlockSize);
+    XPF_DEATH_ON_FAILURE(nullptr != Location);
 
     return Location;
 }
@@ -408,8 +408,8 @@ operator delete(
 {
     XPF_MAX_DISPATCH_LEVEL();
 
-    XPF_VERIFY(nullptr != Pointer);
-    XPF_VERIFY(nullptr != Location);
+    XPF_DEATH_ON_FAILURE(nullptr != Pointer);
+    XPF_DEATH_ON_FAILURE(nullptr != Location);
 }
 
 /**
@@ -435,6 +435,6 @@ operator delete(
 {
     XPF_MAX_DISPATCH_LEVEL();
 
-    XPF_VERIFY(nullptr != Pointer);
-    XPF_VERIFY(0 != Size);
+    XPF_DEATH_ON_FAILURE(nullptr != Pointer);
+    XPF_DEATH_ON_FAILURE(0 != Size);
 }

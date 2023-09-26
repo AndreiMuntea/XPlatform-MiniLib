@@ -222,7 +222,7 @@ OnEvent(
     _Inout_ xpf::EventBus* Bus
 ) noexcept(true) override
 {
-    XPF_VERIFY(nullptr != Bus);
+    XPF_DEATH_ON_FAILURE(nullptr != Bus);
 
     if ((*Event).EventId() == this->m_EventId)
     {

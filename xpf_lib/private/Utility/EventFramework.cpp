@@ -71,7 +71,7 @@ xpf::EventBus::Dispatch(
     }
     else
     {
-        XPF_ASSERT(DispatchType == xpf::EventDispatchType::kAsync);
+        XPF_DEATH_ON_FAILURE(DispatchType == xpf::EventDispatchType::kAsync);
         return this->EnqueueAsync(Event);
     }
 }
@@ -201,7 +201,7 @@ xpf::EventBus::Create(
     //
     if ((nullptr == EventBusToCreate) || (EventBusToCreate->HasValue()))
     {
-        XPF_ASSERT(false);
+        XPF_DEATH_ON_FAILURE(false);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -217,7 +217,7 @@ xpf::EventBus::Create(
     //
     if (!EventBusToCreate->HasValue())
     {
-        XPF_ASSERT(false);
+        XPF_DEATH_ON_FAILURE(false);
         return STATUS_NO_DATA_DETECTED;
     }
 
@@ -263,11 +263,11 @@ Exit:
     if (!NT_SUCCESS(status))
     {
         EventBusToCreate->Reset();
-        XPF_ASSERT(!EventBusToCreate->HasValue());
+        XPF_DEATH_ON_FAILURE(!EventBusToCreate->HasValue());
     }
     else
     {
-        XPF_ASSERT(EventBusToCreate->HasValue());
+        XPF_DEATH_ON_FAILURE(EventBusToCreate->HasValue());
     }
     return status;
 }
@@ -478,13 +478,13 @@ xpf::EventBus::AsyncCallback(
     xpf::EventData* eventData = reinterpret_cast<xpf::EventData*>(EventData);
     if (nullptr == eventData)
     {
-        XPF_ASSERT(false);
+        XPF_DEATH_ON_FAILURE(false);
         return;
     }
 
     if (nullptr == eventData->Bus)
     {
-        XPF_ASSERT(false);
+        XPF_DEATH_ON_FAILURE(false);
         return;
     }
 

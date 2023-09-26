@@ -59,7 +59,7 @@ xpf_test::RunAllTests(
     if ((xpf::AlgoPointerToValue(&gXpfStartMarker) >= xpf::AlgoPointerToValue(&gXpfTestMarker)) ||
         (xpf::AlgoPointerToValue(&gXpfEndMarker) <= xpf::AlgoPointerToValue(&gXpfTestMarker)))
     {
-        XPF_ASSERT(false);
+        XPF_DEATH_ON_FAILURE(false);
         return STATUS_NOT_SUPPORTED;
     }
 

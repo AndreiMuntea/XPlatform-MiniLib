@@ -43,7 +43,7 @@ xpf::LookasideListAllocator::Create(
     //
     if ((nullptr == LookasideAllocatorToCreate) || (LookasideAllocatorToCreate->HasValue()))
     {
-        XPF_ASSERT(false);
+        XPF_DEATH_ON_FAILURE(false);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -59,7 +59,7 @@ xpf::LookasideListAllocator::Create(
     //
     if (!LookasideAllocatorToCreate->HasValue())
     {
-        XPF_ASSERT(false);
+        XPF_DEATH_ON_FAILURE(false);
         return STATUS_NO_DATA_DETECTED;
     }
     xpf::LookasideListAllocator& newLookasideAllocator = (*(*LookasideAllocatorToCreate));
@@ -109,11 +109,11 @@ Exit:
     if (!NT_SUCCESS(status))
     {
         LookasideAllocatorToCreate->Reset();
-        XPF_ASSERT(!LookasideAllocatorToCreate->HasValue());
+        XPF_DEATH_ON_FAILURE(!LookasideAllocatorToCreate->HasValue());
     }
     else
     {
-        XPF_ASSERT(LookasideAllocatorToCreate->HasValue());
+        XPF_DEATH_ON_FAILURE(LookasideAllocatorToCreate->HasValue());
     }
     return status;
 }
@@ -194,11 +194,10 @@ xpf::LookasideListAllocator::AllocateMemory(
 
     //
     // If the block size is greater than the element size, we can't satisfy the allocation.
-    // This is likely an invalid usage. Assert here.
+    // This is likely an invalid usage.
     //
     if (BlockSize > this->m_ElementSize)
     {
-        XPF_ASSERT(false);
         return nullptr;
     }
 

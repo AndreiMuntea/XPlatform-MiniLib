@@ -79,7 +79,7 @@ XpfInternalThreadRunCallback(
     //
     if (PASSIVE_LEVEL != ::KeGetCurrentIrql())
     {
-        XPF_ASSERT(false);
+        XPF_DEATH_ON_FAILURE(false);
         return;
     }
 
@@ -94,7 +94,7 @@ XpfInternalThreadRunCallback(
     // Validate the invariants. We should still be at passive level.
     // This will help on debug.
     //
-    XPF_ASSERT(PASSIVE_LEVEL == ::KeGetCurrentIrql());
+    XPF_DEATH_ON_FAILURE(PASSIVE_LEVEL == ::KeGetCurrentIrql());
 }
 
 #elif defined XPF_PLATFORM_LINUX_UM
@@ -215,7 +215,7 @@ xpf::thread::Thread::Run(
                                              KernelMode,
                                              &this->m_Context.ThreadHandle,
                                              NULL);
-        XPF_VERIFY(NT_SUCCESS(::ZwClose(threadHandle)));
+        XPF_DEATH_ON_FAILURE(NT_SUCCESS(::ZwClose(threadHandle)));
         if (!NT_SUCCESS(status))
         {
             this->m_Context.ThreadHandle = nullptr;
@@ -289,10 +289,10 @@ xpf::thread::Thread::Join(
     #if defined XPF_PLATFORM_WIN_UM
         const DWORD waitResult = ::WaitForSingleObject(this->m_Context.ThreadHandle,
                                                        INFINITE);
-        XPF_VERIFY(WAIT_OBJECT_0 == waitResult);
+        XPF_DEATH_ON_FAILURE(WAIT_OBJECT_0 == waitResult);
 
         const BOOL closeResult = ::CloseHandle(this->m_Context.ThreadHandle);
-        XPF_VERIFY(FALSE != closeResult);
+        XPF_DEATH_ON_FAILURE(FALSE != closeResult);
 
     #elif defined XPF_PLATFORM_WIN_KM
         const NTSTATUS status = ::KeWaitForSingleObject(this->m_Context.ThreadHandle,
@@ -300,14 +300,14 @@ xpf::thread::Thread::Join(
                                                         KernelMode,
                                                         FALSE,
                                                         NULL);
-        XPF_VERIFY(NT_SUCCESS(status));
+        XPF_DEATH_ON_FAILURE(NT_SUCCESS(status));
 
         ObDereferenceObject(this->m_Context.ThreadHandle);
 
     #elif defined XPF_PLATFORM_LINUX_UM
         const int error = pthread_join(*(reinterpret_cast<pthread_t*>(this->m_Context.ThreadHandle)),
                                        NULL);
-        XPF_VERIFY(0 == error);
+        XPF_DEATH_ON_FAILURE(0 == error);
 
         xpf::CriticalMemoryAllocator::FreeMemory(&this->m_Context.ThreadHandle);
     #else

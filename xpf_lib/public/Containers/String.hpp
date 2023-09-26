@@ -178,8 +178,7 @@ operator[](
 {
     if (Index >= this->m_BufferSize)
     {
-        XPF_ASSERT(Index < this->m_BufferSize);
-        xpf::ApiPanic(STATUS_INVALID_BUFFER_SIZE);
+        XPF_DEATH_ON_FAILURE(Index < this->m_BufferSize);
     }
     return this->m_Buffer[Index];
 }
@@ -670,8 +669,7 @@ operator[](
 
     if (Index >= this->m_BufferSize)
     {
-        XPF_ASSERT(Index < this->m_BufferSize);
-        xpf::ApiPanic(STATUS_INVALID_BUFFER_SIZE);
+        XPF_DEATH_ON_FAILURE(Index < this->m_BufferSize);
     }
     return buffer[Index];
 }
@@ -694,8 +692,7 @@ operator[](
 
     if (Index >= this->m_BufferSize)
     {
-        XPF_ASSERT(Index < this->m_BufferSize);
-        xpf::ApiPanic(STATUS_INVALID_BUFFER_SIZE);
+        XPF_DEATH_ON_FAILURE(Index < this->m_BufferSize);
     }
     return buffer[Index];
 }

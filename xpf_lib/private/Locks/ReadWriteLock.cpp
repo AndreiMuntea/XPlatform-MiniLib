@@ -64,7 +64,7 @@ xpf::ReadWriteLock::Create(
     //
     if ((nullptr == LockToCreate) || (LockToCreate->HasValue()))
     {
-        XPF_ASSERT(false);
+        XPF_DEATH_ON_FAILURE(false);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -80,7 +80,7 @@ xpf::ReadWriteLock::Create(
     //
     if (!LockToCreate->HasValue())
     {
-        XPF_ASSERT(false);
+        XPF_DEATH_ON_FAILURE(false);
         return STATUS_NO_DATA_DETECTED;
     }
 
@@ -156,11 +156,11 @@ Exit:
     if (!NT_SUCCESS(status))
     {
         LockToCreate->Reset();
-        XPF_ASSERT(!LockToCreate->HasValue());
+        XPF_DEATH_ON_FAILURE(!LockToCreate->HasValue());
     }
     else
     {
-        XPF_ASSERT(LockToCreate->HasValue());
+        XPF_DEATH_ON_FAILURE(LockToCreate->HasValue());
     }
     return status;
 }
@@ -197,16 +197,18 @@ xpf::ReadWriteLock::Destroy(
         UNREFERENCED_PARAMETER(lock);
     #elif defined XPF_PLATFORM_WIN_KM
         //
-        // On windows KM we destroy the ERESOURCE.
+        // On windows KM we destroy the ERESOURCE. This should never faile
+        // as the resource was properly initialized.
         //
         const NTSTATUS status = ::ExDeleteResourceLite(&lock->RwLock);
-        XPF_VERIFY(NT_SUCCESS(status));
+        XPF_DEATH_ON_FAILURE(NT_SUCCESS(status));
     #elif defined XPF_PLATFORM_LINUX_UM
         //
-        // On Linux User Mode we destroy the rwlock
+        // On Linux User Mode we destroy the rwlock.
+        // This should never fail because the lock was properly initialized.
         //
         const int error = pthread_rwlock_destroy(&lock->RwLock);
-        XPF_VERIFY(0 == error);
+        XPF_DEATH_ON_FAILURE(0 == error);
     #else
         #error Unrecognized Platform
     #endif
@@ -231,7 +233,7 @@ xpf::ReadWriteLock::LockExclusive(
     // Create should guarantee that the object is not partially constructed.
     // Assert here and investigate.
     //
-    XPF_ASSERT(nullptr != this->m_Lock);
+    XPF_DEATH_ON_FAILURE(nullptr != this->m_Lock);
     _Analysis_assume_(nullptr != this->m_Lock);
 
     //
@@ -257,9 +259,12 @@ xpf::ReadWriteLock::LockExclusive(
         // This routine returns FALSE if the input Wait is FALSE
         // and exclusive access cannot be granted immediately.
         //
+        // This should never fail, because the resource was properly initialized
+        // and we will wait for it to be acquired.
+        //
         const BOOLEAN wasAcquired = ::ExAcquireResourceExclusiveLite(&lock->RwLock,
                                                                      TRUE);
-        XPF_VERIFY(FALSE != wasAcquired);
+        XPF_DEATH_ON_FAILURE(FALSE != wasAcquired);
 
     #elif defined XPF_PLATFORM_LINUX_UM
         //
@@ -293,7 +298,7 @@ xpf::ReadWriteLock::UnLockExclusive(
     // Create should guarantee that the object is not partially constructed.
     // Assert here and investigate.
     //
-    XPF_ASSERT(nullptr != this->m_Lock);
+    XPF_DEATH_ON_FAILURE(nullptr != this->m_Lock);
     _Analysis_assume_(nullptr != this->m_Lock);
 
     //
@@ -309,8 +314,13 @@ xpf::ReadWriteLock::UnLockExclusive(
         ::ExReleaseResourceLite(&lock->RwLock);
         ::KeLeaveCriticalRegion();
     #elif defined XPF_PLATFORM_LINUX_UM
+
+        //
+        // This should never fail as the lock should have been previously locked.
+        // On fail raise and investigate!
+        //
         const int error = pthread_rwlock_unlock(&lock->RwLock);
-        XPF_VERIFY(0 == error);
+        XPF_DEATH_ON_FAILURE(0 == error);
     #else
         #error Unrecognized Platform
     #endif
@@ -329,7 +339,7 @@ xpf::ReadWriteLock::LockShared(
     // Create should guarantee that the object is not partially constructed.
     // Assert here and investigate.
     //
-    XPF_ASSERT(nullptr != this->m_Lock);
+    XPF_DEATH_ON_FAILURE(nullptr != this->m_Lock);
     _Analysis_assume_(nullptr != this->m_Lock);
 
     //
@@ -355,9 +365,12 @@ xpf::ReadWriteLock::LockShared(
         // This routine returns FALSE if the input Wait is FALSE
         // and shared access cannot be granted immediately.
         //
+        // Should never fail as the resource should be acquired.
+        // We wait for it!
+        //
         const BOOLEAN wasAcquired = ::ExAcquireResourceSharedLite(&lock->RwLock,
                                                                   TRUE);
-        XPF_VERIFY(FALSE != wasAcquired);
+        XPF_DEATH_ON_FAILURE(FALSE != wasAcquired);
     #elif defined XPF_PLATFORM_LINUX_UM
         //
         // On Linux User Mode we retry to lock until we get a 0.
@@ -390,7 +403,7 @@ xpf::ReadWriteLock::UnLockShared(
     // Create should guarantee that the object is not partially constructed.
     // Assert here and investigate.
     //
-    XPF_ASSERT(nullptr != this->m_Lock);
+    XPF_DEATH_ON_FAILURE(nullptr != this->m_Lock);
     _Analysis_assume_(nullptr != this->m_Lock);
 
     //
@@ -405,8 +418,12 @@ xpf::ReadWriteLock::UnLockShared(
         ::ExReleaseResourceLite(&lock->RwLock);
         ::KeLeaveCriticalRegion();
     #elif defined XPF_PLATFORM_LINUX_UM
+        //
+        // If this fails, it means the lock was not initialized or locked.
+        // Raise here and investigate the situation. It's likely a logic bug.
+        //
         const int error = pthread_rwlock_unlock(&lock->RwLock);
-        XPF_VERIFY(0 == error);
+        XPF_DEATH_ON_FAILURE(0 == error);
     #else
         #error Unrecognized Platform
     #endif

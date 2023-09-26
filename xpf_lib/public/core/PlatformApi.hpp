@@ -40,7 +40,49 @@ XPF_API
 ApiPanic(
     _In_ NTSTATUS Status
 ) noexcept(true);
+};  // namespace xpf
 
+
+/**
+ * @brief Helpers macro for ASSERT and VERIFY.
+ *        Similar with NT_ASSERT and NT_VERIFY from Windows.
+ */
+#if defined XPF_CONFIGURATION_RELEASE
+
+    /**
+     * @brief Macro definition for ASSERT. This is not evaluated on release.
+     */
+    #define XPF_ASSERT(Expression)      (((void) 0), true)
+    /**
+     * @brief Macro definition for VERIFY. This is evaluated on release.
+     */
+    #define XPF_VERIFY(Expression)      ((Expression) ? true : false)
+
+#elif defined XPF_CONFIGURATION_DEBUG
+
+    /**
+     * @brief Macro definition for ASSERT. This is evaluated on debug.
+     */
+    #define XPF_ASSERT(Expression)      ((Expression) ? true                                                            \
+                                                      : (xpf::ApiPanic(STATUS_UNHANDLED_EXCEPTION), false))
+    /**
+     * @brief Macro definition for VERIFY. This is evaluated on debug.
+     */
+    #define XPF_VERIFY                  XPF_ASSERT
+#else
+
+    #error Unknown Configuration
+#endif
+
+/**
+ * @brief Helper macro for verifying an invariant.
+ *        If the condition is not met, an assertion is raised regardless on configuration!
+ *        This is useful to validate logic bugs - both on debug and release.
+ */
+#define XPF_DEATH_ON_FAILURE(Expression)     ((Expression) ? true                                                       \
+                                                           : (xpf::ApiPanic(STATUS_UNHANDLED_EXCEPTION), false))
+namespace xpf
+{
 /**
  * @brief Copies the contents of a source memory block to a destination memory block.
  *        It supports overlapping source and destination memory blocks.
@@ -179,8 +221,8 @@ ApiAtomicIncrement(
     // undefined behavior. So assert here to catch this invalid usage
     // on debug builds.
     //
-    XPF_ASSERT(xpf::AlgoIsNumberAligned(xpf::AlgoPointerToValue(Number),
-                                        alignof(Type)));
+    XPF_DEATH_ON_FAILURE(xpf::AlgoIsNumberAligned(xpf::AlgoPointerToValue(Number),
+                                                  alignof(Type)));
 
     #if defined XPF_COMPILER_MSVC
 
@@ -242,8 +284,8 @@ ApiAtomicDecrement(
     // undefined behavior. So assert here to catch this invalid usage
     // on debug builds.
     //
-    XPF_ASSERT(xpf::AlgoIsNumberAligned(xpf::AlgoPointerToValue(Number),
-                                        alignof(Type)));
+    XPF_DEATH_ON_FAILURE(xpf::AlgoIsNumberAligned(xpf::AlgoPointerToValue(Number),
+                                                  alignof(Type)));
 
     #if defined XPF_COMPILER_MSVC
 
@@ -313,8 +355,8 @@ ApiAtomicCompareExchange(
     // undefined behavior. So assert here to catch this invalid usage
     // on debug builds.
     //
-    XPF_ASSERT(xpf::AlgoIsNumberAligned(xpf::AlgoPointerToValue(Destination),
-                                        alignof(Type)));
+    XPF_DEATH_ON_FAILURE(xpf::AlgoIsNumberAligned(xpf::AlgoPointerToValue(Destination),
+                                                  alignof(Type)));
 
     #if defined XPF_COMPILER_MSVC
 
@@ -376,8 +418,8 @@ ApiAtomicCompareExchangePointer(
     _In_opt_ void* Comperand
 ) noexcept(true)
 {
-    XPF_ASSERT(xpf::AlgoIsNumberAligned(xpf::AlgoPointerToValue(Destination),
-                                        alignof(void*)));
+    XPF_DEATH_ON_FAILURE(xpf::AlgoIsNumberAligned(xpf::AlgoPointerToValue(Destination),
+                                                  alignof(void*)));
 
     #if defined XPF_COMPILER_MSVC
 
@@ -498,3 +540,4 @@ ApiAreUuidsEqual(
     _In_ const uuid_t Second
 ) noexcept(true);
 };  // namespace xpf
+

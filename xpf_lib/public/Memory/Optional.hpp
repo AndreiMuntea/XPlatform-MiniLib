@@ -186,8 +186,7 @@ operator*(
 {
     if (!this->HasValue())
     {
-        XPF_ASSERT(this->HasValue());
-        xpf::ApiPanic(STATUS_NO_DATA_DETECTED);
+        XPF_DEATH_ON_FAILURE(this->HasValue());
     }
 
     return this->m_Value;
@@ -205,8 +204,7 @@ operator*(
 {
     if (!this->HasValue())
     {
-        XPF_ASSERT(this->HasValue());
-        xpf::ApiPanic(STATUS_NO_DATA_DETECTED);
+        XPF_DEATH_ON_FAILURE(this->HasValue());
     }
 
     return this->m_Value;

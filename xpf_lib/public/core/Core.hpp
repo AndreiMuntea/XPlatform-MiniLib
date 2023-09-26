@@ -245,34 +245,6 @@
  * @brief Platform specific definitions.
  */
 #if defined XPF_PLATFORM_WIN_KM
-
-    #if defined XPF_CONFIGURATION_RELEASE
-
-        /**
-         * @brief Macro definition for ASSERT.
-         */
-        #define XPF_ASSERT(Expression)      (((void) 0), true)
-        /**
-         * @brief Macro definition for VERIFY.
-         */
-        #define XPF_VERIFY(Expression)      ((Expression) ? true : false)
-
-    #elif defined XPF_CONFIGURATION_DEBUG
-
-        /**
-         * @brief Macro definition for ASSERT.
-         */
-        #define XPF_ASSERT(Expression)      ((Expression) ? true                                                                \
-                                                          : (::ExRaiseStatus(STATUS_UNHANDLED_EXCEPTION), false))
-        /**
-         * @brief Macro definition for VERIFY.
-         */
-        #define XPF_VERIFY                  XPF_ASSERT
-    #else
-
-        #error Unknown Configuration
-    #endif
-
     /**
      * @brief Use the same calling convention as NT APIs.
      */
@@ -332,33 +304,6 @@
 
 #elif defined XPF_PLATFORM_WIN_UM
 
-    #if defined XPF_CONFIGURATION_RELEASE
-
-        /**
-         * @brief Macro definition for ASSERT.
-         */
-        #define XPF_ASSERT(Expression)      (((void) 0), true)
-        /**
-         * @brief Macro definition for VERIFY.
-         */
-        #define XPF_VERIFY(Expression)      ((Expression) ? true : false)
-
-    #elif defined XPF_CONFIGURATION_DEBUG
-
-        /**
-         * @brief Macro definition for ASSERT.
-         */
-        #define XPF_ASSERT(Expression)      ((Expression) ? true                                                                \
-                                                          : (::RaiseException(ERROR_UNHANDLED_EXCEPTION, 0, 0, NULL), false))
-        /**
-         * @brief Macro definition for VERIFY.
-         */
-        #define XPF_VERIFY                  XPF_ASSERT
-    #else
-
-        #error Unknown Configuration
-    #endif
-
     /**
      * @brief Use the same calling convention as NT APIs.
      */
@@ -411,33 +356,6 @@
      using int64_t = INT64;
 
 #elif defined XPF_PLATFORM_LINUX_UM
-
-    #if defined XPF_CONFIGURATION_RELEASE
-
-        /**
-         * @brief Macro definition for ASSERT.
-         */
-        #define XPF_ASSERT(Expression)  (((void) 0), true)
-        /**
-         * @brief Macro definition for VERIFY.
-         */
-        #define XPF_VERIFY(Expression)   ((Expression) ? true : false)
-
-    #elif defined XPF_CONFIGURATION_DEBUG
-
-        /**
-         * @brief Macro definition for ASSERT.
-         */
-        #define XPF_ASSERT(Expression)   ((Expression) ? true : (::raise(SIGSEGV), false))
-        /**
-         * @brief Macro definition for VERIFY.
-         */
-        #define XPF_VERIFY               XPF_ASSERT
-    #else
-
-        #error Unknown Configuration
-    #endif
-
     /**
      * @brief Use the same calling convention as MS ABI.
      */

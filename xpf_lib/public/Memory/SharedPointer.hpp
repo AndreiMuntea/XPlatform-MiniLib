@@ -210,8 +210,7 @@ operator*(
 
     if (nullptr == rawPointer)
     {
-        XPF_ASSERT(nullptr != rawPointer);
-        xpf::ApiPanic(STATUS_NO_DATA_DETECTED);
+        XPF_DEATH_ON_FAILURE(nullptr != rawPointer);
     }
     return (*rawPointer);
 }
@@ -231,8 +230,7 @@ operator*(
 
     if (nullptr == rawPointer)
     {
-        XPF_ASSERT(nullptr != rawPointer);
-        xpf::ApiPanic(STATUS_NO_DATA_DETECTED);
+        XPF_DEATH_ON_FAILURE(nullptr != rawPointer);
     }
     return (*rawPointer);
 }

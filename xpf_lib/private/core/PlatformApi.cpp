@@ -111,7 +111,8 @@ xpf::ApiFreeMemory(
         BOOL result = ::HeapFree(::GetProcessHeap(),
                                  0,
                                  block);
-        XPF_VERIFY(FALSE != result);
+        /* We allocated from the process heap. This shouldn't fail. */
+        XPF_DEATH_ON_FAILURE(FALSE != result);
     #elif defined XPF_PLATFORM_LINUX_UM
         ::free(block);
     #else
@@ -324,7 +325,7 @@ xpf::ApiCurrentTime(
 
         if (0 != gettimeofday(&timeValue, NULL))
         {
-            XPF_ASSERT(false);
+            XPF_DEATH_ON_FAILURE(false);
             return 0;
         }
 
@@ -478,7 +479,9 @@ xpf::ApiRandomUuid(
             }
 
             const BOOL releaseStatus = ::CryptReleaseContext(prov, 0);
-            XPF_VERIFY(FALSE != releaseStatus);
+
+            /* This was properly acquired, it shouldn't fail to release! */
+            XPF_DEATH_ON_FAILURE(FALSE != releaseStatus);
         }
 
     #elif defined XPF_PLATFORM_WIN_KM

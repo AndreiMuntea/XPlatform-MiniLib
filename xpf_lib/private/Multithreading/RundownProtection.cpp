@@ -63,7 +63,7 @@ xpf::RundownProtection::Acquire(
         // Avoid setting the parity bit with additions.
         //
         const uint64_t newValue = currentValue + this->RUNDOWN_INCREMENT;
-        XPF_ASSERT((newValue & this->RUNDOWN_ACTIVE) == 0);
+        XPF_DEATH_ON_FAILURE((newValue & this->RUNDOWN_ACTIVE) == 0);
 
         //
         // Atomic swap - ApiAtomicCompareExchange returns the original value.
@@ -231,7 +231,7 @@ xpf::RundownProtection::Create(
     //
     if ((nullptr == RundownProtectionToCreate) || (RundownProtectionToCreate->HasValue()))
     {
-        XPF_ASSERT(false);
+        XPF_DEATH_ON_FAILURE(false);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -247,7 +247,7 @@ xpf::RundownProtection::Create(
     //
     if (!RundownProtectionToCreate->HasValue())
     {
-        XPF_ASSERT(false);
+        XPF_DEATH_ON_FAILURE(false);
         return STATUS_NO_DATA_DETECTED;
     }
 
@@ -276,11 +276,11 @@ Exit:
     if (!NT_SUCCESS(status))
     {
         RundownProtectionToCreate->Reset();
-        XPF_ASSERT(!RundownProtectionToCreate->HasValue());
+        XPF_DEATH_ON_FAILURE(!RundownProtectionToCreate->HasValue());
     }
     else
     {
-        XPF_ASSERT(RundownProtectionToCreate->HasValue());
+        XPF_DEATH_ON_FAILURE(RundownProtectionToCreate->HasValue());
     }
     return status;
 }

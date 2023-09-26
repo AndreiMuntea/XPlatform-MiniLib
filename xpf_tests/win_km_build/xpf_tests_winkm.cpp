@@ -95,7 +95,7 @@ DriverEntry(
     status = XpfInitializeCppSupport();
     if (!NT_SUCCESS(status))
     {
-        XPF_ASSERT(false);
+        XPF_DEATH_ON_FAILURE(false);
         return status;
     }
 

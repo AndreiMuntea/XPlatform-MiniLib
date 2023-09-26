@@ -38,7 +38,7 @@ xpf::Signal::Create(
     //
     if ((nullptr == SignalToCreate) || (SignalToCreate->HasValue()))
     {
-        XPF_ASSERT(false);
+        XPF_DEATH_ON_FAILURE(false);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -54,7 +54,7 @@ xpf::Signal::Create(
     //
     if (!SignalToCreate->HasValue())
     {
-        XPF_ASSERT(false);
+        XPF_DEATH_ON_FAILURE(false);
         return STATUS_NO_DATA_DETECTED;
     }
 
@@ -139,8 +139,11 @@ xpf::Signal::Create(
                                    NULL);
         if (0 != error)
         {
+            //
+            // The condition variable was properly initialized. Raise on fail.
+            //
             const int destroyStatus = pthread_cond_destroy(&newSignal.m_SignalHandle.ConditionVariable);
-            XPF_VERIFY(0 == destroyStatus);
+            XPF_DEATH_ON_FAILURE(0 == destroyStatus);
 
             status = NTSTATUS_FROM_PLATFORM_ERROR(error);
             goto Exit;
@@ -161,11 +164,11 @@ Exit:
     if (!NT_SUCCESS(status))
     {
         SignalToCreate->Reset();
-        XPF_ASSERT(!SignalToCreate->HasValue());
+        XPF_DEATH_ON_FAILURE(!SignalToCreate->HasValue());
     }
     else
     {
-        XPF_ASSERT(SignalToCreate->HasValue());
+        XPF_DEATH_ON_FAILURE(SignalToCreate->HasValue());
     }
     return status;
 }
@@ -185,7 +188,8 @@ xpf::Signal::Destroy(
         if (nullptr != this->m_SignalHandle.Handle)
         {
             const BOOL closeStatus = ::CloseHandle(this->m_SignalHandle.Handle);
-            XPF_VERIFY(FALSE != closeStatus);
+            XPF_DEATH_ON_FAILURE(FALSE != closeStatus);
+
             this->m_SignalHandle.Handle = nullptr;
         }
 
@@ -207,10 +211,10 @@ xpf::Signal::Destroy(
         if (this->m_SignalHandle.IsProperlyInitialized)
         {
             const int destroyStatusCond = pthread_cond_destroy(&this->m_SignalHandle.ConditionVariable);
-            XPF_VERIFY(0 == destroyStatusCond);
+            XPF_DEATH_ON_FAILURE(0 == destroyStatusCond);
 
             const int destroyStatusMutex = pthread_mutex_destroy(&this->m_SignalHandle.ContitionMutex);
-            XPF_VERIFY(0 == destroyStatusMutex);
+            XPF_DEATH_ON_FAILURE(0 == destroyStatusMutex);
 
             this->m_SignalHandle.IsProperlyInitialized = false;
         }
@@ -236,26 +240,26 @@ xpf::Signal::Set(
 
 
     #if defined XPF_PLATFORM_WIN_UM
-        XPF_ASSERT(nullptr != this->m_SignalHandle.Handle);
+        XPF_DEATH_ON_FAILURE(nullptr != this->m_SignalHandle.Handle);
         _Analysis_assume_(nullptr != this->m_SignalHandle.Handle);
 
         (VOID) ::SetEvent(this->m_SignalHandle.Handle);
 
     #elif defined XPF_PLATFORM_WIN_KM
-        XPF_ASSERT(nullptr != this->m_SignalHandle.Handle);
+        XPF_DEATH_ON_FAILURE(nullptr != this->m_SignalHandle.Handle);
         _Analysis_assume_(nullptr != this->m_SignalHandle.Handle);
 
         (VOID) ::KeSetEvent(this->m_SignalHandle.Handle,
                             IO_NO_INCREMENT,
                             FALSE);
     #elif defined XPF_PLATFORM_LINUX_UM
-        XPF_ASSERT(this->m_SignalHandle.IsProperlyInitialized);
+        XPF_DEATH_ON_FAILURE(this->m_SignalHandle.IsProperlyInitialized);
 
         //
         // Start by acquiring the condition mutex.
         //
         const int mutexAcquireStatus = pthread_mutex_lock(&this->m_SignalHandle.ContitionMutex);
-        XPF_VERIFY(0 == mutexAcquireStatus);
+        XPF_DEATH_ON_FAILURE(0 == mutexAcquireStatus);
 
         //
         // Mark the state as signaled - this variable is guarded by the mutex.
@@ -269,7 +273,7 @@ xpf::Signal::Set(
             // On manual reset, we signal ALL threads.
             //
             const int signalStatus = pthread_cond_broadcast(&this->m_SignalHandle.ConditionVariable);
-            XPF_VERIFY(0 == signalStatus);
+            XPF_DEATH_ON_FAILURE(0 == signalStatus);
         }
         else
         {
@@ -279,14 +283,14 @@ xpf::Signal::Set(
             // This is handled in Wait().
             //
             const int signalStatus = pthread_cond_signal(&this->m_SignalHandle.ConditionVariable);
-            XPF_VERIFY(0 == signalStatus);
+            XPF_DEATH_ON_FAILURE(0 == signalStatus);
         }
 
         //
         // And now release the mutex.
         //
         const int releaseStatus = pthread_mutex_unlock(&this->m_SignalHandle.ContitionMutex);
-        XPF_VERIFY(0 == releaseStatus);
+        XPF_DEATH_ON_FAILURE(0 == releaseStatus);
 
     #else
         #error Unrecognized Platform
@@ -302,25 +306,25 @@ xpf::Signal::Reset(
     XPF_MAX_DISPATCH_LEVEL();
 
     #if defined XPF_PLATFORM_WIN_UM
-        XPF_ASSERT(nullptr != this->m_SignalHandle.Handle);
+        XPF_DEATH_ON_FAILURE(nullptr != this->m_SignalHandle.Handle);
         _Analysis_assume_(nullptr != this->m_SignalHandle.Handle);
 
         (VOID) ::ResetEvent(this->m_SignalHandle.Handle);
 
     #elif defined XPF_PLATFORM_WIN_KM
-        XPF_ASSERT(nullptr != this->m_SignalHandle.Handle);
+        XPF_DEATH_ON_FAILURE(nullptr != this->m_SignalHandle.Handle);
         _Analysis_assume_(nullptr != this->m_SignalHandle.Handle);
 
         (VOID) ::KeResetEvent(this->m_SignalHandle.Handle);
 
     #elif defined XPF_PLATFORM_LINUX_UM
-        XPF_ASSERT(this->m_SignalHandle.IsProperlyInitialized);
+        XPF_DEATH_ON_FAILURE(this->m_SignalHandle.IsProperlyInitialized);
 
         //
         // Start by acquiring the condition mutex.
         //
         const int mutexAcquireStatus = pthread_mutex_lock(&this->m_SignalHandle.ContitionMutex);
-        XPF_VERIFY(0 == mutexAcquireStatus);
+        XPF_DEATH_ON_FAILURE(0 == mutexAcquireStatus);
 
         //
         // Mark the state as non signaled - this variable is guarded by the mutex.
@@ -332,7 +336,7 @@ xpf::Signal::Reset(
         // And now release the condition mutex.
         //
         const int releaseStatus = pthread_mutex_unlock(&this->m_SignalHandle.ContitionMutex);
-        XPF_VERIFY(0 == releaseStatus);
+        XPF_DEATH_ON_FAILURE(0 == releaseStatus);
 
     #else
         #error Unrecognized Platform
@@ -354,7 +358,7 @@ xpf::Signal::Wait(
     bool waitSatisfied = false;
 
     #if defined XPF_PLATFORM_WIN_UM
-        XPF_ASSERT(nullptr != this->m_SignalHandle.Handle);
+        XPF_DEATH_ON_FAILURE(nullptr != this->m_SignalHandle.Handle);
         _Analysis_assume_(nullptr != this->m_SignalHandle.Handle);
 
         const DWORD waitResult = ::WaitForSingleObject(this->m_SignalHandle.Handle,
@@ -379,7 +383,7 @@ xpf::Signal::Wait(
         // Now wait for the event. See msdn for KeWaitForSingleObject.
         // We don't handle indepenedent statuses here. Only care about SUCCESS or not.
         //
-        XPF_ASSERT(nullptr != this->m_SignalHandle.Handle);
+        XPF_DEATH_ON_FAILURE(nullptr != this->m_SignalHandle.Handle);
         _Analysis_assume_(nullptr != this->m_SignalHandle.Handle);
 
         const NTSTATUS status = ::KeWaitForSingleObject(this->m_SignalHandle.Handle,
@@ -391,7 +395,7 @@ xpf::Signal::Wait(
                                                    : false;
 
     #elif defined XPF_PLATFORM_LINUX_UM
-        XPF_ASSERT(this->m_SignalHandle.IsProperlyInitialized);
+        XPF_DEATH_ON_FAILURE(this->m_SignalHandle.IsProperlyInitialized);
 
         //
         // First we do the legwork of computing the absolute time.
@@ -430,7 +434,7 @@ xpf::Signal::Wait(
         // Start by acquiring the condition mutex.
         //
         const int mutexAcquireStatus = pthread_mutex_lock(&this->m_SignalHandle.ContitionMutex);
-        XPF_VERIFY(0 == mutexAcquireStatus);
+        XPF_DEATH_ON_FAILURE(0 == mutexAcquireStatus);
 
         //
         // Now we wait in a loop as we have a special case to handle
@@ -467,7 +471,7 @@ xpf::Signal::Wait(
         // And now release the mutex.
         //
         const int releaseStatus = pthread_mutex_unlock(&this->m_SignalHandle.ContitionMutex);
-        XPF_VERIFY(0 == releaseStatus);
+        XPF_DEATH_ON_FAILURE(0 == releaseStatus);
 
     #else
         #error Unrecognized Platform
