@@ -24,7 +24,7 @@ add_executable( XPF_Tests "XPF-Tests.cpp"
                           "tests/Memory/TestUniquePointer.cpp"
                           "tests/Memory/TestOptional.cpp"
 
-                          "tests/Containers/TestAtomicList.cpp"
+                          "tests/Containers/TestTwoLockQueue.cpp"
                           "tests/Containers/TestVector.cpp"
                           "tests/Containers/TestString.cpp"
                           

@@ -96,7 +96,7 @@ xpf::EventBus::NotifyListeners(
     //
     // Now walk all listeners and notify the event.
     //
-    XPF_SINGLE_LIST_ENTRY* crtEntry = this->m_Listeners.Head();
+    XPF_SINGLE_LIST_ENTRY* crtEntry = this->m_Listeners.Head;
     while (crtEntry != nullptr)
     {
         xpf::EventListenerData* eventListenerData = XPF_CONTAINING_RECORD(crtEntry, xpf::EventListenerData, ListEntry);
@@ -141,7 +141,7 @@ xpf::EventBus::EnqueueAsync(
     //
     // Now we allocate the event data structure.
     //
-    void* memoryBlock = (*this->m_Allocator).AllocateMemory(sizeof(xpf::EventData));
+    void* memoryBlock = this->m_Allocator.AllocateMemory(sizeof(xpf::EventData));
     if (nullptr == memoryBlock)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -171,7 +171,7 @@ CleanUp:
     if (!NT_SUCCESS(status))
     {
         xpf::MemoryAllocator::Destruct(eventData);
-        (*this->m_Allocator).FreeMemory(reinterpret_cast<void**>(&eventData));
+        this->m_Allocator.FreeMemory(reinterpret_cast<void**>(&eventData));
     }
     return status;
 }
@@ -193,7 +193,6 @@ xpf::EventBus::Create(
     XPF_MAX_PASSIVE_LEVEL();
 
     NTSTATUS status = STATUS_UNSUCCESSFUL;
-    size_t lookasideElementSize = 0;
 
     //
     // We will not initialize over an already initialized event bus.
@@ -231,20 +230,6 @@ xpf::EventBus::Create(
     // First thing first, the event bus rundown.
     //
     status = xpf::RundownProtection::Create(&newEventBus.m_EventBusRundown);
-    if (!NT_SUCCESS(status))
-    {
-        goto Exit;
-    }
-
-    //
-    // Then the allocator. We'll use the same allocator for the events and listeners.
-    // So use the bigger size here.
-    //
-    lookasideElementSize = sizeof(xpf::EventData) > sizeof(xpf::EventListenerData) ? sizeof(xpf::EventData)
-                                                                                   : sizeof(xpf::EventListenerData);
-    status = xpf::LookasideListAllocator::Create(&newEventBus.m_Allocator,
-                                                 lookasideElementSize,
-                                                 true);
     if (!NT_SUCCESS(status))
     {
         goto Exit;
@@ -291,7 +276,7 @@ xpf::EventBus::Rundown(
     //
     // Walk all listeners and run down.
     //
-    XPF_SINGLE_LIST_ENTRY* crtEntry = this->m_Listeners.Head();
+    XPF_SINGLE_LIST_ENTRY* crtEntry = this->m_Listeners.Head;
     while (crtEntry != nullptr)
     {
         xpf::EventListenerData* eventListenerData = XPF_CONTAINING_RECORD(crtEntry, xpf::EventListenerData, ListEntry);
@@ -323,7 +308,7 @@ xpf::EventBus::Rundown(
     //
     // And now flush the event listeners and free resources.
     //
-    this->m_Listeners.Flush(&crtEntry);
+    crtEntry = TlqFlush(this->m_Listeners);
     while (crtEntry != nullptr)
     {
         xpf::EventListenerData* eventListenerData = XPF_CONTAINING_RECORD(crtEntry, xpf::EventListenerData, ListEntry);
@@ -335,7 +320,7 @@ xpf::EventBus::Rundown(
         if (nullptr != eventListenerData)
         {
             xpf::MemoryAllocator::Destruct(eventListenerData);
-            (*this->m_Allocator).FreeMemory(reinterpret_cast<void**>(&eventListenerData));
+            this->m_Allocator.FreeMemory(reinterpret_cast<void**>(&eventListenerData));
         }
     }
 }
@@ -373,7 +358,7 @@ xpf::EventBus::RegisterListener(
     //
     // Now we allocate the event data listener structure.
     //
-    void* memoryBlock = (*this->m_Allocator).AllocateMemory(sizeof(xpf::EventListenerData));
+    void* memoryBlock = this->m_Allocator.AllocateMemory(sizeof(xpf::EventListenerData));
     if (nullptr == memoryBlock)
     {
         status = STATUS_INSUFFICIENT_RESOURCES;
@@ -407,7 +392,7 @@ xpf::EventBus::RegisterListener(
     //
     // All good. insert the listener in list and set the output parameters.
     //
-    this->m_Listeners.Insert(&listenerData->ListEntry);
+    TlqPush(this->m_Listeners, &listenerData->ListEntry);
     xpf::ApiCopyMemory(ListenerId, &listenerData->Id, sizeof(listenerData->Id));
     status = STATUS_SUCCESS;
 
@@ -417,7 +402,7 @@ CleanUp:
         if (nullptr != listenerData)
         {
             xpf::MemoryAllocator::Destruct(listenerData);
-            (*this->m_Allocator).FreeMemory(reinterpret_cast<void**>(&listenerData));
+            this->m_Allocator.FreeMemory(reinterpret_cast<void**>(&listenerData));
         }
     }
     return status;
@@ -445,7 +430,7 @@ xpf::EventBus::UnregisterListener(
     //
     // Now walk the listeners list and search for the one with the given id.
     //
-    XPF_SINGLE_LIST_ENTRY* crtEntry = this->m_Listeners.Head();
+    XPF_SINGLE_LIST_ENTRY* crtEntry = this->m_Listeners.Head;
     while (crtEntry != nullptr)
     {
         xpf::EventListenerData* eventListenerData = XPF_CONTAINING_RECORD(crtEntry, xpf::EventListenerData, ListEntry);
@@ -492,7 +477,7 @@ xpf::EventBus::AsyncCallback(
     // Get a reference to the allocator from event bus.
     // We'll be destroying the event data structure at the end.
     //
-    auto& allocator = (*eventData->Bus->m_Allocator);
+    auto& allocator = eventData->Bus->m_Allocator;
 
     //
     // Notify the listeners. This comes from a thread pool.

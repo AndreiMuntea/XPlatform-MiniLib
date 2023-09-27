@@ -24,100 +24,6 @@
   */
 XPF_SECTION_DEFAULT;
 
-_Must_inspect_result_
-NTSTATUS
-XPF_API
-xpf::LookasideListAllocator::Create(
-    _Inout_ xpf::Optional<xpf::LookasideListAllocator>* LookasideAllocatorToCreate,
-    _In_ size_t ElementSize,
-    _In_ bool IsCriticalAllocator
-) noexcept(true)
-{
-    XPF_MAX_DISPATCH_LEVEL();
-
-    NTSTATUS status = STATUS_UNSUCCESSFUL;
-
-    //
-    // We will not initialize over an already initialized lookaside list allocator.
-    // Assert here and bail early.
-    //
-    if ((nullptr == LookasideAllocatorToCreate) || (LookasideAllocatorToCreate->HasValue()))
-    {
-        XPF_DEATH_ON_FAILURE(false);
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    //
-    // Start by creating a new allocator. This will be an empty one.
-    // It will be initialized below.
-    //
-    LookasideAllocatorToCreate->Emplace();
-
-    //
-    // We failed to create an event. It shouldn't happen.
-    // Assert here and bail early.
-    //
-    if (!LookasideAllocatorToCreate->HasValue())
-    {
-        XPF_DEATH_ON_FAILURE(false);
-        return STATUS_NO_DATA_DETECTED;
-    }
-    xpf::LookasideListAllocator& newLookasideAllocator = (*(*LookasideAllocatorToCreate));
-
-    //
-    // The element size needs to be at least the size of the atomic list.
-    // As we will reuse the memory for blocks.
-    //
-    newLookasideAllocator.m_ElementSize = (ElementSize < sizeof(XPF_SINGLE_LIST_ENTRY)) ? sizeof(XPF_SINGLE_LIST_ENTRY)
-                                                                                        : ElementSize;
-    newLookasideAllocator.m_IsCriticalAllocator = IsCriticalAllocator;
-
-    //
-    // Now let's see how many elements we can store. Compute this based on element size.
-    // We don't want to exceed approximatively 1 mb in one allocator.
-    // If the allocation is somehow bigger than this limit, we'll store 5 elements in our lookaside list.
-    // These numbers can be changed if we notice we have a problem.
-    //
-    const size_t maxElements = size_t{ 1048576 } / newLookasideAllocator.m_ElementSize;
-    newLookasideAllocator.m_MaxElements = (maxElements < 5) ? 5
-                                                            : maxElements;
-    newLookasideAllocator.m_CurrentElements = 0;
-
-    //
-    // Now we need the sentinel node - the initial allocation.
-    // If this fails, we stop.
-    //
-    XPF_SINGLE_LIST_ENTRY* sentinel = reinterpret_cast<XPF_SINGLE_LIST_ENTRY*>(newLookasideAllocator.NewMemoryBlock());
-    if (nullptr == sentinel)
-    {
-        status = STATUS_INSUFFICIENT_RESOURCES;
-        goto Exit;
-    }
-    sentinel->Next = nullptr;
-
-    //
-    // Now set the head and tail to point to the sentinel.
-    //
-    newLookasideAllocator.m_ListHead = sentinel;
-    newLookasideAllocator.m_ListTail = sentinel;
-
-    //
-    // All good. We're done.
-    //
-    status = STATUS_SUCCESS;
-Exit:
-    if (!NT_SUCCESS(status))
-    {
-        LookasideAllocatorToCreate->Reset();
-        XPF_DEATH_ON_FAILURE(!LookasideAllocatorToCreate->HasValue());
-    }
-    else
-    {
-        XPF_DEATH_ON_FAILURE(LookasideAllocatorToCreate->HasValue());
-    }
-    return status;
-}
-
 void
 XPF_API
 xpf::LookasideListAllocator::Destroy(
@@ -127,16 +33,9 @@ xpf::LookasideListAllocator::Destroy(
     XPF_MAX_DISPATCH_LEVEL();
 
     //
-    // Acquire both locks. Prevent further operations.
-    // This is done only on destructor.
-    //
-    xpf::ExclusiveLockGuard headGuard(this->m_HeadLock);
-    xpf::ExclusiveLockGuard tailGuard(this->m_TailLock);
-
-    //
     // Walk the list and free everything.
     //
-    XPF_SINGLE_LIST_ENTRY* crtEntry = this->m_ListHead;
+    XPF_SINGLE_LIST_ENTRY* crtEntry = xpf::TlqFlush(this->m_TwoLockQueue);
     while (nullptr != crtEntry)
     {
         void* blockToBeDestroyed = reinterpret_cast<void*>(crtEntry);
@@ -148,8 +47,6 @@ xpf::LookasideListAllocator::Destroy(
     //
     // Don't leave garbage.
     //
-    this->m_ListHead = nullptr;
-    this->m_ListTail = nullptr;
     this->m_ElementSize = 0;
     this->m_CurrentElements = 0;
     this->m_MaxElements = 0;
@@ -202,37 +99,9 @@ xpf::LookasideListAllocator::AllocateMemory(
     }
 
     //
-    // Now we start - grab the head lock. We always dequeue at head.
     // If we have a memory block in list, we return it.
     //
-    {
-        xpf::ExclusiveLockGuard headGuard{ this->m_HeadLock };
-
-        //
-        // A null head means we are already destructed.
-        // Shouldn't happen. Assert here and bail.
-        //
-        if (nullptr == this->m_ListHead)
-        {
-            xpf::ApiPanic(STATUS_INVALID_STATE_TRANSITION);
-            return nullptr;
-        }
-
-        //
-        // We keep the sentinel in list.
-        // So if next is null, we can't allocate.
-        //
-        if (nullptr != this->m_ListHead->Next)
-        {
-            memoryBlock = this->m_ListHead;
-            this->m_ListHead = this->m_ListHead->Next;
-
-            //
-            // Remove one element from the list.
-            //
-            xpf::ApiAtomicDecrement(&this->m_CurrentElements);
-        }
-    }
+    memoryBlock = xpf::TlqPop(this->m_TwoLockQueue);
 
     //
     // If we didn't have a memory block we take the long route.
@@ -240,6 +109,10 @@ xpf::LookasideListAllocator::AllocateMemory(
     if (nullptr == memoryBlock)
     {
         memoryBlock = reinterpret_cast<XPF_SINGLE_LIST_ENTRY*>(this->NewMemoryBlock());
+    }
+    else
+    {
+        xpf::ApiAtomicDecrement(&this->m_CurrentElements);
     }
 
     //
@@ -290,37 +163,11 @@ xpf::LookasideListAllocator::FreeMemory(
     //
     if (xpf::ApiAtomicCompareExchange(&this->m_CurrentElements, uint32_t{0}, uint32_t{0}) >= this->m_MaxElements)
     {
-        this->FreeMemory(reinterpret_cast<void**>(&newEntry));
-        return;
+        this->DeleteMemoryBlock(reinterpret_cast<void**>(&newEntry));
     }
-
-    //
-    // Now we attempt to free the block - this means, enqueue to list.
-    // Always enqueue at tail.
-    //
+    else
     {
-        xpf::ExclusiveLockGuard tailGuard{ this->m_TailLock };
-
-        //
-        // A null tail means we are already destructed.
-        // Shouldn't happen. Assert here and bail.
-        // Leak the memory block instead.
-        //
-        if (nullptr == this->m_ListTail)
-        {
-            xpf::ApiPanic(STATUS_INVALID_STATE_TRANSITION);
-            return;
-        }
-
-        //
-        // Adjust the tail to point to the new element.
-        //
-        this->m_ListTail->Next = newEntry;
-        this->m_ListTail = newEntry;
-
-        //
-        // We emplaced one element in the list.
-        //
+        xpf::TlqPush(this->m_TwoLockQueue, newEntry);
         xpf::ApiAtomicIncrement(&this->m_CurrentElements);
     }
 }

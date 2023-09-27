@@ -76,7 +76,7 @@ struct ThreadPoolThreadContext
     /**
      * @brief   A list of enqueued work items to be processed.
      */
-    xpf::AtomicList WorkQueue;
+    xpf::TwoLockQueue WorkQueue;
 
     /**
      * @brief   Threads are also stored in their own list inside threadpool.
@@ -114,7 +114,7 @@ xpf::ThreadPool::CreateWorkItem(
     //
     // Work items will be stored in non-paged memory. They are critical allocations.
     //
-    workItem = reinterpret_cast<ThreadPoolWorkItem*>((*this->m_WorkItemAllocator).AllocateMemory(sizeof(*workItem)));
+    workItem = reinterpret_cast<ThreadPoolWorkItem*>(this->m_WorkItemAllocator.AllocateMemory(sizeof(*workItem)));
     if (nullptr == workItem)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -131,7 +131,7 @@ xpf::ThreadPool::CreateWorkItem(
     //
     // Now add it to thread's queue.
     //
-    threadContext->WorkQueue.Insert(&workItem->WorkItemListEntry);
+    TlqPush(threadContext->WorkQueue, &workItem->WorkItemListEntry);
     (*threadContext->WakeUpSignal).Set();
 
     //
@@ -165,7 +165,7 @@ xpf::ThreadPool::DestroyWorkItem(
     // Destroy the work item.
     //
     xpf::MemoryAllocator::Destruct(workItem);
-    (*this->m_WorkItemAllocator).FreeMemory(reinterpret_cast<void**>(&workItem));
+    this->m_WorkItemAllocator.FreeMemory(reinterpret_cast<void**>(&workItem));
 
     //
     // Don't leave invalid memory...
@@ -214,10 +214,10 @@ xpf::ThreadPool::Enqueue(
     }
 
     //
-    // If we reached the end, we go to the head of the list. We do that here before doing too many
-    // operations.
+    // If we reached the end, we go to the head of the list.
+    // We do that here before doing too many operations.
     //
-    this->m_RoundRobinIndex = (nullptr == roundRobinIndex->Next) ? this->m_ThreadsList.Head()
+    this->m_RoundRobinIndex = (nullptr == roundRobinIndex->Next) ? this->m_ThreadsList.Head
                                                                  : roundRobinIndex->Next;
 
     ThreadPoolThreadContext* threadContext = XPF_CONTAINING_RECORD(roundRobinIndex, ThreadPoolThreadContext, ThreadListEntry);
@@ -240,6 +240,15 @@ xpf::ThreadPool::Enqueue(
  *          Our threads are running at passive anyway.
  */
 XPF_SECTION_PAGED;
+
+
+xpf::ThreadPool::ThreadPool(
+    void
+) noexcept(true) : m_WorkItemAllocator(sizeof(ThreadPoolWorkItem), true)
+{
+    XPF_NOTHING();
+}
+
 
 _Must_inspect_result_
 NTSTATUS
@@ -294,26 +303,6 @@ xpf::ThreadPool::Create(
     }
 
     //
-    // Then the lock.
-    //
-    status = xpf::ReadWriteLock::Create(&newThreadpool.m_ThreadpoolLock);
-    if (!NT_SUCCESS(status))
-    {
-        goto Exit;
-    }
-
-    //
-    // Then the allocator.
-    //
-    status = xpf::LookasideListAllocator::Create(&newThreadpool.m_WorkItemAllocator,
-                                                 sizeof(ThreadPoolWorkItem),
-                                                 true);
-    if (!NT_SUCCESS(status))
-    {
-        goto Exit;
-    }
-
-    //
     // Then the initial number of threads.
     //
     XPF_DEATH_ON_FAILURE(newThreadpool.INITIAL_THREAD_QUOTA != 0);
@@ -330,7 +319,7 @@ xpf::ThreadPool::Create(
     //
     // Now we set the round robin index to the first element in the list.
     //
-    newThreadpool.m_RoundRobinIndex = newThreadpool.m_ThreadsList.Head();
+    newThreadpool.m_RoundRobinIndex = newThreadpool.m_ThreadsList.Head;
     XPF_DEATH_ON_FAILURE(nullptr != newThreadpool.m_RoundRobinIndex);
 
     //
@@ -372,20 +361,13 @@ xpf::ThreadPool::Rundown(
     //
     // If the lock was not initialized, We're done.
     //
-    if (!this->m_ThreadpoolLock.HasValue())
-    {
-        return;
-    }
-
-    xpf::ExclusiveLockGuard guard{ (*this->m_ThreadpoolLock) };
-
-    this->m_ThreadsList.Flush(&crtEntry);
     this->m_NumberOfThreads = 0;
     this->m_RoundRobinIndex = nullptr;
 
     //
     // Further threads won't be allowed as we marked the thread pool for run down.
     //
+    crtEntry = TlqFlush(this->m_ThreadsList);
     while (nullptr != crtEntry)
     {
         //
@@ -477,20 +459,17 @@ xpf::ThreadPool::CreateThreadContext(
 
     //
     // Now attempt to add the thread to the main threads list.
-    // Check again for m_NumberOfThreads. Hold the lock with minimal scope.
+    // Check again for m_NumberOfThreads.
     //
+    if (xpf::ApiAtomicIncrement(&this->m_NumberOfThreads) >= this->MAX_THREAD_QUOTA)
     {
-        xpf::ExclusiveLockGuard lockGuard{ (*this->m_ThreadpoolLock) };
-        if (this->m_NumberOfThreads >= this->MAX_THREAD_QUOTA)
-        {
-            status = STATUS_QUOTA_EXCEEDED;
-        }
-        else
-        {
-            this->m_ThreadsList.Insert(&threadContext->ThreadListEntry);
-            this->m_NumberOfThreads++;
-            status = STATUS_SUCCESS;
-        }
+        xpf::ApiAtomicDecrement(&this->m_NumberOfThreads);
+        status = STATUS_QUOTA_EXCEEDED;
+    }
+    else
+    {
+        TlqPush(this->m_ThreadsList, &threadContext->ThreadListEntry);
+        status = STATUS_SUCCESS;
     }
 
 CleanUp:
@@ -645,7 +624,7 @@ xpf::ThreadPool::ThreadPoolProcessWorkItems(
     //
     // Flush the list of work items.
     //
-    threadContext->WorkQueue.Flush(&crtEntry);
+    crtEntry = TlqFlush(threadContext->WorkQueue);
 
     //
     // Iterate them one by one and process them.

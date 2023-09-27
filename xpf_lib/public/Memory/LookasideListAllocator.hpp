@@ -27,7 +27,7 @@
 #include "xpf_lib/public/Memory/Optional.hpp"
 
 #include "xpf_lib/public/Locks/BusyLock.hpp"
-#include "xpf_lib/public/Containers/AtomicList.hpp"
+#include "xpf_lib/public/Containers/TwoLockQueue.hpp"
 
 
 namespace xpf
@@ -45,15 +45,40 @@ namespace xpf
  */
 class LookasideListAllocator final
 {
- private:
+ public:
 /**
  * @brief Default constructor.
+ *
+ * @param[in] ElementSize - The maximum size that the element can have.
+ *                          The allocator won't be able to retrieve elements bigger than this size.
+ *
+ * @param[in] IsCriticalAllocator - If true, it will allocate using the Critical default allocator,
+ *                                  if false, it will allocate using the Memory default allocator.
  */
 LookasideListAllocator(
-    void
-) noexcept(true) = default;
+    _In_ size_t ElementSize,
+    _In_ bool IsCriticalAllocator
+) noexcept(true)
+{
+    //
+    // This needs to be at least XPF_SINGLE_LIST_ENTRY as the element will be inserted in the Two Lock Queue.
+    //
+    this->m_ElementSize = (ElementSize < sizeof(XPF_SINGLE_LIST_ENTRY)) ? sizeof(XPF_SINGLE_LIST_ENTRY)
+                                                                        : ElementSize;
+    this->m_IsCriticalAllocator = IsCriticalAllocator;
 
- public:
+    //
+    // Now let's see how many elements we can store. Compute this based on element size.
+    // We don't want to exceed approximatively 1 mb in one allocator.
+    // If the allocation is somehow bigger than this limit, we'll store 5 elements in our lookaside list.
+    // These numbers can be changed if we notice we have a problem.
+    //
+    const size_t maxElements = size_t{ 1048576 } / this->m_ElementSize;
+    this->m_MaxElements = (maxElements < 5) ? 5
+                                            : maxElements;
+    this->m_CurrentElements = 0;
+}
+
 /**
  * @brief Default destructor.
  */
@@ -141,35 +166,6 @@ FreeMemory(
     _Inout_ void** MemoryBlock
 ) noexcept(true);
 
-/**
- * @brief Create and initialize a LookasideListAllocator. This must be used instead of constructor.
- *        It ensures the LookasideListAllocator is not partially initialized.
- *        This is a middle ground for not using exceptions and not calling ApiPanic() on fail.
- *        We allow a gracefully failure handling.
- *
- * @param[in, out] LookasideAllocatorToCreate - the allocator to be created. On input it will be empty.
- *                                              On output it will contain a fully initialized allocator
- *                                              or an empty one on fail.
- *
- * @param[in] ElementSize - The maximum size of the element. This allocator will not be able to
- *                          Allocate elements with a bigger size than this one.
- * 
- * @param[in] IsCriticalAllocator - A boolean specifying whether the critical alloc should be used or not.
- *
- * @return A proper NTSTATUS error code on fail, or STATUS_SUCCESS if everything went good.
- * 
- * @note The function has strong guarantees that on success LookasideAllocatorToCreate has a value
- *       and on fail LookasideAllocatorToCreate does not have a value.
- */
-_Must_inspect_result_
-static NTSTATUS
-XPF_API
-Create(
-    _Inout_ xpf::Optional<xpf::LookasideListAllocator>* LookasideAllocatorToCreate,
-    _In_ size_t ElementSize,
-    _In_ bool IsCriticalAllocator
-) noexcept(true);
-
  private:
 /**
  * @brief Clears the underlying resources allocated.
@@ -209,12 +205,7 @@ DeleteMemoryBlock(
 ) noexcept(true);
 
  private:
-    xpf::BusyLock m_HeadLock;
-    XPF_SINGLE_LIST_ENTRY* m_ListHead = nullptr;
-
-    xpf::BusyLock m_TailLock;
-    XPF_SINGLE_LIST_ENTRY* m_ListTail = nullptr;
-
+    xpf::TwoLockQueue m_TwoLockQueue;
     bool m_IsCriticalAllocator = false;
 
     /*
@@ -224,14 +215,5 @@ DeleteMemoryBlock(
     size_t m_ElementSize = 0;
     size_t m_MaxElements = 0;
     alignas(uint32_t) volatile uint32_t m_CurrentElements = 0;
-
-    /**
-     * @brief   Default MemoryAllocator is our friend as it requires access to the private
-     *          default constructor. It is used in the Create() method to ensure that
-     *          no partially constructed objects are created but instead they will be
-     *          all fully initialized.
-     */
-
-     friend class xpf::MemoryAllocator;
 };  // class CriticalMemoryAllocator
 };  // namespace xpf

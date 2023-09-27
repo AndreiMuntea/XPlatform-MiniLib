@@ -24,7 +24,7 @@
 #include "xpf_lib/public/Multithreading/RundownProtection.hpp"
 
 #include "xpf_lib/public/Locks/ReadWriteLock.hpp"
-#include "xpf_lib/public/Containers/AtomicList.hpp"
+#include "xpf_lib/public/Containers/TwoLockQueue.hpp"
 #include "xpf_lib/public/Memory/LookasideListAllocator.hpp"
 
 
@@ -43,7 +43,7 @@ class ThreadPool final
  */
 ThreadPool(
     void
-) noexcept(true) = default;
+) noexcept(true);
 
  public:
 /**
@@ -263,29 +263,20 @@ ThreadPoolProcessWorkItems(
       */
      xpf::Optional<xpf::RundownProtection> m_ThreadpoolRundown;
     /**
-     * @brief   This will guard the list of threads and will
-     *          ensure that it remains consistent.
-     */
-     xpf::Optional<xpf::ReadWriteLock> m_ThreadpoolLock;
-    /**
      * @brief   This will store the underlying threads.
      *          It will grow dynamically depending on the workload.
-     * 
-     * @note    This is guarded by m_ThreadpoolLock.
      */
-     xpf::AtomicList m_ThreadsList;
+     xpf::TwoLockQueue m_ThreadsList;
     /**
      * @brief   This will hold the current number of threads in m_ThreadsList.
      *          It will change when new threads are spawned.
-     * 
-     * @note    This is guarded by m_ThreadpoolLock.
      */
-     size_t m_NumberOfThreads = 0;
+     alignas(uint32_t) volatile uint32_t m_NumberOfThreads = 0;
     /**
      * @brief   We'll use a lookaside list memory allocator to construct the work items.
      *          They all have the same size and they are the perfect match.
      */
-     xpf::Optional<xpf::LookasideListAllocator> m_WorkItemAllocator;
+     xpf::LookasideListAllocator m_WorkItemAllocator;
 
 
     /**

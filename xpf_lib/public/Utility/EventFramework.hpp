@@ -25,7 +25,7 @@
 #include "xpf_lib/public/Multithreading/ThreadPool.hpp"
 
 #include "xpf_lib/public/Memory/SharedPointer.hpp"
-#include "xpf_lib/public/Containers/AtomicList.hpp"
+#include "xpf_lib/public/Containers/TwoLockQueue.hpp"
 
 
 namespace xpf
@@ -309,7 +309,10 @@ class EventBus final
  */
 EventBus(
     void
-) noexcept(true) = default;
+) noexcept(true) : m_Allocator(sizeof(xpf::EventListenerData), true)
+{
+    XPF_NOTHING();
+}
 
  public:
 /**
@@ -500,7 +503,7 @@ AsyncCallback(
      * @brief       This is the allocator for EventData. Use the lookaside allocator
      *              as we'll have a lot of allocations. We want to recycle some of it.
      */
-     xpf::Optional<xpf::LookasideListAllocator> m_Allocator;
+     xpf::LookasideListAllocator m_Allocator;
     /**
      * @brief       This is a threadpool which will be responsible for handling async events.
      *              The workers will start processing from m_EventDataList.
@@ -511,7 +514,7 @@ AsyncCallback(
      *              Note that "removing" a listener simply means running down the listener.
      *              It will be stored in this list forever.
      */
-     xpf::AtomicList m_Listeners;
+     xpf::TwoLockQueue m_Listeners;
 
     /**
      * @brief       This stores the number of currently enqueued async items.

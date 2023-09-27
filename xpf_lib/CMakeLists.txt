@@ -17,6 +17,8 @@ ADD_LIBRARY( xpf_lib STATIC "xpf.hpp"
                             "private/Locks/BusyLock.cpp"
                             "private/Locks/ReadWriteLock.cpp"
 
+                            "private/Containers/TwoLockQueue.cpp"
+
                             "private/Multithreading/Thread.cpp"
                             "private/Multithreading/Signal.cpp"
                             "private/Multithreading/RundownProtection.cpp"
