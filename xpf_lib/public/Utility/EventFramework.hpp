@@ -272,11 +272,7 @@ struct EventListenerData
     *              It will be invalidated once the listener has been ran down.
     */
     xpf::IEventListener* NakedPointer = nullptr;
-   /**
-    * @brief       This will be used to enqueue the EventListenerData structure inside a list.
-    *              The list is stored internally by the event bus itself.
-    */
-    xpf::XPF_SINGLE_LIST_ENTRY ListEntry = { 0 };
+
 };  // struct EventListenerData;
 
 /**
@@ -303,6 +299,13 @@ struct EventData
  */
 class EventBus final
 {
+ public:
+/**
+ * @brief This is useful to ease the access to the Listeners.
+ */
+using ListenersList = xpf::Vector<xpf::SharedPointer<xpf::EventListenerData,
+                                                     xpf::CriticalMemoryAllocator>,
+                                  xpf::CriticalMemoryAllocator>;
  private:
 /**
  * @brief EventBus constructor - default.
@@ -494,6 +497,22 @@ AsyncCallback(
     _In_opt_ xpf::thread::CallbackArgument EventData
 ) noexcept(true);
 
+/**
+ * @brief This method is used to clone the current listeners.
+ *        This is helpful for Register / Unregister so we won't hold the busy lock during dispatch.
+ * 
+ *
+ * @return a Clone of the currently registered listeners.
+ *
+ * @note That the already run down listeners will not be cloned.
+ *       The method must be called with the listeners lock taken.
+ */
+xpf::SharedPointer<ListenersList, xpf::CriticalMemoryAllocator>
+XPF_API
+CloneListeners(
+    void
+) noexcept(true);
+
  private:
     /**
      * @brief   This is used to block further operations within the event bus.
@@ -511,8 +530,17 @@ AsyncCallback(
      xpf::Optional<xpf::ThreadPool> m_AsyncPool;
     /**
      * @brief       This list stores the details about all registered listeners.
+     *              This is a shared pointer<vector> as we want the event framework
+     *              to have a minimal-scope lock.
+     *              During register and unregister we'll clone the vector and replace it,
+     *              so the in-progress listeners will consume events with the old list,
+     *              and won't be affected.
      */
-     xpf::TwoLockQueue m_Listeners;
+     xpf::SharedPointer<ListenersList, xpf::CriticalMemoryAllocator> m_Listeners;
+     /**
+      * @brief  This will guard the access to the m_Listeners. 
+      */
+     xpf::BusyLock m_ListenersLock;
 
     /**
      * @brief       This stores the number of currently enqueued async items.

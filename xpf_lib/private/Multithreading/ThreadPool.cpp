@@ -338,7 +338,7 @@ xpf::ThreadPool::CreateThreadContext(
     status = xpf::Signal::Create(&threadContext.WakeUpSignal, false);
     if (!NT_SUCCESS(status))
     {
-        return status;
+        goto CleanUp;
     }
 
     //
@@ -353,7 +353,7 @@ xpf::ThreadPool::CreateThreadContext(
     status = threadContext.CurrentThread.Run(ThreadPoolMainCallback, xpf::AddressOf(threadContext));
     if (!NT_SUCCESS(status))
     {
-        return status;
+        goto CleanUp;
     }
 
     //
@@ -372,6 +372,11 @@ xpf::ThreadPool::CreateThreadContext(
         }
     }
 
+CleanUp:
+    if (!NT_SUCCESS(status))
+    {
+        this->DestroyThreadContext(threadContextSharedPtr);
+    }
     return status;
 }
 

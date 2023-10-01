@@ -94,28 +94,43 @@ xpf::EventBus::NotifyListeners(
     }
 
     //
+    // Grab a reference to the current listeners list.
+    //
+    xpf::SharedPointer<ListenersList, xpf::CriticalMemoryAllocator> listenersSnapshot;
+    {
+        xpf::SharedLockGuard listenersLock{ this->m_ListenersLock };
+        listenersSnapshot = this->m_Listeners;
+    }
+
+    //
+    // No listener was registered, so we have nothing to do.
+    //
+    if (listenersSnapshot.IsEmpty())
+    {
+        return;
+    }
+    xpf::EventBus::ListenersList& currentListenersList = (*listenersSnapshot);
+
+    //
     // Now walk all listeners and notify the event.
     //
-    XPF_SINGLE_LIST_ENTRY* crtEntry = this->m_Listeners.Head;
-    while (crtEntry != nullptr)
+    for (size_t i = 0; i < currentListenersList.Size(); ++i)
     {
-        xpf::EventListenerData* eventListenerData = XPF_CONTAINING_RECORD(crtEntry, xpf::EventListenerData, ListEntry);
-        crtEntry = crtEntry->Next;
-
-        if (nullptr == eventListenerData)
+        xpf::SharedPointer<xpf::EventListenerData, xpf::CriticalMemoryAllocator> currentListener = currentListenersList[i];
+        if (currentListener.IsEmpty())
         {
             continue;
         }
+        xpf::EventListenerData& eventListenerData = (*currentListener);
 
-        xpf::RundownGuard listenerGuard{ eventListenerData->Rundown };
+        xpf::RundownGuard listenerGuard{ eventListenerData.Rundown };
         if (!listenerGuard.IsRundownAcquired())
         {
             continue;
         }
-
-        if (nullptr != eventListenerData->NakedPointer)
+        if (nullptr != eventListenerData.NakedPointer)
         {
-            eventListenerData->NakedPointer->OnEvent(Event, this);
+            eventListenerData.NakedPointer->OnEvent(Event, this);
         }
     }
 }
@@ -262,26 +277,22 @@ xpf::EventBus::Rundown(
     this->m_EventBusRundown.WaitForRelease();
 
     //
-    // Walk all listeners and run down.
+    // Frist we acquire the listeners lock - this will prevent other operations while we are working.
+    // We run down the listeners with the shared lock guard taken as we'll not modify the listeners list lock.
     //
-    XPF_SINGLE_LIST_ENTRY* crtEntry = this->m_Listeners.Head;
-    while (crtEntry != nullptr)
     {
-        xpf::EventListenerData* eventListenerData = XPF_CONTAINING_RECORD(crtEntry, xpf::EventListenerData, ListEntry);
-        crtEntry = crtEntry->Next;
-
-        if (nullptr != eventListenerData)
+        xpf::SharedLockGuard listenersGuard{ this->m_ListenersLock };
+        if (!this->m_Listeners.IsEmpty())
         {
-            //
-            // Wait for all callbacks to finish.
-            //
-            eventListenerData->Rundown.WaitForRelease();
-
-            //
-            // Invalidate the naked pointer and the id.
-            //
-            eventListenerData->NakedPointer = nullptr;
-            xpf::ApiZeroMemory(&eventListenerData->Id, sizeof(xpf::EVENT_LISTENER_ID));
+            xpf::EventBus::ListenersList& currentListenersList = (*this->m_Listeners);
+            for (size_t i = 0; i < currentListenersList.Size(); ++i)
+            {
+                xpf::SharedPointer<xpf::EventListenerData, xpf::CriticalMemoryAllocator> currentListener = currentListenersList[i];
+                if (!currentListener.IsEmpty())
+                {
+                    (*currentListener).Rundown.WaitForRelease();
+                }
+            }
         }
     }
 
@@ -296,20 +307,9 @@ xpf::EventBus::Rundown(
     //
     // And now flush the event listeners and free resources.
     //
-    crtEntry = TlqFlush(this->m_Listeners);
-    while (crtEntry != nullptr)
     {
-        xpf::EventListenerData* eventListenerData = XPF_CONTAINING_RECORD(crtEntry, xpf::EventListenerData, ListEntry);
-        crtEntry = crtEntry->Next;
-
-        //
-        // And now free the resources.
-        //
-        if (nullptr != eventListenerData)
-        {
-            xpf::MemoryAllocator::Destruct(eventListenerData);
-            this->m_Allocator.FreeMemory(reinterpret_cast<void**>(&eventListenerData));
-        }
+        xpf::ExclusiveLockGuard listenersGuard{ this->m_ListenersLock };
+        this->m_Listeners.Reset();
     }
 }
 
@@ -322,9 +322,6 @@ xpf::EventBus::RegisterListener(
 ) noexcept(true)
 {
     XPF_MAX_PASSIVE_LEVEL();
-
-    NTSTATUS status = STATUS_UNSUCCESSFUL;
-    xpf::EventListenerData* listenerData = nullptr;
 
     //
     // Parameters validation. Sanity check.
@@ -344,47 +341,50 @@ xpf::EventBus::RegisterListener(
     }
 
     //
-    // Now we allocate the event data listener structure.
+    // Now we create the event data listener structure.
     //
-    void* memoryBlock = this->m_Allocator.AllocateMemory(sizeof(xpf::EventListenerData));
-    if (nullptr == memoryBlock)
+    auto listenerDataSharedPtr = xpf::MakeShared<xpf::EventListenerData, xpf::CriticalMemoryAllocator>();
+    if (listenerDataSharedPtr.IsEmpty())
     {
-        status = STATUS_INSUFFICIENT_RESOURCES;
-        goto CleanUp;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
-    xpf::ApiZeroMemory(memoryBlock, sizeof(xpf::EventListenerData));
-
-    //
-    // And now create the structure.
-    //
-    listenerData = reinterpret_cast<xpf::EventListenerData*>(memoryBlock);
-    xpf::MemoryAllocator::Construct(listenerData);
+    xpf::EventListenerData& listenerData = (*listenerDataSharedPtr);
 
     //
     // Now generate the random id for the listener.
     // And fill the other details. From this point below, we can't fail.
     //
     static_assert(sizeof(xpf::EVENT_LISTENER_ID) == sizeof(uuid_t), "Invariant violation!");
-    xpf::ApiRandomUuid(&listenerData->Id);
-    listenerData->NakedPointer = Listener;
+    xpf::ApiRandomUuid(&listenerData.Id);
+    listenerData.NakedPointer = Listener;
 
     //
     // All good. insert the listener in list and set the output parameters.
+    // Here we need to clone the listeners first. Hold the lock with minimal scope.
     //
-    TlqPush(this->m_Listeners, &listenerData->ListEntry);
-    xpf::ApiCopyMemory(ListenerId, &listenerData->Id, sizeof(listenerData->Id));
-    status = STATUS_SUCCESS;
+    xpf::ExclusiveLockGuard listenersGuard{ this->m_ListenersLock };
+    xpf::SharedPointer<ListenersList, xpf::CriticalMemoryAllocator> newListenersList = this->CloneListeners();
+    if (newListenersList.IsEmpty())
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
-CleanUp:
+    //
+    // If we can't insert the new listener in the clone, we're done.
+    //
+    NTSTATUS status = (*newListenersList).Emplace(listenerDataSharedPtr);
     if (!NT_SUCCESS(status))
     {
-        if (nullptr != listenerData)
-        {
-            xpf::MemoryAllocator::Destruct(listenerData);
-            this->m_Allocator.FreeMemory(reinterpret_cast<void**>(&listenerData));
-        }
+        return status;
     }
-    return status;
+
+    //
+    // Now we need to replace the listeners list with the cloned one.
+    //
+    this->m_Listeners = newListenersList;
+    xpf::ApiCopyMemory(ListenerId, &listenerData.Id, sizeof(listenerData.Id));
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -397,6 +397,8 @@ xpf::EventBus::UnregisterListener(
 {
     XPF_MAX_PASSIVE_LEVEL();
 
+    bool foundListener = false;
+
     //
     // First the event bus rundown. If the bus was destroyed, we can't do anything.
     //
@@ -407,28 +409,58 @@ xpf::EventBus::UnregisterListener(
     }
 
     //
-    // Now walk the listeners list and search for the one with the given id.
+    // Frist we acquire the listeners lock - this will prevent other operations while we are working.
+    // We run down the listener with the shared lock guard taken as we'll not modify the listeners list lock.
+    // This will still allow other events to be dispatched.
     //
-    XPF_SINGLE_LIST_ENTRY* crtEntry = this->m_Listeners.Head;
-    while (crtEntry != nullptr)
     {
-        xpf::EventListenerData* eventListenerData = XPF_CONTAINING_RECORD(crtEntry, xpf::EventListenerData, ListEntry);
-        crtEntry = crtEntry->Next;
-
-        //
-        // Further events will not be sent to this listener.
-        //
-        if ((nullptr != eventListenerData) && (xpf::ApiAreUuidsEqual(ListenerId, eventListenerData->Id)))
+        xpf::SharedLockGuard listenersGuard{ this->m_ListenersLock };
+        if (this->m_Listeners.IsEmpty())
         {
-            eventListenerData->Rundown.WaitForRelease();
-            return STATUS_SUCCESS;
+            return STATUS_NOT_FOUND;
+        }
+        xpf::EventBus::ListenersList& currentListenersList = (*this->m_Listeners);
+
+        for (size_t i = 0; i < currentListenersList.Size(); ++i)
+        {
+            xpf::SharedPointer<xpf::EventListenerData, xpf::CriticalMemoryAllocator> currentListener = currentListenersList[i];
+            if (currentListener.IsEmpty())
+            {
+                continue;
+            }
+            if (xpf::ApiAreUuidsEqual(ListenerId, (*currentListener).Id))
+            {
+                (*currentListener).Rundown.WaitForRelease();
+                foundListener = true;
+                break;
+            }
         }
     }
 
     //
-    // At this point we couldn't find the listener with the given id.
+    // No point in cloning the listeners list as we did not find the element.
     //
-    return STATUS_NOT_FOUND;
+    if (!foundListener)
+    {
+        return STATUS_NOT_FOUND;
+    }
+
+    //
+    // And now we'll update the list. This requires exclusive lock.
+    // If we fail to clone the listeners list we won't fail the operation.
+    // The listener was ran down, and won't receive other events.
+    // So we just move on.
+    //
+    {
+        xpf::ExclusiveLockGuard listenersGuard{ this->m_ListenersLock };
+        xpf::SharedPointer<ListenersList, xpf::CriticalMemoryAllocator> newListenersList = this->CloneListeners();
+        if (!newListenersList.IsEmpty())
+        {
+            this->m_Listeners = newListenersList;
+        }
+    }
+
+    return STATUS_SUCCESS;
 }
 
 void
@@ -472,4 +504,84 @@ xpf::EventBus::AsyncCallback(
     //
     xpf::MemoryAllocator::Destruct(eventData);
     allocator.FreeMemory(reinterpret_cast<void**>(&eventData));
+}
+
+xpf::SharedPointer<xpf::EventBus::ListenersList, xpf::CriticalMemoryAllocator>
+XPF_API
+xpf::EventBus::CloneListeners(
+    void
+) noexcept(true)
+{
+    xpf::SharedPointer<xpf::EventBus::ListenersList, xpf::CriticalMemoryAllocator> clone;
+
+    //
+    // On insufficient resources, return empty list.
+    //
+    clone = xpf::MakeShared<xpf::EventBus::ListenersList, xpf::CriticalMemoryAllocator>();
+    if (clone.IsEmpty())
+    {
+        return xpf::SharedPointer<xpf::EventBus::ListenersList, xpf::CriticalMemoryAllocator>();
+    }
+
+    //
+    // If the current list is empty, we're done - return the empty clone.
+    //
+    if (this->m_Listeners.IsEmpty())
+    {
+        return clone;
+    }
+    xpf::EventBus::ListenersList& currentListeners = (*this->m_Listeners);
+
+    for (size_t i = 0; i < currentListeners.Size(); ++i)
+    {
+        xpf::SharedPointer<xpf::EventListenerData, xpf::CriticalMemoryAllocator> currentListenerSharedPtr = currentListeners[i];
+
+        //
+        // Don't enqueue empty listeners.
+        //
+        if (currentListenerSharedPtr.IsEmpty())
+        {
+            continue;
+        }
+        xpf::EventListenerData& currentListener = *currentListenerSharedPtr;
+
+        //
+        // Don't enqueue already ran down listeners.
+        //
+        xpf::RundownGuard listenerGuard{ (currentListener).Rundown };
+        if (!listenerGuard.IsRundownAcquired())
+        {
+            continue;
+        }
+
+        //
+        // If any allocation is failing, we return an empty list.
+        //
+        auto newListenerSharedPtr = xpf::MakeShared<xpf::EventListenerData, xpf::CriticalMemoryAllocator>();
+        if (newListenerSharedPtr.IsEmpty())
+        {
+            return xpf::SharedPointer<xpf::EventBus::ListenersList, xpf::CriticalMemoryAllocator>();
+        }
+        xpf::EventListenerData& newListener = *newListenerSharedPtr;
+
+        //
+        // Now copy the details.
+        //
+        xpf::ApiCopyMemory(&newListener.Id, &currentListener.Id, sizeof(newListener.Id));
+        newListener.NakedPointer = currentListener.NakedPointer;
+
+        //
+        // And finally insert to the clone.
+        //
+        auto status = (*clone).Emplace(newListenerSharedPtr);
+        if (!NT_SUCCESS(status))
+        {
+            return xpf::SharedPointer<xpf::EventBus::ListenersList, xpf::CriticalMemoryAllocator>();
+        }
+    }
+
+    //
+    // Returned the cloned list.
+    //
+    return clone;
 }
