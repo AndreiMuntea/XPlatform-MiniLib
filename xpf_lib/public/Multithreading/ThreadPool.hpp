@@ -278,7 +278,7 @@ _Must_inspect_result_
 NTSTATUS
 XPF_API
 CreateWorkItem(
-    _Inout_ xpf::SharedPointer<xpf::ThreadPoolThreadContext, xpf::CriticalMemoryAllocator>& ThreadContext,
+    _Inout_ xpf::SharedPointer<xpf::ThreadPoolThreadContext, xpf::CriticalMemoryAllocator>& ThreadContext,      // NOLINT(*)
     _In_ xpf::thread::Callback UserCallback,
     _In_ xpf::thread::Callback NotProcessedCallback,
     _In_opt_ xpf::thread::CallbackArgument UserCallbackArgument

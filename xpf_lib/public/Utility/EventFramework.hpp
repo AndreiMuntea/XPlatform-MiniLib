@@ -272,7 +272,6 @@ struct EventListenerData
     *              It will be invalidated once the listener has been ran down.
     */
     xpf::IEventListener* NakedPointer = nullptr;
-
 };  // struct EventListenerData;
 
 /**
@@ -513,6 +512,20 @@ CloneListeners(
     void
 ) noexcept(true);
 
+
+/**
+ * @brief This is used to check if one event can be safely sent in SYNC way.
+ *        On Windows KM this checks if we are at IRQL < DISPATCH_LEVEL, if not, we can't send it sync.
+ *
+ * @return true if the event can be send synchronously,
+ *         false otherwise.
+ */
+bool
+XPF_API
+CanSendSyncEvent(
+    void
+) const noexcept(true);
+
  private:
     /**
      * @brief   This is used to block further operations within the event bus.
@@ -550,7 +563,7 @@ CloneListeners(
     /**
      * @brief       This is the async threshold. When this is reached, we'll favor stealing threads.
      */
-     static constexpr uint32_t ASYNC_THRESHOLD = 1024;
+     static constexpr uint32_t ASYNC_THRESHOLD = 256;
 
 
     /**

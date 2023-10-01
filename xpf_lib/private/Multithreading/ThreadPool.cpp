@@ -225,7 +225,7 @@ xpf::ThreadPool::Create(
     //
     // Then the initial number of threads.
     //
-    static_assert(xpf::ThreadPool::INITIAL_THREAD_QUOTA > 0 && 
+    static_assert(xpf::ThreadPool::INITIAL_THREAD_QUOTA > 0 &&
                   xpf::ThreadPool::INITIAL_THREAD_QUOTA <= xpf::ThreadPool::MAX_THREAD_QUOTA,
                   "Invalid Initial Thread Quota!");
 

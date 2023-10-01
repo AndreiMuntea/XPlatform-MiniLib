@@ -54,7 +54,7 @@ xpf::EventBus::Dispatch(
     //
     if (DispatchType == xpf::EventDispatchType::kAuto)
     {
-        if (this->m_EnqueuedAsyncItems >= this->ASYNC_THRESHOLD)
+        if ((this->m_EnqueuedAsyncItems >= this->ASYNC_THRESHOLD) && (this->CanSendSyncEvent()))
         {
             DispatchType = xpf::EventDispatchType::kSync;
         }
@@ -284,10 +284,10 @@ xpf::EventBus::Rundown(
         xpf::SharedLockGuard listenersGuard{ this->m_ListenersLock };
         if (!this->m_Listeners.IsEmpty())
         {
-            xpf::EventBus::ListenersList& currentListenersList = (*this->m_Listeners);
-            for (size_t i = 0; i < currentListenersList.Size(); ++i)
+            xpf::EventBus::ListenersList& listenersList = (*this->m_Listeners);
+            for (size_t i = 0; i < listenersList.Size(); ++i)
             {
-                xpf::SharedPointer<xpf::EventListenerData, xpf::CriticalMemoryAllocator> currentListener = currentListenersList[i];
+                xpf::SharedPointer<xpf::EventListenerData, xpf::CriticalMemoryAllocator> currentListener = listenersList[i];
                 if (!currentListener.IsEmpty())
                 {
                     (*currentListener).Rundown.WaitForRelease();
@@ -584,4 +584,20 @@ xpf::EventBus::CloneListeners(
     // Returned the cloned list.
     //
     return clone;
+}
+
+bool
+XPF_API
+xpf::EventBus::CanSendSyncEvent(
+    void
+) const noexcept(true)
+{
+    #if defined XPF_PLATFORM_WIN_KM
+        if (::KeGetCurrentIrql() >= DISPATCH_LEVEL)
+        {
+            return false;
+        }
+    #endif  // XPF_PLATFORM_WIN_KM
+
+    return true;
 }
