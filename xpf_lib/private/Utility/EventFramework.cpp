@@ -20,6 +20,22 @@
  */
 XPF_SECTION_DEFAULT;
 
+bool
+XPF_API
+xpf::EventBus::CanSendSyncEvent(
+    void
+) const noexcept(true)
+{
+    #if defined XPF_PLATFORM_WIN_KM
+        if (::KeGetCurrentIrql() >= DISPATCH_LEVEL)
+        {
+            return false;
+        }
+    #endif  // XPF_PLATFORM_WIN_KM
+
+    return true;
+}
+
 _Must_inspect_result_
 NTSTATUS
 XPF_API
@@ -584,20 +600,4 @@ xpf::EventBus::CloneListeners(
     // Returned the cloned list.
     //
     return clone;
-}
-
-bool
-XPF_API
-xpf::EventBus::CanSendSyncEvent(
-    void
-) const noexcept(true)
-{
-    #if defined XPF_PLATFORM_WIN_KM
-        if (::KeGetCurrentIrql() >= DISPATCH_LEVEL)
-        {
-            return false;
-        }
-    #endif  // XPF_PLATFORM_WIN_KM
-
-    return true;
 }
