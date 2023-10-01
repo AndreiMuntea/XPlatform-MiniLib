@@ -118,20 +118,6 @@ xpf::RundownProtection::Release(
         //
         if (currentValue == xpf::ApiAtomicCompareExchange(&this->m_Rundown, newValue, currentValue))
         {
-            //
-            // Now we have a special case - if the rundown is active and we were the last
-            // to touch it, we need to set the event.
-            //
-            // This is equivalent with the new value being 1 (RUNDOWN_ACTIVE).
-            //
-            if (newValue == this->RUNDOWN_ACTIVE)
-            {
-                (*this->m_RundownSignal).Set();
-            }
-
-            //
-            // All good - we released the rundown.
-            //
             return;
         }
 
@@ -167,13 +153,17 @@ xpf::RundownProtection::WaitForRelease(
         //
         // If the rundown bit is set, we wait for rundown to be released.
         // the rundown is released when the value is 1 (only the active bit is set).
-        // We did not set the bit, so somebody else did. We'll wait for the signal.
+        // We did not set the bit, so somebody else did. We'll wait here.
         //
         if ((currentValue & this->RUNDOWN_ACTIVE) != 0)
         {
             while (this->m_Rundown != this->RUNDOWN_ACTIVE)
             {
-                (*this->m_RundownSignal).Wait();
+                //
+                // Relinquish the resources to allow another thread to run.
+                // This value is small enough so we allow fast response.
+                //
+                xpf::ApiSleep(100);
             }
             break;
         }
@@ -190,20 +180,9 @@ xpf::RundownProtection::WaitForRelease(
         if (currentValue == xpf::ApiAtomicCompareExchange(&this->m_Rundown, newValue, currentValue))
         {
             //
-            // Now we have a special case - if the rundown is active but there were no
-            // acquisitions - we need to set the event as we were the ones which marked
-            // the rundown as active.
-            //
-            if (newValue == this->RUNDOWN_ACTIVE)
-            {
-                (*this->m_RundownSignal).Set();
-            }
-
-            //
-            // Don't exit here as we need to wait for the rundown signal.
             // Spin again, as we'll enter the check above.
-            // ...
             //
+            XPF_NOTHING();
         }
 
         //
@@ -212,75 +191,4 @@ xpf::RundownProtection::WaitForRelease(
         //
         continue;
     }
-}
-
-_Must_inspect_result_
-NTSTATUS
-XPF_API
-xpf::RundownProtection::Create(
-    _Inout_ xpf::Optional<xpf::RundownProtection>* RundownProtectionToCreate
-) noexcept(true)
-{
-    XPF_MAX_APC_LEVEL();
-
-    NTSTATUS status = STATUS_UNSUCCESSFUL;
-
-    //
-    // We will not initialize over an already initialized rundown.
-    // Assert here and bail early.
-    //
-    if ((nullptr == RundownProtectionToCreate) || (RundownProtectionToCreate->HasValue()))
-    {
-        XPF_DEATH_ON_FAILURE(false);
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    //
-    // Start by creating a new rundown. This will be an empty one.
-    // It will be initialized below.
-    //
-    RundownProtectionToCreate->Emplace();
-
-    //
-    // We failed to create a rundown. It shouldn't happen.
-    // Assert here and bail early.
-    //
-    if (!RundownProtectionToCreate->HasValue())
-    {
-        XPF_DEATH_ON_FAILURE(false);
-        return STATUS_NO_DATA_DETECTED;
-    }
-
-    //
-    // Grab a reference to the new rundown. Makes the code more easier.
-    // On release, this is optimized away.
-    //
-    xpf::RundownProtection& newRundown = (*(*RundownProtectionToCreate));
-
-    //
-    // We need to initialize the rundown event.
-    // This will be a manual reset event (once it is signaled it stays signaled.
-    //
-    status = xpf::Signal::Create(&newRundown.m_RundownSignal, true);
-    if (!NT_SUCCESS(status))
-    {
-        goto Exit;
-    }
-
-    //
-    // All good - created the rundown.
-    //
-    status = STATUS_SUCCESS;
-
-Exit:
-    if (!NT_SUCCESS(status))
-    {
-        RundownProtectionToCreate->Reset();
-        XPF_DEATH_ON_FAILURE(!RundownProtectionToCreate->HasValue());
-    }
-    else
-    {
-        XPF_DEATH_ON_FAILURE(RundownProtectionToCreate->HasValue());
-    }
-    return status;
 }

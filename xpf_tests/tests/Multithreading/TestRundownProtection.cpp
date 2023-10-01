@@ -23,7 +23,7 @@ struct MockTestRundownProtectionContext
     /**
      * @brief   This is the rundown that we'll try to acquire.
      */
-    xpf::Optional<xpf::RundownProtection> Rundown;
+    xpf::RundownProtection Rundown;
 
     /**
      * @brief   This is the signal which is used to signal that
@@ -63,7 +63,7 @@ MockRundownProtectionCallback(
         //
         // This call will block until all outstanding references are removed.
         //
-        (*mockContext->Rundown).WaitForRelease();
+        mockContext->Rundown.WaitForRelease();
 
         //
         // At this point we successfully ran down the object.
@@ -77,13 +77,9 @@ MockRundownProtectionCallback(
  */
 XPF_TEST_SCENARIO(TestRundownProtection, Create)
 {
-    NTSTATUS status = STATUS_UNSUCCESSFUL;
-    xpf::Optional<xpf::RundownProtection> rundown;
-
-    status = xpf::RundownProtection::Create(&rundown);
-    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
-
-    XPF_TEST_EXPECT_TRUE(rundown.HasValue());
+    {
+        xpf::RundownProtection rundown;
+    }
 }
 
 /**
@@ -93,20 +89,16 @@ XPF_TEST_SCENARIO(TestRundownProtection, Create)
  */
 XPF_TEST_SCENARIO(TestRundownProtection, AcquireRecursive)
 {
-    NTSTATUS status = STATUS_UNSUCCESSFUL;
-    xpf::Optional<xpf::RundownProtection> rundown;
-
-    status = xpf::RundownProtection::Create(&rundown);
-    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
+    xpf::RundownProtection rundown;
 
     for (size_t i = 0; i < 100; ++i)
     {
-        XPF_TEST_EXPECT_TRUE((*rundown).Acquire());
+        XPF_TEST_EXPECT_TRUE(rundown.Acquire());
     }
 
     for (size_t i = 0; i < 100; ++i)
     {
-        (*rundown).Release();
+        rundown.Release();
     }
 }
 
@@ -117,16 +109,12 @@ XPF_TEST_SCENARIO(TestRundownProtection, AcquireRecursive)
  */
 XPF_TEST_SCENARIO(TestRundownProtection, AcquireRecursiveRundownGuard)
 {
-    NTSTATUS status = STATUS_UNSUCCESSFUL;
-    xpf::Optional<xpf::RundownProtection> rundown;
+    xpf::RundownProtection rundown;
 
-    status = xpf::RundownProtection::Create(&rundown);
-    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
-
-    xpf::RundownGuard guard1{ (*rundown) };
+    xpf::RundownGuard guard1{ rundown };
     XPF_TEST_EXPECT_TRUE(guard1.IsRundownAcquired());
 
-    xpf::RundownGuard guard2{ (*rundown) };
+    xpf::RundownGuard guard2{ rundown };
     XPF_TEST_EXPECT_TRUE(guard2.IsRundownAcquired());
 }
 
@@ -140,9 +128,6 @@ XPF_TEST_SCENARIO(TestRundownProtection, WaitForReleaseBlocksAcquisitions)
     MockTestRundownProtectionContext rundownContext;
     xpf::thread::Thread rundownThread;
 
-    status = xpf::RundownProtection::Create(&rundownContext.Rundown);
-    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
-
     status = xpf::Signal::Create(&rundownContext.IsThreadAwake, true);
     XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
@@ -151,7 +136,7 @@ XPF_TEST_SCENARIO(TestRundownProtection, WaitForReleaseBlocksAcquisitions)
     //
     for (size_t i = 0; i < 100; ++i)
     {
-        XPF_TEST_EXPECT_TRUE((*rundownContext.Rundown).Acquire());
+        XPF_TEST_EXPECT_TRUE(rundownContext.Rundown.Acquire());
     }
 
     //
@@ -172,7 +157,7 @@ XPF_TEST_SCENARIO(TestRundownProtection, WaitForReleaseBlocksAcquisitions)
     //
     for (size_t i = 0; i < 100; ++i)
     {
-        XPF_TEST_EXPECT_TRUE(false == (*rundownContext.Rundown).Acquire());
+        XPF_TEST_EXPECT_TRUE(false == rundownContext.Rundown.Acquire());
     }
 
     //
@@ -182,7 +167,7 @@ XPF_TEST_SCENARIO(TestRundownProtection, WaitForReleaseBlocksAcquisitions)
     for (size_t i = 0; i < 100; ++i)
     {
         XPF_TEST_EXPECT_TRUE(!rundownContext.IsRunDownReleased);
-        (*rundownContext.Rundown).Release();
+        rundownContext.Rundown.Release();
     }
     rundownThread.Join();
 
@@ -197,20 +182,15 @@ XPF_TEST_SCENARIO(TestRundownProtection, WaitForReleaseBlocksAcquisitions)
  */
 XPF_TEST_SCENARIO(TestRundownProtection, WaitForRelease)
 {
-    NTSTATUS status = STATUS_UNSUCCESSFUL;
-    xpf::Optional<xpf::RundownProtection> rundown;
-
-    status = xpf::RundownProtection::Create(&rundown);
-    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
-
-    (*rundown).WaitForRelease();
+    xpf::RundownProtection rundown;
+    rundown.WaitForRelease();
 
     //
     // No acquisition should happen.
     //
     for (size_t i = 0; i < 100; ++i)
     {
-        XPF_TEST_EXPECT_TRUE(false == (*rundown).Acquire());
+        XPF_TEST_EXPECT_TRUE(false == rundown.Acquire());
     }
 }
 
@@ -220,11 +200,7 @@ XPF_TEST_SCENARIO(TestRundownProtection, WaitForRelease)
  */
 XPF_TEST_SCENARIO(TestRundownProtection, ReleaseNoAcquire)
 {
-    NTSTATUS status = STATUS_UNSUCCESSFUL;
-    xpf::Optional<xpf::RundownProtection> rundown;
+    xpf::RundownProtection rundown;
 
-    status = xpf::RundownProtection::Create(&rundown);
-    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
-
-    XPF_TEST_EXPECT_DEATH((*rundown).Release());
+    XPF_TEST_EXPECT_DEATH(rundown.Release());
 }

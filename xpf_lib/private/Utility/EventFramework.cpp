@@ -41,7 +41,7 @@ xpf::EventBus::Dispatch(
     //
     // Prevent the event bus from being run down.
     //
-    xpf::RundownGuard busGuard{ *this->m_EventBusRundown };
+    xpf::RundownGuard busGuard{ this->m_EventBusRundown };
     if (!busGuard.IsRundownAcquired())
     {
         return STATUS_TOO_LATE;
@@ -87,7 +87,7 @@ xpf::EventBus::NotifyListeners(
     //
     // Prevent the event bus from being run down.
     //
-    xpf::RundownGuard busGuard{ *this->m_EventBusRundown };
+    xpf::RundownGuard busGuard{ this->m_EventBusRundown };
     if (!busGuard.IsRundownAcquired())
     {
         return;
@@ -107,7 +107,7 @@ xpf::EventBus::NotifyListeners(
             continue;
         }
 
-        xpf::RundownGuard listenerGuard{ *(eventListenerData->Rundown) };
+        xpf::RundownGuard listenerGuard{ eventListenerData->Rundown };
         if (!listenerGuard.IsRundownAcquired())
         {
             continue;
@@ -132,7 +132,7 @@ xpf::EventBus::EnqueueAsync(
     //
     // Prevent the event bus from being run down.
     //
-    xpf::RundownGuard busGuard{ *this->m_EventBusRundown };
+    xpf::RundownGuard busGuard{ this->m_EventBusRundown };
     if (!busGuard.IsRundownAcquired())
     {
         return STATUS_TOO_LATE;
@@ -227,16 +227,7 @@ xpf::EventBus::Create(
     xpf::EventBus& newEventBus = (*(*EventBusToCreate));
 
     //
-    // First thing first, the event bus rundown.
-    //
-    status = xpf::RundownProtection::Create(&newEventBus.m_EventBusRundown);
-    if (!NT_SUCCESS(status))
-    {
-        goto Exit;
-    }
-
-    //
-    // And finally the threadpool.
+    // Create the threadpool.
     //
     status = xpf::ThreadPool::Create(&newEventBus.m_AsyncPool);
     if (!NT_SUCCESS(status))
@@ -268,10 +259,7 @@ xpf::EventBus::Rundown(
     //
     // Block further event listeners registrations and bus operations.
     //
-    if (this->m_EventBusRundown.HasValue())
-    {
-        (*this->m_EventBusRundown).WaitForRelease();
-    }
+    this->m_EventBusRundown.WaitForRelease();
 
     //
     // Walk all listeners and run down.
@@ -282,12 +270,12 @@ xpf::EventBus::Rundown(
         xpf::EventListenerData* eventListenerData = XPF_CONTAINING_RECORD(crtEntry, xpf::EventListenerData, ListEntry);
         crtEntry = crtEntry->Next;
 
-        if ((nullptr != eventListenerData) && (eventListenerData->Rundown.HasValue()))
+        if (nullptr != eventListenerData)
         {
             //
             // Wait for all callbacks to finish.
             //
-            (*eventListenerData->Rundown).WaitForRelease();
+            eventListenerData->Rundown.WaitForRelease();
 
             //
             // Invalidate the naked pointer and the id.
@@ -349,7 +337,7 @@ xpf::EventBus::RegisterListener(
     //
     // First the event bus rundown. If the bus was destroyed, we can't enqueue.
     //
-    xpf::RundownGuard guard{ *this->m_EventBusRundown };
+    xpf::RundownGuard guard{ this->m_EventBusRundown };
     if (!guard.IsRundownAcquired())
     {
         return STATUS_TOO_LATE;
@@ -371,15 +359,6 @@ xpf::EventBus::RegisterListener(
     //
     listenerData = reinterpret_cast<xpf::EventListenerData*>(memoryBlock);
     xpf::MemoryAllocator::Construct(listenerData);
-
-    //
-    // Now create the rundown for this event listener.
-    //
-    status = xpf::RundownProtection::Create(&listenerData->Rundown);
-    if (!NT_SUCCESS(status))
-    {
-        goto CleanUp;
-    }
 
     //
     // Now generate the random id for the listener.
@@ -421,7 +400,7 @@ xpf::EventBus::UnregisterListener(
     //
     // First the event bus rundown. If the bus was destroyed, we can't do anything.
     //
-    xpf::RundownGuard guard{ *this->m_EventBusRundown };
+    xpf::RundownGuard guard{ this->m_EventBusRundown };
     if (!guard.IsRundownAcquired())
     {
         return STATUS_TOO_LATE;
@@ -441,7 +420,7 @@ xpf::EventBus::UnregisterListener(
         //
         if ((nullptr != eventListenerData) && (xpf::ApiAreUuidsEqual(ListenerId, eventListenerData->Id)))
         {
-            (*eventListenerData->Rundown).WaitForRelease();
+            eventListenerData->Rundown.WaitForRelease();
             return STATUS_SUCCESS;
         }
     }

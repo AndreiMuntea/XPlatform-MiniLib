@@ -35,17 +35,14 @@ namespace xpf
  */
 class RundownProtection
 {
- private:
+ public:
 /**
- * @brief Default constructor. This generates a partially constructed object.
- *        Create() should be used instead to ensure the signal is properly initialized.
- *        Thus we mark this as private.
+ * @brief Default constructor.
  */
 RundownProtection(
     void
 ) noexcept(true) = default;
 
- public:
 /**
  * @brief Default destructor.
  */
@@ -101,28 +98,6 @@ operator=(
 ) noexcept(true) = delete;
 
 /**
- * @brief Create and initialize a RundownProtection. This must be used instead of constructor.
- *        It ensures the rundown is not partially initialized.
- *        This is a middle ground for not using exceptions and not calling ApiPanic() on fail.
- *        We allow a gracefully failure handling.
- *
- * @param[in, out] RundownProtectionToCreate - the rundown to be created. On input it will be empty.
- *                                             On output it will contain a fully initialized RundownProtection
- *                                             or an empty one on fail.
- *
- * @return A proper NTSTATUS error code on fail, or STATUS_SUCCESS if everything went good.
- * 
- * @note The function has strong guarantees that on success RundownProtectionToCreate has a value
- *       and on fail RundownProtectionToCreate does not have a value.
- */
-_Must_inspect_result_
-static NTSTATUS
-XPF_API
-Create(
-    _Inout_ xpf::Optional<xpf::RundownProtection>* RundownProtectionToCreate
-) noexcept(true);
-
-/**
  * @brief Tries to acquire run-down protection on a shared object so the caller can safely access the object.
  * 
  * @return true if the routine successfully acquires run-down protection for the caller. Otherwise, it returns false.
@@ -165,11 +140,6 @@ WaitForRelease(
      *           The other 63 bits will be used to count the access.
      */
     alignas(uint64_t) volatile uint64_t m_Rundown = 0;
-    /**
-     * @brief   This will be set when the rundown is finished so we don't spin indefinitely.
-     */
-    xpf::Optional<xpf::Signal> m_RundownSignal;
-
 
     /**
      * @brief   The parity bit is the rundown bit. Reserved.
@@ -181,16 +151,6 @@ WaitForRelease(
      *          Do not change this value without first validating the implementation.
      */
     static constexpr const uint64_t RUNDOWN_INCREMENT = 2;
-
-
-    /**
-     * @brief   Default MemoryAllocator is our friend as it requires access to the private
-     *          default constructor. It is used in the Create() method to ensure that
-     *          no partially constructed objects are created but instead they will be
-     *          all fully initialized.
-     */
-
-     friend class xpf::MemoryAllocator;
 };  // class RundownProtection
 
 

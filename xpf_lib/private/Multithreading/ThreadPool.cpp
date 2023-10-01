@@ -18,77 +18,12 @@
  */
 XPF_SECTION_DEFAULT;
 
-/**
- * @brief   This will be enqueued to be executed by the threadpool.
- */
-struct ThreadPoolWorkItem
-{
-    /**
-     * @brief   This callback will be ran by the worker thread.
-     */
-    xpf::thread::Callback ThreadCallback = nullptr;
-
-    /**
-     * @brief   This callback will be ran by the worker thread
-     *          when Rundown() is called
-     */
-    xpf::thread::Callback ThreadRundownCallback = nullptr;
-
-    /**
-     * @brief   The context to be passed to callback.
-     */
-    xpf::thread::CallbackArgument ThreadCallbackArgument = nullptr;
-
-    /**
-     * @brief   List entry as this structure will be enqueued in a thread list.
-     *          Required by the underlying API.
-     */
-    xpf::XPF_SINGLE_LIST_ENTRY WorkItemListEntry = { 0 };
-};
-
-/**
- * @brief   Serves as a container for threads.
- *          This will be passed by threadpool to each thread.
- */
-struct ThreadPoolThreadContext
-{
-    /**
-     * @brief   Identifies the current running thread.
-     */
-    xpf::thread::Thread CurrentThread;
-
-    /**
-     * @brief   Serves as a container for threads.
-     *          The CurrentThread is part of this threadpool.
-     */
-    xpf::ThreadPool* OwnerThreadPool = nullptr;
-
-    /**
-     * @brief   Signals the thread to wake up - something changed. 
-     */
-    xpf::Optional<xpf::Signal> WakeUpSignal;
-
-    /**
-     * @brief   Signals the thread that it should exit as soon as possible. 
-     */
-    bool IsShutdownSignaled = false;
-
-    /**
-     * @brief   A list of enqueued work items to be processed.
-     */
-    xpf::TwoLockQueue WorkQueue;
-
-    /**
-     * @brief   Threads are also stored in their own list inside threadpool.
-     */
-    xpf::XPF_SINGLE_LIST_ENTRY ThreadListEntry = { 0 };
-};
 
 _Must_inspect_result_
 NTSTATUS
 XPF_API
 xpf::ThreadPool::CreateWorkItem(
-    _In_ void* ThreadContext,
+    _Inout_ xpf::SharedPointer<xpf::ThreadPoolThreadContext, xpf::CriticalMemoryAllocator>& ThreadContext,
     _In_ xpf::thread::Callback UserCallback,
     _In_ xpf::thread::Callback NotProcessedCallback,
     _In_opt_ xpf::thread::CallbackArgument UserCallbackArgument
@@ -99,17 +34,15 @@ xpf::ThreadPool::CreateWorkItem(
     //
     XPF_MAX_DISPATCH_LEVEL();
 
-    ThreadPoolThreadContext* threadContext = nullptr;
     ThreadPoolWorkItem* workItem = nullptr;
 
     //
     // Arguments checking.
     //
-    if ((nullptr == ThreadContext) || (nullptr == UserCallback) || (nullptr == NotProcessedCallback))
+    if ((ThreadContext.IsEmpty()) || (nullptr == UserCallback) || (nullptr == NotProcessedCallback))
     {
         return STATUS_INVALID_PARAMETER;
     }
-    threadContext = reinterpret_cast<ThreadPoolThreadContext*>(ThreadContext);
 
     //
     // Work items will be stored in non-paged memory. They are critical allocations.
@@ -131,8 +64,8 @@ xpf::ThreadPool::CreateWorkItem(
     //
     // Now add it to thread's queue.
     //
-    TlqPush(threadContext->WorkQueue, &workItem->WorkItemListEntry);
-    (*threadContext->WakeUpSignal).Set();
+    TlqPush((*ThreadContext).WorkQueue, &workItem->WorkItemListEntry);
+    (*(*ThreadContext).WakeUpSignal).Set();
 
     //
     // All good.
@@ -195,7 +128,7 @@ xpf::ThreadPool::Enqueue(
     //
     // Now we try to acquire the rundown - this will prevent shutdown until we are finished.
     //
-    xpf::RundownGuard guard{ (*this->m_ThreadpoolRundown) };
+    xpf::RundownGuard guard{ this->m_ThreadpoolRundown };
     if (!guard.IsRundownAcquired())
     {
         return STATUS_SHUTDOWN_IN_PROGRESS;
@@ -204,32 +137,36 @@ xpf::ThreadPool::Enqueue(
     //
     // Now that we are here, the threadpool won't shutdown until we finish.
     // So we go into our round-robin algorithm. Don't guard access to m_RoundRobinIndex
-    // as the only guarantee we need is to be a valid thread. And the thread list->next will
-    // never be modified (we can't pop from atomic list and we won't flush as the rundown is acquired).
+    // as the only guarantee we need is to be a valid thread.
     //
-    auto roundRobinIndex = this->m_RoundRobinIndex;
-    if (nullptr == roundRobinIndex)
+    auto currentRoundRobinIndex = this->m_RoundRobinIndex;
+    if (currentRoundRobinIndex >= this->m_Threads.Size())
     {
-        return STATUS_INVALID_STATE_TRANSITION;
+        currentRoundRobinIndex = 0;
     }
 
     //
-    // If we reached the end, we go to the head of the list.
+    // If we reached the end, we go to the beginning.
     // We do that here before doing too many operations.
     //
-    this->m_RoundRobinIndex = (nullptr == roundRobinIndex->Next) ? this->m_ThreadsList.Head
-                                                                 : roundRobinIndex->Next;
+    this->m_RoundRobinIndex = (this->m_RoundRobinIndex + 1) % this->m_Threads.Size();
 
-    ThreadPoolThreadContext* threadContext = XPF_CONTAINING_RECORD(roundRobinIndex, ThreadPoolThreadContext, ThreadListEntry);
-    if (nullptr == threadContext)
+    //
+    // The lock will have minimal scope - just grab a reference to the selected thread.
+    //
+    xpf::SharedPointer<xpf::ThreadPoolThreadContext, xpf::CriticalMemoryAllocator> currentThread;
     {
-        return STATUS_INVALID_STATE_TRANSITION;
+        xpf::SharedLockGuard threadGuard{ this->m_ThreadsLock };
+        if (currentRoundRobinIndex < this->m_Threads.Size())
+        {
+            currentThread = this->m_Threads[currentRoundRobinIndex];
+        }
     }
 
     //
     // Now we have our thread context - enqueue the item in its list.
     //
-    return this->CreateWorkItem(threadContext,
+    return this->CreateWorkItem(currentThread,
                                 UserCallback,
                                 NotProcessedCallback,
                                 UserCallbackArgument);
@@ -240,14 +177,6 @@ xpf::ThreadPool::Enqueue(
  *          Our threads are running at passive anyway.
  */
 XPF_SECTION_PAGED;
-
-
-xpf::ThreadPool::ThreadPool(
-    void
-) noexcept(true) : m_WorkItemAllocator(sizeof(ThreadPoolWorkItem), true)
-{
-    XPF_NOTHING();
-}
 
 
 _Must_inspect_result_
@@ -294,19 +223,13 @@ xpf::ThreadPool::Create(
     xpf::ThreadPool& newThreadpool = (*(*ThreadPoolToCreate));
 
     //
-    // First thing first - we create the rundown.
-    //
-    status = xpf::RundownProtection::Create(&newThreadpool.m_ThreadpoolRundown);
-    if (!NT_SUCCESS(status))
-    {
-        goto Exit;
-    }
-
-    //
     // Then the initial number of threads.
     //
-    XPF_DEATH_ON_FAILURE(newThreadpool.INITIAL_THREAD_QUOTA != 0);
-    for (size_t i = 0; i < newThreadpool.INITIAL_THREAD_QUOTA; ++i)
+    static_assert(xpf::ThreadPool::INITIAL_THREAD_QUOTA > 0 && 
+                  xpf::ThreadPool::INITIAL_THREAD_QUOTA <= xpf::ThreadPool::MAX_THREAD_QUOTA,
+                  "Invalid Initial Thread Quota!");
+
+    for (size_t i = 0; i < xpf::ThreadPool::INITIAL_THREAD_QUOTA; ++i)
     {
         status = newThreadpool.CreateThreadContext();
         if (!NT_SUCCESS(status))
@@ -314,17 +237,12 @@ xpf::ThreadPool::Create(
             goto Exit;
         }
     }
-    XPF_DEATH_ON_FAILURE(newThreadpool.m_NumberOfThreads == newThreadpool.INITIAL_THREAD_QUOTA);
 
     //
     // Now we set the round robin index to the first element in the list.
-    //
-    newThreadpool.m_RoundRobinIndex = newThreadpool.m_ThreadsList.Head;
-    XPF_DEATH_ON_FAILURE(nullptr != newThreadpool.m_RoundRobinIndex);
-
-    //
     // All good. Signal success.
     //
+    newThreadpool.m_RoundRobinIndex = 0;
     status = STATUS_SUCCESS;
 
 Exit:
@@ -348,39 +266,24 @@ xpf::ThreadPool::Rundown(
 {
     XPF_MAX_APC_LEVEL();
 
-    XPF_SINGLE_LIST_ENTRY* crtEntry = nullptr;
-
     //
     // Block further inserts and further thread creations.
     //
-    if (this->m_ThreadpoolRundown.HasValue())
-    {
-        (*this->m_ThreadpoolRundown).WaitForRelease();
-    }
-
-    //
-    // If the lock was not initialized, We're done.
-    //
-    this->m_NumberOfThreads = 0;
-    this->m_RoundRobinIndex = nullptr;
+    this->m_ThreadpoolRundown.WaitForRelease();
 
     //
     // Further threads won't be allowed as we marked the thread pool for run down.
     //
-    crtEntry = TlqFlush(this->m_ThreadsList);
-    while (nullptr != crtEntry)
     {
-        //
-        // Grab the current thread context and move to the next one.
-        //
-        ThreadPoolThreadContext* threadContext = XPF_CONTAINING_RECORD(crtEntry, ThreadPoolThreadContext, ThreadListEntry);
-        crtEntry = crtEntry->Next;
-
-        //
-        // Now Destroy the context.
-        //
-        this->DestroyThreadContext(reinterpret_cast<void**>(&threadContext));
+        xpf::ExclusiveLockGuard guard{ this->m_ThreadsLock };
+        for (size_t i = 0; i < this->m_Threads.Size(); ++i)
+        {
+            DestroyThreadContext(this->m_Threads[i]);
+        }
+        this->m_Threads.Clear();
     }
+
+    this->m_RoundRobinIndex = 0;
 }
 
 _Must_inspect_result_
@@ -391,11 +294,11 @@ xpf::ThreadPool::CreateThreadContext(
 {
     //
     // This should be called only at passive level.
-    // Should be called eiterh from Create() flow, either from a threadpool thread.
+    // Should be called either from Create() flow, either from a threadpool thread.
     //
     XPF_MAX_PASSIVE_LEVEL();
 
-    ThreadPoolThreadContext* threadContext = nullptr;
+    xpf::SharedPointer<xpf::ThreadPoolThreadContext, xpf::CriticalMemoryAllocator> threadContextSharedPtr;
     NTSTATUS status = STATUS_UNSUCCESSFUL;
 
     //
@@ -403,140 +306,125 @@ xpf::ThreadPool::CreateThreadContext(
     // as shutdown is in progress. While we are creating the thread, we will hold this guard.
     // This is not a lock, so not as expensive.
     //
-    xpf::RundownGuard rundownGuard{ (*this->m_ThreadpoolRundown) };
+    xpf::RundownGuard rundownGuard{ this->m_ThreadpoolRundown };
     if (!rundownGuard.IsRundownAcquired())
     {
-        status = STATUS_SHUTDOWN_IN_PROGRESS;
-        goto CleanUp;
+        return STATUS_SHUTDOWN_IN_PROGRESS;
     }
 
     //
     // First check if we can create a new thread.
     //
-    if (this->m_NumberOfThreads >= this->MAX_THREAD_QUOTA)
+    if (this->m_Threads.Size() >= this->MAX_THREAD_QUOTA)
     {
-        status = STATUS_QUOTA_EXCEEDED;
-        goto CleanUp;
+        return STATUS_QUOTA_EXCEEDED;
     }
 
     //
     // Threads will be stored in non-paged memory. They are critical allocations.
     //
-    threadContext = reinterpret_cast<ThreadPoolThreadContext*>(
-                                    xpf::CriticalMemoryAllocator::AllocateMemory(sizeof(*threadContext)));
-    if (nullptr == threadContext)
+    threadContextSharedPtr = xpf::MakeShared<xpf::ThreadPoolThreadContext, xpf::CriticalMemoryAllocator>();
+    if (threadContextSharedPtr.IsEmpty())
     {
-        status = STATUS_INSUFFICIENT_RESOURCES;
-        goto CleanUp;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
-    xpf::MemoryAllocator::Construct(threadContext);
+    xpf::ThreadPoolThreadContext& threadContext = *threadContextSharedPtr;
 
     //
     // Now to properly initialize the threadContext we need WakeUpSignal.
     // This will be an auto-reset event (so manual reset = false).
     // It will wake the thread multiple times when it has a work item.
     //
-    status = xpf::Signal::Create(&threadContext->WakeUpSignal, false);
+    status = xpf::Signal::Create(&threadContext.WakeUpSignal, false);
     if (!NT_SUCCESS(status))
     {
-        goto CleanUp;
+        return status;
     }
 
     //
     // Now set the owner threadpool accordingly.
     // This must be done before running the callback routine.
     //
-    threadContext->OwnerThreadPool = this;
+    threadContext.OwnerThreadPool = this;
 
     //
     // And now start the thread.
     //
-    status = threadContext->CurrentThread.Run(ThreadPoolMainCallback, threadContext);
+    status = threadContext.CurrentThread.Run(ThreadPoolMainCallback, xpf::AddressOf(threadContext));
     if (!NT_SUCCESS(status))
     {
-        goto CleanUp;
+        return status;
     }
 
     //
     // Now attempt to add the thread to the main threads list.
     // Check again for m_NumberOfThreads.
     //
-    if (xpf::ApiAtomicIncrement(&this->m_NumberOfThreads) >= this->MAX_THREAD_QUOTA)
     {
-        xpf::ApiAtomicDecrement(&this->m_NumberOfThreads);
-        status = STATUS_QUOTA_EXCEEDED;
-    }
-    else
-    {
-        TlqPush(this->m_ThreadsList, &threadContext->ThreadListEntry);
-        status = STATUS_SUCCESS;
+        xpf::ExclusiveLockGuard guard{ this->m_ThreadsLock };
+        if (this->m_Threads.Size() >= this->MAX_THREAD_QUOTA)
+        {
+            status = STATUS_QUOTA_EXCEEDED;
+        }
+        else
+        {
+            status = this->m_Threads.Emplace(threadContextSharedPtr);
+        }
     }
 
-CleanUp:
-    if (!NT_SUCCESS(status))
-    {
-        DestroyThreadContext(reinterpret_cast<void**>(&threadContext));
-        threadContext = nullptr;
-    }
     return status;
 }
 
 void
 XPF_API
 xpf::ThreadPool::DestroyThreadContext(
-    _Inout_ void** ThreadContext
+    _Inout_ xpf::SharedPointer<xpf::ThreadPoolThreadContext, xpf::CriticalMemoryAllocator>& ThreadContext
 ) noexcept(true)
 {
     //
-    // Sanity check that we have a valid object.
+    // Can't destroy empty thread context.
     //
-    if ((nullptr == ThreadContext) || (nullptr == (*ThreadContext)))
+    if (ThreadContext.IsEmpty())
     {
         return;
     }
 
     //
-    // Let's get a more familiar form.
+    // This will ease the access.
     //
-    ThreadPoolThreadContext* threadContext = reinterpret_cast<ThreadPoolThreadContext*>(*ThreadContext);
+    xpf::ThreadPoolThreadContext& threadContext = *ThreadContext;
 
     //
     // Signal the thread that we are shutting down.
     //
-    threadContext->IsShutdownSignaled = true;
+    threadContext.IsShutdownSignaled = true;
 
     //
     // If we have the event we wake up the thread.
     //
-    if (threadContext->WakeUpSignal.HasValue())
+    if (threadContext.WakeUpSignal.HasValue())
     {
-        (*threadContext->WakeUpSignal).Set();
+        (*threadContext.WakeUpSignal).Set();
     }
 
     //
     // Now wait to finish - it should wake up by the previously set event.
     //
-    if (threadContext->CurrentThread.IsJoinable())
+    if (threadContext.CurrentThread.IsJoinable())
     {
-        threadContext->CurrentThread.Join();
+        threadContext.CurrentThread.Join();
     }
 
     //
     // And now process everything that was enqueued and wasn't processed.
     // Don't care how many there were in that list.
     //
-    ThreadPoolProcessWorkItems(threadContext, nullptr);
+    ThreadPoolProcessWorkItems(&threadContext, nullptr);
 
     //
     // Then we can safely release resources.
     //
-    xpf::MemoryAllocator::Destruct(threadContext);
-    xpf::CriticalMemoryAllocator::FreeMemory(reinterpret_cast<void**>(&threadContext));
-
-    //
-    // Don't leave invalid memory...
-    //
-    *ThreadContext = nullptr;
+    ThreadContext.Reset();
 }
 
 

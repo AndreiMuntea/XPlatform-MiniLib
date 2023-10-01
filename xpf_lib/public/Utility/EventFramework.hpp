@@ -25,7 +25,7 @@
 #include "xpf_lib/public/Multithreading/ThreadPool.hpp"
 
 #include "xpf_lib/public/Memory/SharedPointer.hpp"
-#include "xpf_lib/public/Containers/TwoLockQueue.hpp"
+#include "xpf_lib/public/Containers/Vector.hpp"
 
 
 namespace xpf
@@ -260,7 +260,7 @@ struct EventListenerData
     *              It will prevent the listener from being unregistered while there
     *              are outstanding callbacks to it.
     */
-    xpf::Optional<xpf::RundownProtection> Rundown;
+    xpf::RundownProtection Rundown;
    /**
     * @brief       This uniquely identifies an event listener inside an event bus.
     *              When the listener is registered this will be returned to the caller.
@@ -498,7 +498,7 @@ AsyncCallback(
     /**
      * @brief   This is used to block further operations within the event bus.
      */
-     xpf::Optional<xpf::RundownProtection> m_EventBusRundown;
+     xpf::RundownProtection m_EventBusRundown;
     /**
      * @brief       This is the allocator for EventData. Use the lookaside allocator
      *              as we'll have a lot of allocations. We want to recycle some of it.
@@ -511,8 +511,6 @@ AsyncCallback(
      xpf::Optional<xpf::ThreadPool> m_AsyncPool;
     /**
      * @brief       This list stores the details about all registered listeners.
-     *              Note that "removing" a listener simply means running down the listener.
-     *              It will be stored in this list forever.
      */
      xpf::TwoLockQueue m_Listeners;
 

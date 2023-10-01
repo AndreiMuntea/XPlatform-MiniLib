@@ -25,11 +25,78 @@
 
 #include "xpf_lib/public/Locks/ReadWriteLock.hpp"
 #include "xpf_lib/public/Containers/TwoLockQueue.hpp"
+#include "xpf_lib/public/Containers/Vector.hpp"
 #include "xpf_lib/public/Memory/LookasideListAllocator.hpp"
+#include "xpf_lib/public/Memory/SharedPointer.hpp"
 
 
 namespace xpf
 {
+/**
+ * @brief   Forward definition.
+ */
+class ThreadPool;
+
+/**
+ * @brief   This will be enqueued to be executed by the threadpool.
+ */
+struct ThreadPoolWorkItem
+{
+    /**
+     * @brief   This callback will be ran by the worker thread.
+     */
+    xpf::thread::Callback ThreadCallback = nullptr;
+
+    /**
+     * @brief   This callback will be ran by the worker thread
+     *          when Rundown() is called
+     */
+    xpf::thread::Callback ThreadRundownCallback = nullptr;
+
+    /**
+     * @brief   The context to be passed to callback.
+     */
+    xpf::thread::CallbackArgument ThreadCallbackArgument = nullptr;
+
+    /**
+     * @brief   List entry as this structure will be enqueued in a thread list.
+     *          Required by the underlying API.
+     */
+    xpf::XPF_SINGLE_LIST_ENTRY WorkItemListEntry = { 0 };
+};
+
+/**
+ * @brief   Serves as a container for threads.
+ *          This will be passed by threadpool to each thread.
+ */
+struct ThreadPoolThreadContext
+{
+    /**
+     * @brief   Identifies the current running thread.
+     */
+    xpf::thread::Thread CurrentThread;
+
+    /**
+     * @brief   Serves as a container for threads.
+     *          The CurrentThread is part of this threadpool.
+     */
+    xpf::ThreadPool* OwnerThreadPool = nullptr;
+
+    /**
+     * @brief   Signals the thread to wake up - something changed. 
+     */
+    xpf::Optional<xpf::Signal> WakeUpSignal;
+
+    /**
+     * @brief   Signals the thread that it should exit as soon as possible. 
+     */
+    bool IsShutdownSignaled = false;
+
+    /**
+     * @brief   A list of enqueued work items to be processed.
+     */
+    xpf::TwoLockQueue WorkQueue;
+};
 
 /**
  * @brief   Serves as a container for threads.
@@ -43,7 +110,10 @@ class ThreadPool final
  */
 ThreadPool(
     void
-) noexcept(true);
+) noexcept(true) : m_WorkItemAllocator(sizeof(ThreadPoolWorkItem), true)
+{
+    XPF_NOTHING();
+}
 
  public:
 /**
@@ -182,7 +252,7 @@ CreateThreadContext(
 void
 XPF_API
 DestroyThreadContext(
-    _Inout_ void** ThreadContext
+    _Inout_ xpf::SharedPointer<xpf::ThreadPoolThreadContext, xpf::CriticalMemoryAllocator>& ThreadContext
 ) noexcept(true);
 
 
@@ -190,7 +260,7 @@ DestroyThreadContext(
  * @brief This will create a new threadpool work item.
  *        This is what will actually be processed.
  * 
- * @param[in] ThreadContext - The context of a thread where this item  was selected to run.
+ * @param[in,out] ThreadContext - The context of a thread where this item  was selected to run.
  * 
  * @param[in] UserCallback - Callback to be run.
  *
@@ -208,7 +278,7 @@ _Must_inspect_result_
 NTSTATUS
 XPF_API
 CreateWorkItem(
-    _In_ void* ThreadContext,
+    _Inout_ xpf::SharedPointer<xpf::ThreadPoolThreadContext, xpf::CriticalMemoryAllocator>& ThreadContext,
     _In_ xpf::thread::Callback UserCallback,
     _In_ xpf::thread::Callback NotProcessedCallback,
     _In_opt_ xpf::thread::CallbackArgument UserCallbackArgument
@@ -261,24 +331,22 @@ ThreadPoolProcessWorkItems(
       * @brief   This is used to block the creation of all new threads.
       *          And the scheduling of new items.
       */
-     xpf::Optional<xpf::RundownProtection> m_ThreadpoolRundown;
-    /**
-     * @brief   This will store the underlying threads.
-     *          It will grow dynamically depending on the workload.
-     */
-     xpf::TwoLockQueue m_ThreadsList;
-    /**
-     * @brief   This will hold the current number of threads in m_ThreadsList.
-     *          It will change when new threads are spawned.
-     */
-     alignas(uint32_t) volatile uint32_t m_NumberOfThreads = 0;
-    /**
-     * @brief   We'll use a lookaside list memory allocator to construct the work items.
-     *          They all have the same size and they are the perfect match.
-     */
+     xpf::RundownProtection m_ThreadpoolRundown;
+     /**
+      * @brief   We'll use a lookaside list memory allocator to construct the work items.
+      *          They all have the same size and they are the perfect match.
+      */
      xpf::LookasideListAllocator m_WorkItemAllocator;
-
-
+     /**
+      * @brief  This will be the currently available list of threads.
+      *         This won't exceed MAX_THREAD_QUOTA.
+      */
+     xpf::Vector<xpf::SharedPointer<xpf::ThreadPoolThreadContext, xpf::CriticalMemoryAllocator>,
+                 xpf::CriticalMemoryAllocator> m_Threads;
+     /**
+      * @brief  This will guard the access to the m_Threads. 
+      */
+     xpf::BusyLock m_ThreadsLock;
     /**
      * @brief   We will enqueue in a round-robin manner.
      *          If we have n threads, then we will enqueue the first item to the first thread,
@@ -289,21 +357,20 @@ ThreadPoolProcessWorkItems(
      *          We just want to ensure a minimalist load balancing distributed among threads.
      *          So this index will always be in [0, m_NumberOfThreads - 1].
      */
-     XPF_SINGLE_LIST_ENTRY* m_RoundRobinIndex = nullptr;
-
+     size_t m_RoundRobinIndex = 0;
 
     /**
      * @brief   This controls when should we spawn a new thread.
      *          If a thread has more than a certain number items at once
      *          it will spawn a new thread to consume them.
      */
-     static constexpr size_t MAX_WORKLOAD_SIZE = 64;
+     static constexpr size_t MAX_WORKLOAD_SIZE = 512;
     /**
      * @brief   This controls how many threads we can spawn. We won't exceed this number.
      *          Something smarter could be done (depending on current cores).
      *          We can come back to this later.
      */
-     static constexpr size_t MAX_THREAD_QUOTA = 16;
+     static constexpr size_t MAX_THREAD_QUOTA = 64;
     /**
      * @brief   This controls how many threads we spawn during creation of threadpool.
      *          We can't start with a single one as a flood of work items can be enqueued
