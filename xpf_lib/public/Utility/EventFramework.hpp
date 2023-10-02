@@ -290,7 +290,6 @@ struct EventData
     xpf::EventBus* Bus = nullptr;
 };  // struct EventData;
 
-
 /**
  * @brief       This is the event bus class.
  *              You can register listeners, unregister listeners

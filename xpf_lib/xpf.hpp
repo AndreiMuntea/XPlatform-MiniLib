@@ -43,3 +43,4 @@
 #include "public/Multithreading/ThreadPool.hpp"
 
 #include "public/Utility/EventFramework.hpp"
+#include "public/Utility/ISerializable.hpp"
