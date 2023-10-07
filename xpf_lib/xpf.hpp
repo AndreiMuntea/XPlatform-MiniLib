@@ -21,6 +21,7 @@
 #include "public/core/TypeTraits.hpp"
 #include "public/core/Algorithm.hpp"
 #include "public/core/PlatformApi.hpp"
+#include "public/core/Endianess.hpp"
 
 #include "public/Memory/MemoryAllocator.hpp"
 #include "public/Memory/CompressedPair.hpp"

@@ -17,6 +17,7 @@ add_executable( XPF_Tests "XPF-Tests.cpp"
 
                           "tests/core/TestCore.cpp"
                           "tests/core/TestPlatformApi.cpp"
+                          "tests/core/TestEndianess.cpp"
 
                           "tests/Memory/TestMemoryAllocator.cpp"
                           "tests/Memory/TestCompressedPair.cpp"

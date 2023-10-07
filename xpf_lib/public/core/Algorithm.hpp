@@ -145,5 +145,4 @@ AlgoPointerToValue(
                       "Unsupported Pointer type!");
     }
 }
-
 };  // namespace xpf
