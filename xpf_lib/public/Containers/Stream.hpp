@@ -29,6 +29,182 @@
 
 namespace xpf
 {
+//
+// ************************************************************************************************
+// This is the section containing the interfaces
+// ************************************************************************************************
+//
+
+/**
+ * @brief   This is a stream reader interface. This allows decoupling from the implementation.
+ *          The default one is provided below in this file. It is especially useful when
+ *          deserializing data.
+ */
+class IStreamReader
+{
+ public:
+/**
+ * @brief IStreamReader constructor - default.
+ */
+IStreamReader(
+    void
+) noexcept(true) = default;
+
+/**
+ * @brief IStreamReader destructor - default
+ */
+virtual ~IStreamReader(
+    void
+) noexcept(true) = default;
+
+/**
+ * @brief Copy constructor - default.
+ * 
+ * @param[in] Other - The other object to construct from.
+ */
+IStreamReader(
+    _In_ _Const_ const IStreamReader& Other
+) noexcept(true) = default;
+
+/**
+ * @brief Move constructor - default.
+ * 
+ * @param[in,out] Other - The other object to construct from.
+ *                        Will be invalidated after this call.
+ */
+IStreamReader(
+    _Inout_ IStreamReader&& Other
+) noexcept(true) = default;
+
+/**
+ * @brief Copy assignment - default.
+ * 
+ * @param[in] Other - The other object to construct from.
+ * 
+ * @return A reference to *this object after copy.
+ */
+IStreamReader&
+operator=(
+    _In_ _Const_ const IStreamReader& Other
+) noexcept(true) = default;
+
+/**
+ * @brief Move assignment - default.
+ * 
+ * @param[in,out] Other - The other object to construct from.
+ *                        Will be invalidated after this call.
+ * 
+ * @return A reference to *this object after move.
+ */
+IStreamReader&
+operator=(
+    _Inout_ IStreamReader&& Other
+) noexcept(true) = default;
+
+/**
+ * @brief Reads a number of bytes from the underlying stream.
+ *
+ * @param[in] NumberOfBytes - The number of bytes to read from the stream.
+ *
+ * @param[in,out] Bytes - The read bytes.
+ *
+ * @param[in] Peek - If this is true, the cursor will not be adjusted,
+ *                   that's it - if subsequent reads will be attempted,
+ *                   the same values will be read, as the cursor won't be adjusted.
+ *
+ * @return true if the operation was successful, false otherwise.
+ */
+virtual bool
+XPF_API
+ReadBytes(
+    _In_ size_t NumberOfBytes,
+    _Inout_ uint8_t* Bytes,
+    _In_ bool Peek = false
+) noexcept(true) = 0;
+};  // IStreamReader
+
+/**
+ * @brief   This is a stream writer interface. This allows decoupling from the implementation.
+ *          The default one is provided below in this file. It is especially useful when
+ *          serializing data.
+ */
+class IStreamWriter
+{
+ public:
+/**
+ * @brief IStreamWriter constructor - default.
+ */
+IStreamWriter(
+    void
+) noexcept(true) = default;
+
+/**
+ * @brief IStreamWriter destructor - default
+ */
+virtual ~IStreamWriter(
+    void
+) noexcept(true) = default;
+
+/**
+ * @brief Copy constructor - default.
+ * 
+ * @param[in] Other - The other object to construct from.
+ */
+IStreamWriter(
+    _In_ _Const_ const IStreamWriter& Other
+) noexcept(true) = default;
+
+/**
+ * @brief Move constructor - default.
+ * 
+ * @param[in,out] Other - The other object to construct from.
+ *                        Will be invalidated after this call.
+ */
+IStreamWriter(
+    _Inout_ IStreamWriter&& Other
+) noexcept(true) = default;
+
+/**
+ * @brief Copy assignment - default.
+ * 
+ * @param[in] Other - The other object to construct from.
+ * 
+ * @return A reference to *this object after copy.
+ */
+IStreamWriter&
+operator=(
+    _In_ _Const_ const IStreamWriter& Other
+) noexcept(true) = default;
+
+/**
+ * @brief Move assignment - default.
+ * 
+ * @param[in,out] Other - The other object to construct from.
+ *                        Will be invalidated after this call.
+ * 
+ * @return A reference to *this object after move.
+ */
+IStreamWriter&
+operator=(
+    _Inout_ IStreamWriter&& Other
+) noexcept(true) = default;
+
+/**
+ * @brief Writes a number of bytes to the underlying stream.
+ *
+ * @param[in] NumberOfBytes - The number of bytes to write from the stream.
+ *
+ * @param[in] Bytes - The bytes to be written.
+ *
+ * @return true if the operation was successful, false otherwise.
+ */
+virtual bool
+XPF_API
+WriteBytes(
+    _In_ size_t NumberOfBytes,
+    _In_ _Const_ const uint8_t* Bytes
+) noexcept(true) = 0;
+};  // IStreamWriter
 
 //
 // ************************************************************************************************
@@ -41,7 +217,7 @@ namespace xpf
  *          Espeacially useful for deserializing data.
  */
 template <class AllocatorType = xpf::MemoryAllocator>
-class StreamReader final
+class StreamReader final : public xpf::IStreamReader
 {
  public:
 /**
@@ -52,7 +228,8 @@ class StreamReader final
  */
 StreamReader(
     _In_ const xpf::Buffer<AllocatorType>& DataBuffer
-) noexcept(true): m_Buffer{ DataBuffer }
+) noexcept(true): xpf::IStreamReader(),
+                  m_Buffer{ DataBuffer }
 {
     XPF_NOTHING();
 }
@@ -60,7 +237,7 @@ StreamReader(
 /**
  * @brief StreamReader destructor - default
  */
-~StreamReader(
+virtual ~StreamReader(
     void
 ) noexcept(true) = default;
 
@@ -122,6 +299,7 @@ operator=(
  */
 template <class Type>
 inline bool
+XPF_API
 ReadNumber(
     _Out_ Type& Number,
     _In_ bool Peek = false
@@ -141,7 +319,6 @@ ReadNumber(
                            Peek);
 }
 
-
 /**
  * @brief Reads a number of bytes from the underlying stream.
  *
@@ -155,12 +332,13 @@ ReadNumber(
  *
  * @return true if the operation was successful, false otherwise.
  */
-inline bool
+bool
+XPF_API
 ReadBytes(
     _In_ size_t NumberOfBytes,
     _Inout_ uint8_t* Bytes,
     _In_ bool Peek = false
-) noexcept(true)
+) noexcept(true) override
 {
     //
     // Validate the input parameters.
@@ -217,7 +395,7 @@ ReadBytes(
  *          Espeacially useful for serializing data.
  */
 template <class AllocatorType = xpf::MemoryAllocator>
-class StreamWriter final
+class StreamWriter final : public xpf::IStreamWriter
 {
  public:
 /**
@@ -227,7 +405,8 @@ class StreamWriter final
  */
 StreamWriter(
     _Inout_ xpf::Buffer<AllocatorType>& DataBuffer
-) noexcept(true): m_Buffer{ DataBuffer }
+) noexcept(true): xpf::IStreamWriter(),
+                  m_Buffer{ DataBuffer }
 {
     XPF_NOTHING();
 }
@@ -235,7 +414,7 @@ StreamWriter(
 /**
  * @brief StreamWriter destructor - default
  */
-~StreamWriter(
+virtual ~StreamWriter(
     void
 ) noexcept(true) = default;
 
@@ -292,6 +471,7 @@ operator=(
  */
 template <class Type>
 inline bool
+XPF_API
 WriteNumber(
     _In_ const Type& Number
 ) noexcept(true)
@@ -318,11 +498,12 @@ WriteNumber(
  *
  * @return true if the operation was successful, false otherwise.
  */
-inline bool
+bool
+XPF_API
 WriteBytes(
     _In_ size_t NumberOfBytes,
     _In_ _Const_ const uint8_t* Bytes
-) noexcept(true)
+) noexcept(true) override
 {
     //
     // Validate the input parameters.
