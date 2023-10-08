@@ -28,6 +28,7 @@ add_executable( XPF_Tests "XPF-Tests.cpp"
                           "tests/Containers/TestTwoLockQueue.cpp"
                           "tests/Containers/TestVector.cpp"
                           "tests/Containers/TestString.cpp"
+                          "tests/Containers/TestStream.cpp"
                           
                           "tests/Locks/TestBusyLock.cpp"
                           "tests/Locks/TestReadWriteLock.cpp"

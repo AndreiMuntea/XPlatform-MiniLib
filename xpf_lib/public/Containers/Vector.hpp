@@ -31,6 +31,7 @@ namespace xpf
 // This is the section containing a managed buffer implementation.
 // ************************************************************************************************
 //
+
 /**
  * @brief This is the class to create a managed buffer.
  *        It is internally used by vector class and other classes as well.

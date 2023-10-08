@@ -33,6 +33,7 @@
 #include "public/Containers/TwoLockQueue.hpp"
 #include "public/Containers/String.hpp"
 #include "public/Containers/Vector.hpp"
+#include "public/Containers/Stream.hpp"
 
 #include "public/Locks/Lock.hpp"
 #include "public/Locks/BusyLock.hpp"
