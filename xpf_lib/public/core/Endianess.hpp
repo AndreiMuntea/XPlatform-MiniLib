@@ -22,6 +22,11 @@
 
 namespace xpf
 {
+
+/**
+ * @brief An enum class containing possible endianess.
+ *        See the description for each.
+ */
 enum class Endianess : uint32_t
 {
     /**

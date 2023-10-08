@@ -22,6 +22,8 @@
 #include "xpf_lib/public/Memory/MemoryAllocator.hpp"
 #include "xpf_lib/public/Memory/CompressedPair.hpp"
 
+#include "xpf_lib/public/Containers/Vector.hpp"
+
 
 
 namespace xpf
@@ -569,28 +571,7 @@ String(
     _Inout_ String&& Other
 ) noexcept(true)
 {
-    //
-    // Grab a reference from compressed pair. It makes the code more easier to read.
-    // On release it will be optimized away - as these will be inline calls.
-    //
-    auto& allocator = this->m_CompressedPair.First();
-    auto& buffer = this->m_CompressedPair.Second();
-
-    auto& otherAllocator = Other.m_CompressedPair.First();
-    auto& otherBuffer = Other.m_CompressedPair.Second();
-
-    //
-    // Move from other to this.
-    //
-    allocator = otherAllocator;
-    buffer = otherBuffer;
-    this->m_BufferSize = Other.m_BufferSize;
-
-    //
-    // And now invalidate other.
-    //
-    otherBuffer = nullptr;
-    Other.m_BufferSize = 0;
+    this->m_Buffer = xpf::Move(Other.m_Buffer);
 }
 
 /**
@@ -618,36 +599,7 @@ operator=(
     _Inout_ String&& Other
 ) noexcept(true)
 {
-    if (this != xpf::AddressOf(Other))
-    {
-        //
-        // First ensure we free any preexisting underlying buffer.
-        //
-        this->Reset();
-
-        //
-        // Grab a reference from compressed pair. It makes the code more easier to read.
-        // On release it will be optimized away - as these will be inline calls.
-        //
-        auto& allocator = this->m_CompressedPair.First();
-        auto& buffer = this->m_CompressedPair.Second();
-
-        auto& otherAllocator = Other.m_CompressedPair.First();
-        auto& otherBuffer = Other.m_CompressedPair.Second();
-
-        //
-        // Move from other to this.
-        //
-        allocator = otherAllocator;
-        buffer = otherBuffer;
-        this->m_BufferSize = Other.m_BufferSize;
-
-        //
-        // And now invalidate other.
-        //
-        otherBuffer = nullptr;
-        Other.m_BufferSize = 0;
-    }
+    this->m_Buffer = xpf::Move(Other.m_Buffer);
     return *this;
 }
 
@@ -665,12 +617,9 @@ operator[](
     _In_ size_t Index
 ) const noexcept(true)
 {
-    const auto& buffer = this->m_CompressedPair.Second();
+    const CharType* buffer = reinterpret_cast<const CharType*>(this->m_Buffer.GetBuffer());
 
-    if (Index >= this->m_BufferSize)
-    {
-        XPF_DEATH_ON_FAILURE(Index < this->m_BufferSize);
-    }
+    XPF_DEATH_ON_FAILURE(Index < this->BufferSize());
     return buffer[Index];
 }
 
@@ -688,12 +637,9 @@ operator[](
     _In_ size_t Index
 ) noexcept(true)
 {
-    auto& buffer = this->m_CompressedPair.Second();
+    CharType* buffer = reinterpret_cast<CharType*>(this->m_Buffer.GetBuffer());
 
-    if (Index >= this->m_BufferSize)
-    {
-        XPF_DEATH_ON_FAILURE(Index < this->m_BufferSize);
-    }
+    XPF_DEATH_ON_FAILURE(Index < this->BufferSize());
     return buffer[Index];
 }
 
@@ -708,20 +654,22 @@ IsEmpty(
     void
 ) const noexcept(true)
 {
-    return (this->m_BufferSize == 0);
+    return (this->BufferSize() == 0);
 }
 
 /**
  * @brief Gets the underlying buffer size.
  *
- * @return The underlying buffer size.
+ * @return The underlying buffer size not accounting for null terminator.
  */
 inline size_t
 BufferSize(
     void
 ) const noexcept(true)
 {
-    return this->m_BufferSize;
+    const size_t bufferSize = this->m_Buffer.GetSize() / sizeof(CharType);
+    return (bufferSize == 0) ? bufferSize
+                             : (bufferSize - 1);
 }
 
 /**
@@ -737,8 +685,8 @@ View(
     void
 ) const noexcept(true)
 {
-    const auto& buffer = this->m_CompressedPair.Second();
-    return StringView(buffer, this->m_BufferSize);
+    const CharType* buffer = reinterpret_cast<const CharType*>(this->m_Buffer.GetBuffer());
+    return StringView(buffer, this->BufferSize());
 }
 
 /**
@@ -749,7 +697,7 @@ Reset(
     void
 ) noexcept(true)
 {
-    this->DestroyBuffer();
+    this->m_Buffer.Clear();
 }
 
 /**
@@ -780,8 +728,10 @@ ToLower(
     void
 ) noexcept(true)
 {
-    auto& buffer = this->m_CompressedPair.Second();
-    for (size_t i = 0; i < this->m_BufferSize; ++i)
+    CharType* buffer = reinterpret_cast<CharType*>(this->m_Buffer.GetBuffer());
+    const size_t size = this->BufferSize();
+
+    for (size_t i = 0; i < size; ++i)
     {
         wchar_t newChar = xpf::ApiCharToLower(static_cast<wchar_t>(buffer[i]));
         buffer[i] = static_cast<CharType>(newChar);
@@ -796,8 +746,10 @@ ToUpper(
     void
 ) noexcept(true)
 {
-    auto& buffer = this->m_CompressedPair.Second();
-    for (size_t i = 0; i < this->m_BufferSize; ++i)
+    CharType* buffer = reinterpret_cast<CharType*>(this->m_Buffer.GetBuffer());
+    const size_t size = this->BufferSize();
+
+    for (size_t i = 0; i < size; ++i)
     {
         wchar_t newChar = xpf::ApiCharToUpper(static_cast<wchar_t>(buffer[i]));
         buffer[i] = static_cast<CharType>(newChar);
@@ -805,35 +757,6 @@ ToUpper(
 }
 
  private:
-/**
- * @brief Destroys the underlying buffer and frees any resources.
- */
-inline void
-DestroyBuffer(
-    void
-) noexcept(true)
-{
-    //
-    // Grab a reference from compressed pair. It makes the code more easier to read.
-    // On release it will be optimized away - as these will be inline calls.
-    //
-    auto& allocator = this->m_CompressedPair.First();
-    auto& buffer = this->m_CompressedPair.Second();
-
-    //
-    // Free the buffer, if any.
-    //
-    if (nullptr != buffer)
-    {
-        allocator.FreeMemory(reinterpret_cast<void**>(&buffer));
-    }
-
-    //
-    // And now ensure size reflects the new reality better.
-    //
-    buffer = nullptr;
-    this->m_BufferSize = 0;
-}
 
 /**
  * @brief Extends the current string by appending the View.
@@ -853,13 +776,6 @@ ExtendWithBuffer(
 ) noexcept(true)
 {
     //
-    // Grab a reference from compressed pair. It makes the code more easier to read.
-    // On release it will be optimized away - as these will be inline calls.
-    //
-    auto& allocator = this->m_CompressedPair.First();
-    auto& buffer = this->m_CompressedPair.Second();
-
-    //
     // If the given view is empty, we are done.
     //
     if (View.BufferSize() == 0)
@@ -870,7 +786,7 @@ ExtendWithBuffer(
     //
     // Now we need to compute the final size. On overflow, we stop.
     //
-    const size_t newSize = View.BufferSize() + this->m_BufferSize;
+    const size_t newSize = View.BufferSize() + this->BufferSize();
     if (newSize < View.BufferSize())
     {
         return STATUS_BUFFER_OVERFLOW;
@@ -895,57 +811,41 @@ ExtendWithBuffer(
     }
 
     //
-    // Now let's allocate a new buffer.
+    // Now let's create a new buffer.
     //
-    CharType* newBuffer = reinterpret_cast<CharType*>(allocator.AllocateMemory(sizeInBytes));
-    if (nullptr == newBuffer)
+    Buffer<AllocatorType> tempBuffer;
+    const NTSTATUS status = tempBuffer.Resize(sizeInBytes);
+    if (!NT_SUCCESS(status))
     {
-        return STATUS_INSUFFICIENT_RESOURCES;
+        return status;
     }
-    xpf::ApiZeroMemory(newBuffer, sizeInBytes);
 
     //
     // Copy the original buffer - if any.
     //
-    if (nullptr != buffer)
+    CharType* oldBuffer = reinterpret_cast<CharType*>(this->m_Buffer.GetBuffer());
+    CharType* newBuffer = reinterpret_cast<CharType*>(tempBuffer.GetBuffer());
+    if (nullptr != oldBuffer)
     {
         xpf::ApiCopyMemory(newBuffer,
-                           buffer,
-                           this->m_BufferSize * sizeof(CharType));
+                           oldBuffer,
+                           this->BufferSize() * sizeof(CharType));
     }
     //
     // Now copy the view buffer after.
     //
-    xpf::ApiCopyMemory(&newBuffer[this->m_BufferSize * sizeof(CharType)],
+    xpf::ApiCopyMemory(&newBuffer[this->BufferSize() * sizeof(CharType)],
                        View.Buffer(),
                        View.BufferSize() * sizeof(CharType));
-    //
-    // Now let's free the current buffer.
-    //
-    this->Reset();
-
-    //
-    // And finally set new buffer as current.
-    // Don't count the null terminator as part of buffer.
-    //
-    buffer = newBuffer;
-    this->m_BufferSize = newSize;
 
     //
     // Everything went fine.
     //
+    this->m_Buffer = xpf::Move(tempBuffer);
     return STATUS_SUCCESS;
 }
 
  private:
-   /**
-    * @brief Using a compressed pair here will guarantee that we benefit
-    *        from empty base class optimization as most allocators are stateless.
-    *        So the sizeof(string) will actually be equal to sizeof(char*) + sizeof(size_t).
-    *        This comes with the cost of making the code a bit more harder to read,
-    *        but using some allocator& and buffer& when needed I think it's reasonable.
-    */
-    xpf::CompressedPair<AllocatorType, CharType*> m_CompressedPair;
-    size_t m_BufferSize = 0;
+    xpf::Buffer<AllocatorType> m_Buffer;
 };  // class String
 };  // namespace xpf
