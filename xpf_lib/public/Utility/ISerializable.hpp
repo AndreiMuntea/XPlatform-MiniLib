@@ -20,6 +20,7 @@
 #include "xpf_lib/public/core/Core.hpp"
 #include "xpf_lib/public/Containers/String.hpp"
 #include "xpf_lib/public/Memory/SharedPointer.hpp"
+#include "xpf_lib/public/Containers/Stream.hpp"
 
 namespace xpf
 {
@@ -46,8 +47,11 @@ virtual ~ISerializer(
 
 /**
  * @brief This method is used to serialize a signed number.
+ *        The value will be serialized into the provided stream.
  *
  * @param[in] Number - The number to be serialized.
+ *
+ * @parm[in,out] Stream - The stream where the given value will be serialized.
  *
  * @return true if the number was sucessfully serialized,
  *         false otherwise.
@@ -55,13 +59,17 @@ virtual ~ISerializer(
 virtual bool
 XPF_API
 SerializeI64(
-    _In_ _Const_ const int64_t& Number
+    _In_ _Const_ const int64_t& Number,
+    _Inout_ xpf::IStreamWriter& Stream
 ) noexcept(true) = 0;
 
 /**
  * @brief This method is used to serialize an unsigned number.
+ *        The value will be serialized into the provided stream.
  *
  * @param[in] Number - The number to be serialized.
+ *
+ * @parm[in,out] Stream - The stream where the given value will be serialized.
  *
  * @return true if the number was sucessfully serialized,
  *         false otherwise.
@@ -69,41 +77,36 @@ SerializeI64(
 virtual bool
 XPF_API
 SerializeUI64(
-    _In_ _Const_ const uint64_t& Number
+    _In_ _Const_ const uint64_t& Number,
+    _Inout_ xpf::IStreamWriter& Stream
 ) noexcept(true) = 0;
 
 /**
- * @brief This method is used to serialize an ansi buffer.
+ * @brief This method is used to serialize a binary blob.
+ *        Can be used for character buffers, or simply plain binary data.
+ *        The value will be serialized into the provided stream.
  *
- * @param[in] Buffer - The buffer to be serialized.
+ * @param[in] Buffer - The binary blob to be serialized.
+ *
+ * @parm[in,out] Stream - The stream where the given value will be serialized.
  *
  * @return true if the buffer was sucessfully serialized,
  *         false otherwise.
  */
 virtual bool
 XPF_API
-SerializeAnsiBuffer(
-    _In_ _Const_ const xpf::StringView<char>& Buffer
-) noexcept(true) = 0;
-
-/**
- * @brief This method is used to serialize a wide buffer.
- *
- * @param[in] Buffer - The buffer to be serialized.
- *
- * @return true if the buffer was sucessfully serialized,
- *         false otherwise.
- */
-virtual bool
-XPF_API
-SerializeWideBuffer(
-    _In_ _Const_ const xpf::StringView<wchar_t>& Buffer
+SerializeBinaryBlob(
+    _In_ _Const_ const xpf::StringView<char>& Buffer,
+    _Inout_ xpf::IStreamWriter& Stream
 ) noexcept(true) = 0;
 
 /**
  * @brief This method is used to deserialize a signed number.
+ *        The value will be serialized from the provided stream.
  *
  * @param[out] Number - This contains the deserialized value.
+ *
+ * @parm[in,out] Stream - The stream from where the given value will be deserialized.
  *
  * @return true if the number was sucessfully deserialized,
  *         false otherwise.
@@ -111,13 +114,17 @@ SerializeWideBuffer(
 virtual bool
 XPF_API
 DeserializeI64(
-    _Out_ int64_t& Number
+    _Out_ int64_t& Number,
+    _Inout_ xpf::IStreamReader& Stream
 ) noexcept(true) = 0;
 
 /**
  * @brief This method is used to deserialize an unsigned number.
+ *        The value will be serialized from the provided stream.
  *
  * @param[out] Number - This contains the deserialized value.
+ *
+ * @parm[in,out] Stream - The stream from where the given value will be deserialized.
  *
  * @return true if the number was sucessfully deserialized,
  *         false otherwise.
@@ -125,68 +132,27 @@ DeserializeI64(
 virtual bool
 XPF_API
 DeserializeUI64(
-    _Out_ uint64_t& Number
+    _Out_ uint64_t& Number,
+    _Inout_ xpf::IStreamReader& Stream
 ) noexcept(true) = 0;
 
 /**
- * @brief This method is used to deserialize an ansi string.
+ * @brief This method is used to deserialize a binary blob.
+ *        Can be used for character buffers, or simply plain binary data.
+ *        The value will be deserialized from the provided stream.
  *
  * @param[out] Buffer - This contains the deserialized buffer.
+ *
+ * @parm[in,out] Stream - The stream from where the given value will be deserialized.
  *
  * @return true if the buffer was sucessfully deserialized,
  *         false otherwise.
  */
 virtual bool
 XPF_API
-DeserializeAnsiBuffer(
-    _Out_ xpf::String<char>& Buffer
-) noexcept(true) = 0;
-
-/**
- * @brief This method is used to deserialize a wide string.
- *
- * @param[out] Buffer - This contains the deserialized buffer.
- *
- * @return true if the buffer was sucessfully deserialized,
- *         false otherwise.
- */
-virtual bool
-XPF_API
-DeserializeWideBuffer(
-    _Out_ xpf::String<wchar_t>& Buffer
-) noexcept(true) = 0;
-
-/**
- * @brief This method is used to retrieve serialized data by this serializer.
- *
- * @return A string view representing a byte-array like data.
- *         This will represent the data in a serialized format.
- *         This won't behave like a string, but rather as a byte-array.
- */
-virtual xpf::StringView<char>
-XPF_API
-GetData(
-    void
-) const noexcept(true) = 0;
-
-/**
- * @brief This method is used to replace the currently available data for a serializer.
- *        It is useful when we are trying to deserialize objects from an already constructed data stream.
- *
- * @param[in] Data - The data to replace the existing byte-array.
- *
- * @param[in] ShouldDeepCopy - A boolean which controls whether the Data should be duplicated (true),
- *                             or it is guaranteed by the to remain valid while the serializer is used (false).
- *
- * 
- * @return true if the buffer data was sucessfully set,
- *         false otherwise.
- */
-virtual bool
-XPF_API
-SetData(
-    _In_ _Const_ const xpf::StringView<char>& Data,
-    _In_ bool ShouldDeepCopy
+DeserializeBinaryBlob(
+    _Out_ xpf::Vector<uint8_t>& Buffer,
+    _Inout_ xpf::IStreamReader& Stream
 ) noexcept(true) = 0;
 
 /**
@@ -261,13 +227,16 @@ virtual ~ISerializable(
  *
  * @param[in, out] Serializer - The serializer to serialize to.
  *
+ * @parm[in,out] Stream - The stream where the given value will be serialized.
+ *
  * @return true if this class object was sucessfully deserialized,
  *         false otherwise.
  */
 virtual bool
 XPF_API
 SerializeTo(
-    _Inout_ xpf::ISerializer& Serializer
+    _Inout_ xpf::ISerializer& Serializer,
+    _Inout_ xpf::IStreamWriter& Stream
 ) const noexcept(true) = 0;
 
 /**
@@ -275,13 +244,16 @@ SerializeTo(
  *
  * @param[in, out] Serializer - The serializer to deserialize from.
  *
+ * @parm[in,out] Stream - The stream from where the given value will be deserialized.
+ *
  * @return A shared pointer containing a new instance of the ISerializable object.
  *         Will be empty on failure.
  */
 virtual xpf::SharedPointer<ISerializable>
 XPF_API
 DeserializeFrom(
-    _Inout_ xpf::ISerializer& Serializer
+    _Inout_ xpf::ISerializer& Serializer,
+    _Inout_ xpf::IStreamReader& Stream
 ) const noexcept(true) = 0;
 
 /**
