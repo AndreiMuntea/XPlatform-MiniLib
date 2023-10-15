@@ -74,7 +74,6 @@ xpf::Protobuf::SerializeUI64(
         {
             return false;
         }
-
     } while (value != 0);
 
     return true;
@@ -91,11 +90,11 @@ xpf::Protobuf::SerializeBinaryBlob(
 
     //
     // Binary blobs are serialized as [n][byte0][byte1]...[byten]
-    // where n is the number of bytes. 
+    // where n is the number of bytes.
     //
 
     const uint64_t numberOfBytes = Buffer.BufferSize();
-    if (numberOfBytes > xpf::NumericLimits<uint32_t>::MaxValue())
+    if ((numberOfBytes == 0) || (numberOfBytes > xpf::NumericLimits<uint32_t>::MaxValue()))
     {
         return false;
     }
@@ -162,7 +161,6 @@ xpf::Protobuf::DeserializeUI64(
 
     while (true)
     {
-
         uint8_t byte = 0;
         if (!Stream.ReadBytes(1, &byte))
         {
@@ -176,7 +174,7 @@ xpf::Protobuf::DeserializeUI64(
         //
         // If MSB is 0, then we are finished.
         //
-        if ((byte & 0b100000000) == 0)
+        if ((byte & 0b10000000) == 0)
         {
             break;
         }

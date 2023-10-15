@@ -38,7 +38,8 @@ add_executable( XPF_Tests "XPF-Tests.cpp"
                           "tests/Multithreading/TestRundownProtection.cpp"
                           "tests/Multithreading/TestThreadPool.cpp"
 
-                          "tests/Utility/TestEventFramework.cpp")
+                          "tests/Utility/TestEventFramework.cpp"
+                          "tests/Utility/TestProtobufSerializer.cpp")
 
 # Link test executable against xpf-lib
 target_link_libraries( XPF_Tests xpf_lib )

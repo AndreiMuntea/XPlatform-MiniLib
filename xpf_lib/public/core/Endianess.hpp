@@ -70,7 +70,7 @@ EndianessOnLocalMachine(
 {
     /* This occupies 4 bytes in memory. Depending on the first byte, we can deduce endianess. */
     const uint32_t endianess = 0xAB;
-    
+
     if ((*reinterpret_cast<const uint8_t*>(&endianess)) == 0xAB)
     {
         return xpf::Endianess::Little;
@@ -148,14 +148,14 @@ EndianessConvertBetweenRepresentations(
                   "Unsupported Type!");
 
     /* Little -> Little and Big -> Big requires no conversion */
-    if (((From == xpf::Endianess::Little) && (To == xpf::Endianess::Little)) || 
+    if (((From == xpf::Endianess::Little) && (To == xpf::Endianess::Little)) ||
         ((From == xpf::Endianess::Big)    && (To == xpf::Endianess::Big)))
     {
         return Value;
     }
 
     /* Little -> Big and Big -> Little requires inversion of byte order. */
-    if (((From == xpf::Endianess::Little) && (To == xpf::Endianess::Big)) || 
+    if (((From == xpf::Endianess::Little) && (To == xpf::Endianess::Big)) ||
         ((From == xpf::Endianess::Big)    && (To == xpf::Endianess::Little)))
     {
         return EndianessInvertByteOrder(Value);

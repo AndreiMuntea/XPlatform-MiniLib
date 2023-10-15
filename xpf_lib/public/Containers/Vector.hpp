@@ -40,7 +40,6 @@ template <class AllocatorType = xpf::MemoryAllocator>
 class Buffer final
 {
  public:
-
 /**
  * @brief Buffer constructor - default.
  */
@@ -351,9 +350,7 @@ Resize(
     */
     xpf::CompressedPair<AllocatorType, uint8_t*> m_CompressedPair;
     size_t m_Size = 0;
-
 };  // class Buffer
-
 //
 // ************************************************************************************************
 // This is the section containing vector implementation.

@@ -301,7 +301,7 @@ template <class Type>
 inline bool
 XPF_API
 ReadNumber(
-    _Out_ Type& Number,
+    _Out_ Type& Number,         // NOLINT(runtime/references)
     _In_ bool Peek = false
 ) noexcept(true)
 {

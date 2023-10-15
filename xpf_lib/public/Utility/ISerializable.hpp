@@ -51,7 +51,7 @@ virtual ~ISerializer(
  *
  * @param[in] Number - The number to be serialized.
  *
- * @parm[in,out] Stream - The stream where the given value will be serialized.
+ * @param[in,out] Stream - The stream where the given value will be serialized.
  *
  * @return true if the number was sucessfully serialized,
  *         false otherwise.
@@ -69,7 +69,7 @@ SerializeI64(
  *
  * @param[in] Number - The number to be serialized.
  *
- * @parm[in,out] Stream - The stream where the given value will be serialized.
+ * @param[in,out] Stream - The stream where the given value will be serialized.
  *
  * @return true if the number was sucessfully serialized,
  *         false otherwise.
@@ -88,7 +88,7 @@ SerializeUI64(
  *
  * @param[in] Buffer - The binary blob to be serialized.
  *
- * @parm[in,out] Stream - The stream where the given value will be serialized.
+ * @param[in,out] Stream - The stream where the given value will be serialized.
  *
  * @return true if the buffer was sucessfully serialized,
  *         false otherwise.
@@ -106,7 +106,7 @@ SerializeBinaryBlob(
  *
  * @param[out] Number - This contains the deserialized value.
  *
- * @parm[in,out] Stream - The stream from where the given value will be deserialized.
+ * @param[in,out] Stream - The stream from where the given value will be deserialized.
  *
  * @return true if the number was sucessfully deserialized,
  *         false otherwise.
@@ -114,7 +114,7 @@ SerializeBinaryBlob(
 virtual bool
 XPF_API
 DeserializeI64(
-    _Out_ int64_t& Number,
+    _Out_ int64_t& Number,              // NOLINT(runtime/references)
     _Inout_ xpf::IStreamReader& Stream
 ) noexcept(true) = 0;
 
@@ -124,7 +124,7 @@ DeserializeI64(
  *
  * @param[out] Number - This contains the deserialized value.
  *
- * @parm[in,out] Stream - The stream from where the given value will be deserialized.
+ * @param[in,out] Stream - The stream from where the given value will be deserialized.
  *
  * @return true if the number was sucessfully deserialized,
  *         false otherwise.
@@ -132,7 +132,7 @@ DeserializeI64(
 virtual bool
 XPF_API
 DeserializeUI64(
-    _Out_ uint64_t& Number,
+    _Out_ uint64_t& Number,             // NOLINT(runtime/references)
     _Inout_ xpf::IStreamReader& Stream
 ) noexcept(true) = 0;
 
@@ -143,7 +143,7 @@ DeserializeUI64(
  *
  * @param[out] Buffer - This contains the deserialized buffer.
  *
- * @parm[in,out] Stream - The stream from where the given value will be deserialized.
+ * @param[in,out] Stream - The stream from where the given value will be deserialized.
  *
  * @return true if the buffer was sucessfully deserialized,
  *         false otherwise.
@@ -151,7 +151,7 @@ DeserializeUI64(
 virtual bool
 XPF_API
 DeserializeBinaryBlob(
-    _Out_ xpf::Vector<uint8_t>& Buffer,
+    _Out_ xpf::Vector<uint8_t>& Buffer,     // NOLINT(runtime/references)
     _Inout_ xpf::IStreamReader& Stream
 ) noexcept(true) = 0;
 
@@ -227,7 +227,7 @@ virtual ~ISerializable(
  *
  * @param[in, out] Serializer - The serializer to serialize to.
  *
- * @parm[in,out] Stream - The stream where the given value will be serialized.
+ * @param[in,out] Stream - The stream where the given value will be serialized.
  *
  * @return true if this class object was sucessfully deserialized,
  *         false otherwise.
@@ -235,7 +235,7 @@ virtual ~ISerializable(
 virtual bool
 XPF_API
 SerializeTo(
-    _Inout_ xpf::ISerializer& Serializer,
+    _Inout_ xpf::ISerializer& Serializer,       // NOLINT(runtime/references)
     _Inout_ xpf::IStreamWriter& Stream
 ) const noexcept(true) = 0;
 
@@ -244,7 +244,7 @@ SerializeTo(
  *
  * @param[in, out] Serializer - The serializer to deserialize from.
  *
- * @parm[in,out] Stream - The stream from where the given value will be deserialized.
+ * @param[in,out] Stream - The stream from where the given value will be deserialized.
  *
  * @return A shared pointer containing a new instance of the ISerializable object.
  *         Will be empty on failure.
@@ -252,7 +252,7 @@ SerializeTo(
 virtual xpf::SharedPointer<ISerializable>
 XPF_API
 DeserializeFrom(
-    _Inout_ xpf::ISerializer& Serializer,
+    _Inout_ xpf::ISerializer& Serializer,       // NOLINT(runtime/references)
     _Inout_ xpf::IStreamReader& Stream
 ) const noexcept(true) = 0;
 

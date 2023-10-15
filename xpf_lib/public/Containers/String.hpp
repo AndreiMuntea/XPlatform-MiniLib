@@ -757,7 +757,6 @@ ToUpper(
 }
 
  private:
-
 /**
  * @brief Extends the current string by appending the View.
  * 

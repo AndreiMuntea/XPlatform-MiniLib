@@ -21,7 +21,13 @@
 
 namespace xpf
 {
-
+/**
+ * @brief This class implements the ISerializer interface.
+ *        It follows a minimalistic implementation for protobuf protocol.
+ *            - Unsigned int values are serialized as varint128.
+ *            - Signed values are zig zag encoded and then serialized as varint 128.
+ *            - The binary blob data is serialized byte by byte.
+ */
 class Protobuf final : public ISerializer
 {
  public:
@@ -37,7 +43,10 @@ Protobuf(
  */
 virtual ~Protobuf(
     void
-) noexcept(true) = default;
+) noexcept(true)
+{
+    XPF_NOTHING();
+}
 
 /**
  * @brief Copy constructor - default.
@@ -89,7 +98,7 @@ operator=(
  *
  * @param[in] Number - The number to be serialized.
  *
- * @parm[in,out] Stream - The stream where the given value will be serialized.
+ * @param[in,out] Stream - The stream where the given value will be serialized.
  *
  * @return true if the number was sucessfully serialized,
  *         false otherwise.
@@ -107,7 +116,7 @@ SerializeI64(
  *
  * @param[in] Number - The number to be serialized.
  *
- * @parm[in,out] Stream - The stream where the given value will be serialized.
+ * @param[in,out] Stream - The stream where the given value will be serialized.
  *
  * @return true if the number was sucessfully serialized,
  *         false otherwise.
@@ -126,7 +135,7 @@ SerializeUI64(
  *
  * @param[in] Buffer - The binary blob to be serialized.
  *
- * @parm[in,out] Stream - The stream where the given value will be serialized.
+ * @param[in,out] Stream - The stream where the given value will be serialized.
  *
  * @return true if the buffer was sucessfully serialized,
  *         false otherwise.
@@ -144,7 +153,7 @@ SerializeBinaryBlob(
  *
  * @param[out] Number - This contains the deserialized value.
  *
- * @parm[in,out] Stream - The stream from where the given value will be deserialized.
+ * @param[in,out] Stream - The stream from where the given value will be deserialized.
  *
  * @return true if the number was sucessfully deserialized,
  *         false otherwise.
@@ -162,7 +171,7 @@ DeserializeI64(
  *
  * @param[out] Number - This contains the deserialized value.
  *
- * @parm[in,out] Stream - The stream from where the given value will be deserialized.
+ * @param[in,out] Stream - The stream from where the given value will be deserialized.
  *
  * @return true if the number was sucessfully deserialized,
  *         false otherwise.
@@ -181,7 +190,7 @@ DeserializeUI64(
  *
  * @param[out] Buffer - This contains the deserialized buffer.
  *
- * @parm[in,out] Stream - The stream from where the given value will be deserialized.
+ * @param[in,out] Stream - The stream from where the given value will be deserialized.
  *
  * @return true if the buffer was sucessfully deserialized,
  *         false otherwise.
@@ -194,7 +203,6 @@ DeserializeBinaryBlob(
 ) noexcept(true) override;
 
  private:
-
 /**
  * @brief Zigzag encode a signed integer.
  *
@@ -235,6 +243,5 @@ XPF_API
 ZigZagDecode(
     _In_ _Const_ const uint64_t& Value
 ) noexcept(true);
-
 };  // namespace Protobuf
 };  // namespace xpf
