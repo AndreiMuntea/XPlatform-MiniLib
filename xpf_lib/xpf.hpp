@@ -49,3 +49,4 @@
 #include "public/Utility/ProtobufSerializer.hpp"
 
 #include "public/Communication/IServerClient.hpp"
+#include "public/Communication/ServerSocket.hpp"

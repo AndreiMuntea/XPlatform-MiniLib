@@ -194,19 +194,32 @@
 #elif defined XPF_PLATFORM_WIN_UM
 
     /**
+     * @brief For the use of winsockets we require the Ws2_32 library.
+     */
+    #pragma comment (lib, "Ws2_32.lib")
+
+    /**
      * @brief Do not include ntstatus as it will be included by ntstatus header.
      */
     #define WIN32_NO_STATUS
+    /**
+     * @brief Do not include ALL definitions from Windows.h
+     */
+    #define WIN32_LEAN_AND_MEAN
     /**
      * @brief This conflicts with some definitions in STL.
      */
     #define NOMINMAX
         #include <Windows.h>
+        #include <WS2tcpip.h>
+        #include <WinSock2.h>
+        #include <wincrypt.h>
         #include <winternl.h>
         #include <strsafe.h>
         #include <intsafe.h>
     #undef WIN32_NO_STATUS
         #include <ntstatus.h>
+    #undef WIN32_LEAN_AND_MEAN
     #undef NOMINMAX
 
 #elif defined XPF_PLATFORM_LINUX_UM
@@ -354,6 +367,8 @@
      using int16_t = INT16;
      using int32_t = INT32;
      using int64_t = INT64;
+
+     using uuid_t = GUID;
 
 #elif defined XPF_PLATFORM_LINUX_UM
     /**

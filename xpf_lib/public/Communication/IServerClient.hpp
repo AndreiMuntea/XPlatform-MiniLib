@@ -92,7 +92,6 @@ IClientCookie&
 operator=(
     _Inout_ IClientCookie&& Other
 ) noexcept(true) = delete;
-private:
 };
 
 /**
@@ -123,6 +122,7 @@ virtual ~IServer(
  */
 _Must_inspect_result_
 virtual NTSTATUS
+XPF_API
 Start(
     void
 ) noexcept(true) = 0;
@@ -132,6 +132,7 @@ Start(
  *        This method stops the server and releases any allocated resources.
  */
 virtual void
+XPF_API
 Stop(
     void
 ) noexcept(true) = 0;
@@ -147,6 +148,7 @@ Stop(
  */
 _Must_inspect_result_
 virtual NTSTATUS
+XPF_API
 AcceptClient(
     _Out_ IClientCookie& ClientCookie
 ) noexcept(true) = 0;
@@ -163,6 +165,7 @@ AcceptClient(
  */
 _Must_inspect_result_
 virtual NTSTATUS
+XPF_API
 DisconnectClient(
     _Inout_ IClientCookie& ClientCookie
 ) noexcept(true) = 0;
@@ -180,6 +183,7 @@ DisconnectClient(
  */
 _Must_inspect_result_
 virtual NTSTATUS
+XPF_API
 SendData(
     _Inout_ xpf::IStreamReader& DataStream,
     _Inout_ IClientCookie& ClientCookie
@@ -198,6 +202,7 @@ SendData(
  */
 _Must_inspect_result_
 virtual NTSTATUS
+XPF_API
 ReceiveData(
     _Inout_ xpf::IStreamWriter& DataStream,
     _Inout_ IClientCookie& ClientCookie
@@ -353,6 +358,7 @@ virtual ~IClient(
  */
 _Must_inspect_result_
 virtual NTSTATUS
+XPF_API
 Connect(
     _Out_ IServerCookie& ServerCookie
 ) noexcept(true) = 0;
@@ -369,6 +375,7 @@ Connect(
  */
 _Must_inspect_result_
 virtual NTSTATUS
+XPF_API
 Disconnect(
     _Inout_ IServerCookie& ServerCookie
 ) noexcept(true) = 0;
@@ -386,6 +393,7 @@ Disconnect(
  */
 _Must_inspect_result_
 virtual NTSTATUS
+XPF_API
 SendData(
     _Inout_ xpf::IStreamReader& DataStream,
     _Inout_ IServerCookie& ServerCookie
@@ -404,6 +412,7 @@ SendData(
  */
 _Must_inspect_result_
 virtual NTSTATUS
+XPF_API
 ReceiveData(
     _Inout_ xpf::IStreamWriter& DataStream,
     _Inout_ IServerCookie& ServerCookie
