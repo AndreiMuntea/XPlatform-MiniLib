@@ -156,26 +156,26 @@ DeserializeBinaryBlob(
 ) noexcept(true) = 0;
 
 /**
- * @brief Copy constructor - default.
+ * @brief Copy constructor - delete.
  * 
  * @param[in] Other - The other object to construct from.
  */
 ISerializer(
     _In_ _Const_ const ISerializer& Other
-) noexcept(true) = default;
+) noexcept(true) = delete;
 
 /**
- * @brief Move constructor - default.
+ * @brief Move constructor - delete.
  * 
  * @param[in,out] Other - The other object to construct from.
  *                        Will be invalidated after this call.
  */
 ISerializer(
     _Inout_ ISerializer&& Other
-) noexcept(true) = default;
+) noexcept(true) = delete;
 
 /**
- * @brief Copy assignment - default.
+ * @brief Copy assignment - delete.
  * 
  * @param[in] Other - The other object to construct from.
  * 
@@ -184,10 +184,10 @@ ISerializer(
 ISerializer&
 operator=(
     _In_ _Const_ const ISerializer& Other
-) noexcept(true) = default;
+) noexcept(true) = delete;
 
 /**
- * @brief Move assignment - default.
+ * @brief Move assignment - delete.
  * 
  * @param[in,out] Other - The other object to construct from.
  *                        Will be invalidated after this call.
@@ -197,7 +197,7 @@ operator=(
 ISerializer&
 operator=(
     _Inout_ ISerializer&& Other
-) noexcept(true) = default;
+) noexcept(true) = delete;
 };  // class ISerializer
 
 /**
@@ -257,26 +257,26 @@ DeserializeFrom(
 ) const noexcept(true) = 0;
 
 /**
- * @brief Copy constructor - default.
+ * @brief Copy constructor - delete.
  * 
  * @param[in] Other - The other object to construct from.
  */
 ISerializable(
     _In_ _Const_ const ISerializable& Other
-) noexcept(true) = default;
+) noexcept(true) = delete;
 
 /**
- * @brief Move constructor - default.
+ * @brief Move constructor - delete.
  * 
  * @param[in,out] Other - The other object to construct from.
  *                        Will be invalidated after this call.
  */
 ISerializable(
     _Inout_ ISerializable&& Other
-) noexcept(true) = default;
+) noexcept(true) = delete;
 
 /**
- * @brief Copy assignment - default.
+ * @brief Copy assignment - delete.
  * 
  * @param[in] Other - The other object to construct from.
  * 
@@ -285,10 +285,10 @@ ISerializable(
 ISerializable&
 operator=(
     _In_ _Const_ const ISerializable& Other
-) noexcept(true) = default;
+) noexcept(true) = delete;
 
 /**
- * @brief Move assignment - default.
+ * @brief Move assignment - delete.
  * 
  * @param[in,out] Other - The other object to construct from.
  *                        Will be invalidated after this call.
@@ -298,6 +298,6 @@ operator=(
 ISerializable&
 operator=(
     _Inout_ ISerializable && Other
-) noexcept(true) = default;
+) noexcept(true) = delete;
 };  // class ISerializable
 };  // namespace xpf

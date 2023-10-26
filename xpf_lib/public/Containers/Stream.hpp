@@ -58,26 +58,26 @@ virtual ~IStreamReader(
 ) noexcept(true) = default;
 
 /**
- * @brief Copy constructor - default.
+ * @brief Copy constructor - delete.
  * 
  * @param[in] Other - The other object to construct from.
  */
 IStreamReader(
     _In_ _Const_ const IStreamReader& Other
-) noexcept(true) = default;
+) noexcept(true) = delete;
 
 /**
- * @brief Move constructor - default.
+ * @brief Move constructor - delete.
  * 
  * @param[in,out] Other - The other object to construct from.
  *                        Will be invalidated after this call.
  */
 IStreamReader(
     _Inout_ IStreamReader&& Other
-) noexcept(true) = default;
+) noexcept(true) = delete;
 
 /**
- * @brief Copy assignment - default.
+ * @brief Copy assignment - delete.
  * 
  * @param[in] Other - The other object to construct from.
  * 
@@ -86,10 +86,10 @@ IStreamReader(
 IStreamReader&
 operator=(
     _In_ _Const_ const IStreamReader& Other
-) noexcept(true) = default;
+) noexcept(true) = delete;
 
 /**
- * @brief Move assignment - default.
+ * @brief Move assignment - delete.
  * 
  * @param[in,out] Other - The other object to construct from.
  *                        Will be invalidated after this call.
@@ -99,7 +99,7 @@ operator=(
 IStreamReader&
 operator=(
     _Inout_ IStreamReader&& Other
-) noexcept(true) = default;
+) noexcept(true) = delete;
 
 /**
  * @brief Reads a number of bytes from the underlying stream.
@@ -146,26 +146,26 @@ virtual ~IStreamWriter(
 ) noexcept(true) = default;
 
 /**
- * @brief Copy constructor - default.
+ * @brief Copy constructor - delete.
  * 
  * @param[in] Other - The other object to construct from.
  */
 IStreamWriter(
     _In_ _Const_ const IStreamWriter& Other
-) noexcept(true) = default;
+) noexcept(true) = delete;
 
 /**
- * @brief Move constructor - default.
+ * @brief Move constructor - delete.
  * 
  * @param[in,out] Other - The other object to construct from.
  *                        Will be invalidated after this call.
  */
 IStreamWriter(
     _Inout_ IStreamWriter&& Other
-) noexcept(true) = default;
+) noexcept(true) = delete;
 
 /**
- * @brief Copy assignment - default.
+ * @brief Copy assignment - delete.
  * 
  * @param[in] Other - The other object to construct from.
  * 
@@ -174,10 +174,10 @@ IStreamWriter(
 IStreamWriter&
 operator=(
     _In_ _Const_ const IStreamWriter& Other
-) noexcept(true) = default;
+) noexcept(true) = delete;
 
 /**
- * @brief Move assignment - default.
+ * @brief Move assignment - delete.
  * 
  * @param[in,out] Other - The other object to construct from.
  *                        Will be invalidated after this call.
@@ -187,7 +187,7 @@ operator=(
 IStreamWriter&
 operator=(
     _Inout_ IStreamWriter&& Other
-) noexcept(true) = default;
+) noexcept(true) = delete;
 
 /**
  * @brief Writes a number of bytes to the underlying stream.
