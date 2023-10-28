@@ -196,7 +196,7 @@
     /**
      * @brief For the use of winsockets we require the Ws2_32 library.
      */
-    #pragma comment (lib, "Ws2_32.lib")
+    #pragma comment(lib, "Ws2_32.lib")
 
     /**
      * @brief Do not include ntstatus as it will be included by ntstatus header.

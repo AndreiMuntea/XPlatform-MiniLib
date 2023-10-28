@@ -17,7 +17,6 @@
 
 #include "xpf_lib/public/core/Core.hpp"
 #include "xpf_lib/public/core/TypeTraits.hpp"
-#include "xpf_lib/public/Containers/Stream.hpp"
 
 namespace xpf
 {
@@ -34,7 +33,7 @@ namespace xpf
  */
 class IClientCookie
 {
-public:
+ public:
 /**
  * @brief IClientCookie constructor - default.
  */
@@ -130,6 +129,8 @@ Start(
 /**
  * @brief Stop the server gracefully.
  *        This method stops the server and releases any allocated resources.
+ *
+ * @return void.
  */
 virtual void
 XPF_API
@@ -150,7 +151,7 @@ _Must_inspect_result_
 virtual NTSTATUS
 XPF_API
 AcceptClient(
-    _Out_ IClientCookie& ClientCookie
+    _Out_ xpf::SharedPointer<IClientCookie>& ClientCookie
 ) noexcept(true) = 0;
 
 /**
@@ -167,14 +168,16 @@ _Must_inspect_result_
 virtual NTSTATUS
 XPF_API
 DisconnectClient(
-    _Inout_ IClientCookie& ClientCookie
+    _Inout_ xpf::SharedPointer<IClientCookie>& ClientCookie
 ) noexcept(true) = 0;
 
 /**
  * @brief Send data to a client. If the client is disconnecting or was disconnected,
  *        this method will return a failure status.
  *
- * @param[in,out] DataStream    - The data stream to be sent to the client.
+ * @param[in] NumberOfBytes - The number of bytes to write to the socket
+ *
+ * @param[in] Bytes - The bytes to be written.
  *
  * @param[in,out] ClientCookie  - Uniquely identifies the newly connected client in this server.
  *                                Is retrieved via AcceptClient method.
@@ -185,15 +188,18 @@ _Must_inspect_result_
 virtual NTSTATUS
 XPF_API
 SendData(
-    _Inout_ xpf::IStreamReader& DataStream,
-    _Inout_ IClientCookie& ClientCookie
+    _In_ size_t NumberOfBytes,
+    _In_ _Const_ const uint8_t* Bytes,
+    _Inout_ xpf::SharedPointer<IClientCookie>& ClientCookie
 ) noexcept(true) = 0;
 
 /**
  * @brief Recieves data from a client. If the client is disconnecting or was disconnected,
  *        this method will return a failure status.
  *
- * @param[in,out] DataStream    - Newly received data will be appended to this stream.
+ * @param[in] NumberOfBytes - The number of bytes to read from the socket.
+ *
+ * @param[in,out] Bytes - The read bytes.
  *
  * @param[in,out] ClientCookie  - Uniquely identifies the newly connected client in this server.
  *                                Is retrieved via AcceptClient method.
@@ -204,8 +210,9 @@ _Must_inspect_result_
 virtual NTSTATUS
 XPF_API
 ReceiveData(
-    _Inout_ xpf::IStreamWriter& DataStream,
-    _Inout_ IClientCookie& ClientCookie
+    _In_ size_t NumberOfBytes,
+    _Inout_ uint8_t * Bytes,
+    _Inout_ xpf::SharedPointer<IClientCookie>& ClientCookie
 ) noexcept(true) = 0;
 
 /**
@@ -266,7 +273,7 @@ operator=(
  */
 class IServerCookie
 {
-public:
+ public:
 /**
  * @brief IServerCookie constructor - default.
  */
@@ -324,7 +331,7 @@ IServerCookie&
 operator=(
     _Inout_ IServerCookie&& Other
 ) noexcept(true) = delete;
-private:
+ private:
 };
 
 /**
@@ -384,7 +391,9 @@ Disconnect(
  * @brief Send data to a server. If the server is disconnecting or was disconnected,
  *        this method will return a failure status.
  *
- * @param[in,out] DataStream    - The data stream to be sent to the client.
+ * @param[in] NumberOfBytes - The number of bytes to write to the socket
+ *
+ * @param[in] Bytes - The bytes to be written.
  *
  * @param[in,out] ServerCookie  - Uniquely identifies the client in this server.
  *                                Is retrieved via AcceptClient method.
@@ -395,7 +404,8 @@ _Must_inspect_result_
 virtual NTSTATUS
 XPF_API
 SendData(
-    _Inout_ xpf::IStreamReader& DataStream,
+    _In_ size_t NumberOfBytes,
+    _In_ _Const_ const uint8_t* Bytes,
     _Inout_ IServerCookie& ServerCookie
 ) noexcept(true) = 0;
 
@@ -403,7 +413,9 @@ SendData(
  * @brief Recieves data from server. If the server is disconnecting or was disconnected,
  *        this method will return a failure status.
  *
- * @param[in,out] DataStream    - Newly received data will be appended to this stream.
+ * @param[in] NumberOfBytes - The number of bytes to read from the socket.
+ *
+ * @param[in,out] Bytes - The read bytes.
  *
  * @param[in,out] ServerCookie  - Uniquely identifies the client in this server.
  *                                Is retrieved via AcceptClient method.
@@ -414,7 +426,8 @@ _Must_inspect_result_
 virtual NTSTATUS
 XPF_API
 ReceiveData(
-    _Inout_ xpf::IStreamWriter& DataStream,
+    _In_ size_t NumberOfBytes,
+    _Inout_ uint8_t* Bytes,
     _Inout_ IServerCookie& ServerCookie
 ) noexcept(true) = 0;
 

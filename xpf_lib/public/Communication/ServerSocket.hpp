@@ -81,11 +81,13 @@ virtual NTSTATUS
 XPF_API
 Start(
     void
-) noexcept(true) = 0;
+) noexcept(true);
 
 /**
  * @brief Stop the server gracefully.
  *        This method stops the server and releases any allocated resources.
+ *
+ * @return void
  */
 void
 XPF_API
@@ -106,7 +108,7 @@ _Must_inspect_result_
 NTSTATUS
 XPF_API
 AcceptClient(
-    _Out_ IClientCookie& ClientCookie
+    _Out_ xpf::SharedPointer<IClientCookie>& ClientCookie
 ) noexcept(true) override;
 
 /**
@@ -123,14 +125,16 @@ _Must_inspect_result_
 NTSTATUS
 XPF_API
 DisconnectClient(
-    _Inout_ IClientCookie& ClientCookie
+    _Inout_ xpf::SharedPointer<IClientCookie>& ClientCookie
 ) noexcept(true) override;
 
 /**
  * @brief Send data to a client. If the client is disconnecting or was disconnected,
  *        this method will return a failure status.
  *
- * @param[in,out] DataStream    - The data stream to be sent to the client.
+ * @param[in] NumberOfBytes - The number of bytes to write to the socket
+ *
+ * @param[in] Bytes - The bytes to be written.
  *
  * @param[in,out] ClientCookie  - Uniquely identifies the newly connected client in this server.
  *                                Is retrieved via AcceptClient method.
@@ -141,15 +145,18 @@ _Must_inspect_result_
 NTSTATUS
 XPF_API
 SendData(
-    _Inout_ xpf::IStreamReader& DataStream,
-    _Inout_ IClientCookie& ClientCookie
+    _In_ size_t NumberOfBytes,
+    _In_ _Const_ const uint8_t* Bytes,
+    _Inout_ xpf::SharedPointer<IClientCookie>& ClientCookie
 ) noexcept(true) override;
 
 /**
  * @brief Recieves data from a client. If the client is disconnecting or was disconnected,
  *        this method will return a failure status.
  *
- * @param[in,out] DataStream    - Newly received data will be appended to this stream.
+ * @param[in] NumberOfBytes - The number of bytes to read from the socket.
+ *
+ * @param[in,out] Bytes - The read bytes.
  *
  * @param[in,out] ClientCookie  - Uniquely identifies the newly connected client in this server.
  *                                Is retrieved via AcceptClient method.
@@ -160,8 +167,9 @@ _Must_inspect_result_
 NTSTATUS
 XPF_API
 ReceiveData(
-    _Inout_ xpf::IStreamWriter& DataStream,
-    _Inout_ IClientCookie& ClientCookie
+    _In_ size_t NumberOfBytes,
+    _Inout_ uint8_t* Bytes,
+    _Inout_ xpf::SharedPointer<IClientCookie>& ClientCookie
 ) noexcept(true) override;
 
 /**
@@ -209,7 +217,16 @@ operator=(
 ) noexcept(true) = delete;
 
  private:
-
+/**
+ * @brief Creates the platform specific server socket data.
+ *        This socket can be used to listen for new connections.
+ *
+ * @param[in] Ip - The IPv4 of the socket.
+ *
+ * @param[in] Port - The port of the socket.
+ *
+ * @return The server Socket Data, or nullptr on failure.
+ */
 void*
 XPF_API
 CreateServerSocketData(
@@ -217,10 +234,108 @@ CreateServerSocketData(
     _In_ _Const_ const xpf::StringView<char>& Port
 ) noexcept(true);
 
+/**
+ * @brief Destroys a previously created server socket data
+ *
+ * @param[in,out] ServerSocketData - Socket data created by CreateServerSocketData.
+ *
+ * @return void
+ */
 void
 XPF_API
 DestroyServerSocketData(
     _Inout_ void** ServerSocketData
+) noexcept(true);
+
+/**
+ * @brief Initializes a client connection.
+ *
+ * @param[in, out] ClientConnection - The newly initialized client connection.
+ * 
+ * @return A proper NTSTATUS error code to indicate success or failure.
+ */
+_Must_inspect_result_
+NTSTATUS
+XPF_API
+EstablishClientConnection(
+    _Inout_ xpf::SharedPointer<xpf::IClientCookie>& ClientConnection
+) noexcept(true);
+
+/**
+ * @brief Properly terminates a client connection.
+ *
+ * @param[in, out] ClientConnection - The connection to be terminated.
+ *
+ * @return void.
+ */
+void
+XPF_API
+CloseClientConnection(
+    _Inout_ xpf::SharedPointer<xpf::IClientCookie>& ClientConnection
+) noexcept(true);
+
+/**
+ * @brief Finds the client connection associated with a client cookie.
+ *
+ * @param[in] ClientCookie - The cookie of the client.
+ *
+ * @return void.
+ */
+xpf::SharedPointer<xpf::IClientCookie>
+XPF_API
+FindClientConnection(
+    _In_ _Const_ const xpf::SharedPointer<xpf::IClientCookie>& ClientCookie
+) noexcept(true);
+
+
+/**
+ * @brief Send data to a client connection. If the client is disconnecting or was disconnected,
+ *        this method will return a failure status.
+ *
+ * @param[in] NumberOfBytes - The number of bytes to write to the socket
+ *
+ * @param[in] Bytes - The bytes to be written.
+ *
+ * @param[in,out] ClientConnection - Uniquely identifies the newly connected client in this server.
+ *                                   Is retrieved via FindClientConnection method.
+ *
+ * @return STATUS_SUCCESS if the data was succesfully sent.
+ *         STATUS_CONNECTION_ABORTED if the connection was terminated on client end.
+ *         STATUS_NETWORK_BUSY if the connection is still valid, but we failed to send data over network.
+ *         Another error status to describe non-network related errors.
+ */
+_Must_inspect_result_
+NTSTATUS
+XPF_API
+SendDataToClientConnection(
+    _In_ size_t NumberOfBytes,
+    _In_ _Const_ const uint8_t* Bytes,
+    _Inout_ xpf::SharedPointer<IClientCookie>& ClientConnection
+) noexcept(true);
+
+/**
+ * @brief Recieves data from a client connection. If the client is disconnecting or was disconnected,
+ *        this method will return a failure status.
+ *
+ * @param[in] NumberOfBytes - The number of bytes to read from the socket.
+ *
+ * @param[in,out] Bytes - The read bytes.
+ *
+ * @param[in,out] ClientConnection  - Uniquely identifies the newly connected client in this server.
+ *                                    Is retrieved via FindClientConnection method.
+ *
+ * @return STATUS_SUCCESS if the data was succesfully sent.
+ *         STATUS_CONNECTION_ABORTED if the connection was terminated on client end.
+ *         STATUS_NETWORK_BUSY if the connection is still valid, but we failed to get data from the network.
+ *         Another error status to describe non-network related errors.
+ */
+_Must_inspect_result_
+NTSTATUS
+XPF_API
+ReceiveDataFromClientConnection(
+    _In_ size_t NumberOfBytes,
+    _Inout_ uint8_t* Bytes,
+    _Inout_ xpf::SharedPointer<IClientCookie>& ClientConnection
 ) noexcept(true);
 
  private:
