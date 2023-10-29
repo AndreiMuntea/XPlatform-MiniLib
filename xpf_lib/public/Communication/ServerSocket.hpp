@@ -38,6 +38,8 @@ namespace xpf
 class ServerSocket : public xpf::IServer
 {
  public:
+XPF_CLASS_COPY_MOVE_BEHAVIOR(ServerSocket, delete);
+
 /**
  * @brief ServerSocket constructor.
  *        Currently this uses only IPv4 and TCP.
@@ -172,50 +174,6 @@ ReceiveData(
     _Inout_ uint8_t* Bytes,
     _Inout_ xpf::SharedPointer<IClientCookie>& ClientCookie
 ) noexcept(true) override;
-
-/**
- * @brief Copy constructor - delete.
- * 
- * @param[in] Other - The other object to construct from.
- */
-ServerSocket(
-    _In_ _Const_ const ServerSocket & Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - delete.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-ServerSocket(
-    _Inout_ ServerSocket&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - delete.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-ServerSocket&
-operator=(
-    _In_ _Const_ const ServerSocket& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - delete.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-ServerSocket&
-operator=(
-    _Inout_ ServerSocket&& Other
-) noexcept(true) = delete;
 
  private:
 /**

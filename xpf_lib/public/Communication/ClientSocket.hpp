@@ -37,6 +37,8 @@ namespace xpf
 class ClientSocket : public xpf::IClient
 {
  public:
+XPF_CLASS_COPY_MOVE_BEHAVIOR(ClientSocket, delete);
+
 /**
  * @brief ClientSocket constructor.
  *        Currently this uses only IPv4 and TCP.
@@ -132,50 +134,6 @@ ReceiveData(
     _Inout_ size_t* NumberOfBytes,
     _Inout_ uint8_t* Bytes
 ) noexcept(true) override;
-
-/**
- * @brief Copy constructor - delete.
- * 
- * @param[in] Other - The other object to construct from.
- */
-ClientSocket(
-    _In_ _Const_ const ClientSocket& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - delete.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-ClientSocket(
-    _Inout_ ClientSocket&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - delete.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-ClientSocket&
-operator=(
-    _In_ _Const_ const ClientSocket& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - delete.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-ClientSocket&
-operator=(
-    _Inout_ ClientSocket&& Other
-) noexcept(true) = delete;
 
  private:
 /**

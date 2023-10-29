@@ -33,6 +33,13 @@ struct ServerSocketData
 
 struct ServerSocketClientData : public xpf::IClientCookie
 {
+ public:
+XPF_CLASS_COPY_MOVE_BEHAVIOR(ServerSocketClientData, delete);
+
+ServerSocketClientData(void) noexcept(true) = default;
+virtual ~ServerSocketClientData(void) noexcept(true) = default;
+
+ public:
     uuid_t UniqueId = { 0 };
     xpf::RundownProtection ClientRundown;
 

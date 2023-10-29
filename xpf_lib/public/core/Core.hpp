@@ -527,3 +527,85 @@ static_assert(sizeof(int32_t) == 4, "int32_t should be 4 byte(s)!");
 static_assert(sizeof(int64_t) == 8, "int64_t should be 8 byte(s)!");
 
 static_assert(sizeof(uuid_t)  == 16, "uuid_t should be 16 byte(s)!");
+
+
+/**
+ * @brief Helper macro to specify copy behavior for a class.
+ */
+#define XPF_CLASS_COPY_BEHAVIOR(ClassName, Behavior)                        \
+     /**                                                        */          \
+     /* @brief Copy constructor.                                */          \
+     /*                                                         */          \
+     /* @param[in] Other - The other object to construct from.  */          \
+     /*                                                         */          \
+     ClassName(                                                             \
+         _In_ _Const_ const ClassName& Other                                \
+     ) noexcept(true) = Behavior;                                           \
+                                                                            \
+     /**                                                        */          \
+     /* @brief Copy assignment.                                 */          \
+     /*                                                         */          \
+     /* @param[in] Other - The other object to construct from.  */          \
+     /*                                                         */          \
+     /* @return A reference to *this object after copy.         */          \
+     /*                                                         */          \
+     ClassName& operator=(                                                  \
+         _In_ _Const_ const ClassName& Other                                \
+     ) noexcept(true) = Behavior;
+
+/**
+ * @brief Helper macro to specify copy behavior for a class.
+ */
+#define XPF_CLASS_COPY_BEHAVIOR(ClassName, Behavior)                        \
+     /**                                                        */          \
+     /* @brief Copy constructor.                                */          \
+     /*                                                         */          \
+     /* @param[in] Other - The other object to construct from.  */          \
+     /*                                                         */          \
+     ClassName(                                                             \
+         _In_ _Const_ const ClassName& Other                                \
+     ) noexcept(true) = Behavior;                                           \
+                                                                            \
+     /**                                                        */          \
+     /* @brief Copy assignment.                                 */          \
+     /*                                                         */          \
+     /* @param[in] Other - The other object to construct from.  */          \
+     /*                                                         */          \
+     /* @return A reference to *this object after copy.         */          \
+     /*                                                         */          \
+     ClassName& operator=(                                                  \
+         _In_ _Const_ const ClassName& Other                                \
+     ) noexcept(true) = Behavior;
+
+ /**
+  * @brief Helper macro to specify move behavior for a class.
+  */
+#define XPF_CLASS_MOVE_BEHAVIOR(ClassName, Behavior)                        \
+     /**                                                            */      \
+     /* @brief Move constructor.                                    */      \
+     /*                                                             */      \
+     /* @param[in,out] Other - The other object to construct from.  */      \
+     /*                      - Will be invalidated after this call. */      \
+     /*                                                             */      \
+     ClassName(                                                             \
+         _Inout_ ClassName&& Other                                          \
+     ) noexcept(true) = Behavior;                                           \
+                                                                            \
+     /**                                                            */      \
+     /* @brief Move assignment.                                     */      \
+     /*                                                             */      \
+     /* @param[in,out] Other - The other object to construct from.  */      \
+     /*                      - Will be invalidated after this call. */      \
+     /*                                                             */      \
+     /* @return A reference to *this object after move.             */      \
+     /*                                                             */      \
+     ClassName& operator=(                                                  \
+         _Inout_ ClassName&& Other                                          \
+     ) noexcept(true) = Behavior;
+
+ /**
+  * @brief Helper macro to specify both copy and move behavior for a class.
+  */
+#define XPF_CLASS_COPY_MOVE_BEHAVIOR(ClassName, Behavior)                   \
+        XPF_CLASS_MOVE_BEHAVIOR(ClassName, Behavior)                        \
+        XPF_CLASS_COPY_BEHAVIOR(ClassName, Behavior)

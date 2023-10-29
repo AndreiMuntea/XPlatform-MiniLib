@@ -34,6 +34,8 @@ namespace xpf
 class IClientCookie
 {
  public:
+XPF_CLASS_COPY_MOVE_BEHAVIOR(IClientCookie, delete);
+
 /**
  * @brief IClientCookie constructor - default.
  */
@@ -47,50 +49,6 @@ IClientCookie(
 virtual ~IClientCookie(
     void
 ) noexcept(true) = default;
-
-/**
- * @brief Copy constructor - delete.
- * 
- * @param[in] Other - The other object to construct from.
- */
-IClientCookie(
-    _In_ _Const_ const IClientCookie& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - delete.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-IClientCookie(
-    _Inout_ IClientCookie&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - delete.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-IClientCookie&
-operator=(
-    _In_ _Const_ const IClientCookie& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - delete.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-IClientCookie&
-operator=(
-    _Inout_ IClientCookie&& Other
-) noexcept(true) = delete;
 };
 
 /**
@@ -100,6 +58,8 @@ operator=(
 class IServer
 {
  public:
+XPF_CLASS_COPY_MOVE_BEHAVIOR(IServer, delete);
+
 /**
  * @brief IServer constructor - default.
  */
@@ -215,50 +175,6 @@ ReceiveData(
     _Inout_ uint8_t* Bytes,
     _Inout_ xpf::SharedPointer<IClientCookie>& ClientCookie
 ) noexcept(true) = 0;
-
-/**
- * @brief Copy constructor - delete.
- * 
- * @param[in] Other - The other object to construct from.
- */
-IServer(
-    _In_ _Const_ const IServer& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - delete.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-IServer(
-    _Inout_ IServer&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - delete.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-IServer&
-operator=(
-    _In_ _Const_ const IServer& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - delete.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-IServer&
-operator=(
-    _Inout_ IServer&& Other
-) noexcept(true) = delete;
 };  // class IServer
 
 //
@@ -274,6 +190,8 @@ operator=(
 class IClient
 {
  public:
+XPF_CLASS_COPY_MOVE_BEHAVIOR(IClient, delete);
+
 /**
  * @brief IClient constructor - default.
  */
@@ -287,6 +205,7 @@ IClient(
 virtual ~IClient(
     void
 ) noexcept(true) = default;
+
 
 /**
  * @brief This method will connect to the server.
@@ -350,49 +269,5 @@ ReceiveData(
     _Inout_ size_t* NumberOfBytes,
     _Inout_ uint8_t* Bytes
 ) noexcept(true) = 0;
-
-/**
- * @brief Copy constructor - delete.
- * 
- * @param[in] Other - The other object to construct from.
- */
-IClient(
-    _In_ _Const_ const IClient& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - delete.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-IClient(
-    _Inout_ IClient&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - delete.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-IClient&
-operator=(
-    _In_ _Const_ const IClient& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - delete.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-IClient&
-operator=(
-    _Inout_ IClient&& Other
-) noexcept(true) = delete;
 };  // class IClient
 };  // namespace xpf

@@ -43,6 +43,8 @@ namespace xpf
 class IStreamReader
 {
  public:
+XPF_CLASS_COPY_MOVE_BEHAVIOR(IStreamReader, delete);
+
 /**
  * @brief IStreamReader constructor - default.
  */
@@ -56,50 +58,6 @@ IStreamReader(
 virtual ~IStreamReader(
     void
 ) noexcept(true) = default;
-
-/**
- * @brief Copy constructor - delete.
- * 
- * @param[in] Other - The other object to construct from.
- */
-IStreamReader(
-    _In_ _Const_ const IStreamReader& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - delete.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-IStreamReader(
-    _Inout_ IStreamReader&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - delete.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-IStreamReader&
-operator=(
-    _In_ _Const_ const IStreamReader& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - delete.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-IStreamReader&
-operator=(
-    _Inout_ IStreamReader&& Other
-) noexcept(true) = delete;
 
 /**
  * @brief Reads a number of bytes from the underlying stream.
@@ -131,6 +89,8 @@ ReadBytes(
 class IStreamWriter
 {
  public:
+XPF_CLASS_COPY_MOVE_BEHAVIOR(IStreamWriter, delete);
+
 /**
  * @brief IStreamWriter constructor - default.
  */
@@ -144,50 +104,6 @@ IStreamWriter(
 virtual ~IStreamWriter(
     void
 ) noexcept(true) = default;
-
-/**
- * @brief Copy constructor - delete.
- * 
- * @param[in] Other - The other object to construct from.
- */
-IStreamWriter(
-    _In_ _Const_ const IStreamWriter& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - delete.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-IStreamWriter(
-    _Inout_ IStreamWriter&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - delete.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-IStreamWriter&
-operator=(
-    _In_ _Const_ const IStreamWriter& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - delete.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-IStreamWriter&
-operator=(
-    _Inout_ IStreamWriter&& Other
-) noexcept(true) = delete;
 
 /**
  * @brief Writes a number of bytes to the underlying stream.
@@ -220,6 +136,8 @@ template <class AllocatorType = xpf::MemoryAllocator>
 class StreamReader final : public xpf::IStreamReader
 {
  public:
+XPF_CLASS_COPY_MOVE_BEHAVIOR(StreamReader, delete);
+
 /**
  * @brief StreamReader constructor - default.
  *
@@ -240,51 +158,6 @@ StreamReader(
 virtual ~StreamReader(
     void
 ) noexcept(true) = default;
-
-/**
- * @brief Copy constructor - deleted.
- * 
- * @param[in] Other - The other object to construct from.
- */
-StreamReader(
-    _In_ _Const_ const StreamReader& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-StreamReader(
-    _Inout_ StreamReader&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - deleted.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-StreamReader&
-operator=(
-    _In_ _Const_ const StreamReader& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-StreamReader&
-operator=(
-    _Inout_ StreamReader&& Other
-) noexcept(true) = delete;
-
 
 /**
  * @brief Reads a number from the underlying stream
@@ -398,6 +271,8 @@ template <class AllocatorType = xpf::MemoryAllocator>
 class StreamWriter final : public xpf::IStreamWriter
 {
  public:
+XPF_CLASS_COPY_MOVE_BEHAVIOR(StreamWriter, delete);
+
 /**
  * @brief StreamWriter constructor - default.
  *
@@ -417,50 +292,6 @@ StreamWriter(
 virtual ~StreamWriter(
     void
 ) noexcept(true) = default;
-
-/**
- * @brief Copy constructor - deleted.
- * 
- * @param[in] Other - The other object to construct from.
- */
-StreamWriter(
-    _In_ _Const_ const StreamWriter& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-StreamWriter(
-    _Inout_ StreamWriter&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - deleted.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-StreamWriter&
-operator=(
-    _In_ _Const_ const StreamWriter& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-StreamWriter&
-operator=(
-    _Inout_ StreamWriter&& Other
-) noexcept(true) = delete;
 
 /**
  * @brief Writes a number from the underlying stream
