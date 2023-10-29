@@ -1,7 +1,7 @@
 /**
- * @file        xpf_lib/public/Communication/ServerSocket.hpp
+ * @file        xpf_lib/public/Communication/ClientSocket.hpp
  *
- * @brief       This contains the server implementation using sockets.
+ * @brief       This contains the client implementation using sockets.
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
@@ -30,16 +30,15 @@
 
 namespace xpf
 {
-
 /**
- * @brief   This class provides the server functionality using sockets.
+ * @brief   This class provides the client functionality using sockets.
  *          It contains platform-specific implementation.
  */
-class ServerSocket : public xpf::IServer
+class ClientSocket : public xpf::IClient
 {
  public:
 /**
- * @brief ServerSocket constructor.
+ * @brief ClientSocket constructor.
  *        Currently this uses only IPv4 and TCP.
  *        It can be extended later to support other types as well.
  *        For now keep in mind that there is this limitation!
@@ -49,95 +48,61 @@ class ServerSocket : public xpf::IServer
  * @param[in] Port - The port of the socket.
  *
  */
-ServerSocket(
+ClientSocket(
     _In_ _Const_ const xpf::StringView<char>& Ip,
     _In_ _Const_ const xpf::StringView<char>& Port
-) noexcept(true) : xpf::IServer()
+) noexcept(true) : xpf::IClient()
 {
-    if (NT_SUCCESS(xpf::ReadWriteLock::Create(&this->m_ServerLock)))
+    if (NT_SUCCESS(xpf::ReadWriteLock::Create(&this->m_ClientLock)))
     {
-        this->m_ServerSocketData = this->CreateServerSocketData(Ip, Port);
+        this->m_ClientSocketData = this->CreateClientSocketData(Ip, Port);
     }
 }
 
 /**
- * @brief ServerSocket destructor.
+ * @brief ClientSocket destructor.
  */
-virtual ~ServerSocket(
+virtual ~ClientSocket(
     void
 ) noexcept(true)
 {
-    this->Stop();
-    this->DestroyServerSocketData(&this->m_ServerSocketData);
+    (void) this->Disconnect();
+    this->DestroyClientSocketData(&this->m_ClientSocketData);
 }
 
 /**
- * @brief This method initializes the server and prepares it to accept client connections.
- *
- * @return A proper NTSTATUS error code to indicate success or failure.
- */
-_Must_inspect_result_
-virtual NTSTATUS
-XPF_API
-Start(
-    void
-) noexcept(true);
-
-/**
- * @brief Stop the server gracefully.
- *        This method stops the server and releases any allocated resources.
- *
- * @return void
- */
-void
-XPF_API
-Stop(
-    void
-) noexcept(true) override;
-
-/**
- * @brief Accept client connections.
- *        This method listens for incoming client connections and handles them.
- *
- * @param[out] ClientCookie - Uniquely identifies the newly connected client in this server.
- *                            Can be further used to send or receive data from this particular connection.
+ * @brief This method will connect to the server.
  *
  * @return A proper NTSTATUS error code to indicate success or failure.
  */
 _Must_inspect_result_
 NTSTATUS
 XPF_API
-AcceptClient(
-    _Out_ xpf::SharedPointer<IClientCookie>& ClientCookie
+Connect(
+    void
 ) noexcept(true) override;
 
 /**
  * @brief Disconnect a client from the server.
  *        This method gracefully disconnects a client from the server.
- *        It waits for all outstanding communications with this client to end before terminating the connection.
- *
- * @param[in,out] ClientCookie - Uniquely identifies the newly connected client in this server.
- *                               Is retrieved via AcceptClient method.
+ *        It waits for all outstanding communications with the server to end before terminating the connection.
  *
  * @return A proper NTSTATUS error code to indicate success or failure.
  */
 _Must_inspect_result_
 NTSTATUS
 XPF_API
-DisconnectClient(
-    _Inout_ xpf::SharedPointer<IClientCookie>& ClientCookie
+Disconnect(
+    void
 ) noexcept(true) override;
 
 /**
- * @brief Send data to a client. If the client is disconnecting or was disconnected,
+ * @brief Send data to a server. If the server is disconnecting or was disconnected,
  *        this method will return a failure status.
  *
  * @param[in] NumberOfBytes - The number of bytes to write to the socket
  *
  * @param[in] Bytes - The bytes to be written.
- *
- * @param[in,out] ClientCookie  - Uniquely identifies the newly connected client in this server.
- *                                Is retrieved via AcceptClient method.
  *
  * @return A proper NTSTATUS error code to indicate success or failure.
  */
@@ -146,21 +111,17 @@ NTSTATUS
 XPF_API
 SendData(
     _In_ size_t NumberOfBytes,
-    _In_ _Const_ const uint8_t* Bytes,
-    _Inout_ xpf::SharedPointer<IClientCookie>& ClientCookie
+    _In_ _Const_ const uint8_t* Bytes
 ) noexcept(true) override;
 
 /**
- * @brief Recieves data from a client. If the client is disconnecting or was disconnected,
+ * @brief Recieves data from server. If the server is disconnecting or was disconnected,
  *        this method will return a failure status.
  *
- * @param[in,out] NumberOfBytes - The number of bytes to read from the client.
+ * @param[in,out] NumberOfBytes - The number of bytes to read from the server.
  *                                On return this contains the actual number of bytes read.
  *
  * @param[in,out] Bytes - The read bytes.
- *
- * @param[in,out] ClientCookie  - Uniquely identifies the newly connected client in this server.
- *                                Is retrieved via AcceptClient method.
  *
  * @return A proper NTSTATUS error code to indicate success or failure.
  */
@@ -169,8 +130,7 @@ NTSTATUS
 XPF_API
 ReceiveData(
     _Inout_ size_t* NumberOfBytes,
-    _Inout_ uint8_t* Bytes,
-    _Inout_ xpf::SharedPointer<IClientCookie>& ClientCookie
+    _Inout_ uint8_t* Bytes
 ) noexcept(true) override;
 
 /**
@@ -178,8 +138,8 @@ ReceiveData(
  * 
  * @param[in] Other - The other object to construct from.
  */
-ServerSocket(
-    _In_ _Const_ const ServerSocket & Other
+ClientSocket(
+    _In_ _Const_ const ClientSocket& Other
 ) noexcept(true) = delete;
 
 /**
@@ -188,8 +148,8 @@ ServerSocket(
  * @param[in,out] Other - The other object to construct from.
  *                        Will be invalidated after this call.
  */
-ServerSocket(
-    _Inout_ ServerSocket&& Other
+ClientSocket(
+    _Inout_ ClientSocket&& Other
 ) noexcept(true) = delete;
 
 /**
@@ -199,9 +159,9 @@ ServerSocket(
  * 
  * @return A reference to *this object after copy.
  */
-ServerSocket&
+ClientSocket&
 operator=(
-    _In_ _Const_ const ServerSocket& Other
+    _In_ _Const_ const ClientSocket& Other
 ) noexcept(true) = delete;
 
 /**
@@ -212,25 +172,25 @@ operator=(
  * 
  * @return A reference to *this object after move.
  */
-ServerSocket&
+ClientSocket&
 operator=(
-    _Inout_ ServerSocket&& Other
+    _Inout_ ClientSocket&& Other
 ) noexcept(true) = delete;
 
  private:
 /**
- * @brief Creates the platform specific server socket data.
- *        This socket can be used to listen for new connections.
+ * @brief Creates the platform specific client socket data.
+ *        This socket is used to connect to the server-end.
  *
  * @param[in] Ip - The IPv4 of the socket.
  *
  * @param[in] Port - The port of the socket.
  *
- * @return The server Socket Data, or nullptr on failure.
+ * @return The client Socket Data, or nullptr on failure.
  */
 void*
 XPF_API
-CreateServerSocketData(
+CreateClientSocketData(
     _In_ _Const_ const xpf::StringView<char>& Ip,
     _In_ _Const_ const xpf::StringView<char>& Port
 ) noexcept(true);
@@ -238,66 +198,25 @@ CreateServerSocketData(
 /**
  * @brief Destroys a previously created server socket data
  *
- * @param[in,out] ServerSocketData - Socket data created by CreateServerSocketData.
+ * @param[in,out] ClientSocketData - Socket data created by CreateServerSocketData.
  *
  * @return void
  */
 void
 XPF_API
-DestroyServerSocketData(
-    _Inout_ void** ServerSocketData
+DestroyClientSocketData(
+    _Inout_ void** ClientSocketData
 ) noexcept(true);
 
 /**
- * @brief Initializes a client connection.
- *
- * @param[in, out] ClientConnection - The newly initialized client connection.
- * 
- * @return A proper NTSTATUS error code to indicate success or failure.
- */
-_Must_inspect_result_
-NTSTATUS
-XPF_API
-EstablishClientConnection(
-    _Inout_ xpf::SharedPointer<xpf::IClientCookie>& ClientConnection
-) noexcept(true);
-
-/**
- * @brief Properly terminates a client connection.
- *
- * @param[in, out] ClientConnection - The connection to be terminated.
- *
- * @return void.
- */
-void
-XPF_API
-CloseClientConnection(
-    _Inout_ xpf::SharedPointer<xpf::IClientCookie>& ClientConnection
-) noexcept(true);
-
-/**
- * @brief Finds the client connection associated with a client cookie.
- *
- * @param[in] ClientCookie - The cookie of the client.
- *
- * @return void.
- */
-xpf::SharedPointer<xpf::IClientCookie>
-XPF_API
-FindClientConnection(
-    _In_ _Const_ const xpf::SharedPointer<xpf::IClientCookie>& ClientCookie
-) noexcept(true);
-
-
-/**
- * @brief Send data to a client connection. If the client is disconnecting or was disconnected,
+ * @brief Send data to a server connection. If the server is disconnecting or was disconnected,
  *        this method will return a failure status.
  *
  * @param[in] NumberOfBytes - The number of bytes to write to the socket
  *
  * @param[in] Bytes - The bytes to be written.
  *
- * @param[in,out] ClientConnection - Uniquely identifies the newly connected client in this server.
+ * @param[in,out] ServerConnection - Uniquely identifies the newly connected client in this server.
  *                                   Is retrieved via FindClientConnection method.
  *
  * @return STATUS_SUCCESS if the data was succesfully sent.
@@ -308,20 +227,19 @@ FindClientConnection(
 _Must_inspect_result_
 NTSTATUS
 XPF_API
-SendDataToClientConnection(
+SendDataToServerConnection(
     _In_ size_t NumberOfBytes,
-    _In_ _Const_ const uint8_t* Bytes,
-    _Inout_ xpf::SharedPointer<IClientCookie>& ClientConnection
+    _In_ _Const_ const uint8_t* Bytes
 ) noexcept(true);
 
 /**
  * @brief Recieves data from a client connection. If the client is disconnecting or was disconnected,
  *        this method will return a failure status.
  *
- * @param[in] NumberOfBytes - The number of bytes to read from the socket.
- *
- * @param[in,out] NumberOfBytes - The number of bytes to read from the client.
+ * @param[in,out] NumberOfBytes - The number of bytes to read from the server.
  *                                On return this contains the actual number of bytes read.
+ *
+ * @param[in,out] Bytes - The read bytes.
  *
  * @param[in,out] ClientConnection  - Uniquely identifies the newly connected client in this server.
  *                                    Is retrieved via FindClientConnection method.
@@ -334,18 +252,13 @@ SendDataToClientConnection(
 _Must_inspect_result_
 NTSTATUS
 XPF_API
-ReceiveDataFromClientConnection(
+ReceiveDataFromServerConnection(
     _Inout_ size_t* NumberOfBytes,
-    _Inout_ uint8_t* Bytes,
-    _Inout_ xpf::SharedPointer<IClientCookie>& ClientConnection
+    _Inout_ uint8_t* Bytes
 ) noexcept(true);
 
  private:
-     void* m_ServerSocketData = nullptr;
-
-    xpf::Optional<xpf::ReadWriteLock> m_ServerLock;
-    xpf::Vector<xpf::SharedPointer<xpf::IClientCookie>> m_Clients;
-
-    bool m_IsStarted = false;
-};  // class ServerSocket
+     void* m_ClientSocketData = nullptr;
+     xpf::Optional<xpf::ReadWriteLock> m_ClientLock;
+};  // class ClientSocket
 };  // namespace xpf

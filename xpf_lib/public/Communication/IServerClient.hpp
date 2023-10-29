@@ -197,7 +197,8 @@ SendData(
  * @brief Recieves data from a client. If the client is disconnecting or was disconnected,
  *        this method will return a failure status.
  *
- * @param[in] NumberOfBytes - The number of bytes to read from the socket.
+ * @param[in,out] NumberOfBytes - The number of bytes to read from the client.
+ *                                On return this contains the actual number of bytes read.
  *
  * @param[in,out] Bytes - The read bytes.
  *
@@ -210,8 +211,8 @@ _Must_inspect_result_
 virtual NTSTATUS
 XPF_API
 ReceiveData(
-    _In_ size_t NumberOfBytes,
-    _Inout_ uint8_t * Bytes,
+    _Inout_ size_t* NumberOfBytes,
+    _Inout_ uint8_t* Bytes,
     _Inout_ xpf::SharedPointer<IClientCookie>& ClientCookie
 ) noexcept(true) = 0;
 
@@ -267,74 +268,6 @@ operator=(
 //
 
 /**
- * @brief   This is a server cookie interface.
- *          It can be specialized by each protocol so it uniquely identifies server-associated data
- *          where a client is connected to. The client uses this to send / receive data and communicate with the server.
- */
-class IServerCookie
-{
- public:
-/**
- * @brief IServerCookie constructor - default.
- */
-IServerCookie(
-    void
-) noexcept(true) = default;
-
-/**
- * @brief IServerCookie destructor - default.
- */
-virtual ~IServerCookie(
-    void
-) noexcept(true) = default;
-
-/**
- * @brief Copy constructor - delete.
- * 
- * @param[in] Other - The other object to construct from.
- */
-IServerCookie(
-    _In_ _Const_ const IServerCookie& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - delete.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-IServerCookie(
-    _Inout_ IServerCookie&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - delete.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-IServerCookie&
-operator=(
-    _In_ _Const_ const IServerCookie& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - delete.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-IServerCookie&
-operator=(
-    _Inout_ IServerCookie&& Other
-) noexcept(true) = delete;
- private:
-};
-
-/**
  * @brief   This is a client interface. All other client implementatations
  *          must inherit this one.
  */
@@ -358,16 +291,13 @@ virtual ~IClient(
 /**
  * @brief This method will connect to the server.
  *
- * @param[out] ServerCookie - Uniquely identifies the newly connected client in this server.
- *                            Can be further used to send or receive data from this particular connection.
- *
  * @return A proper NTSTATUS error code to indicate success or failure.
  */
 _Must_inspect_result_
 virtual NTSTATUS
 XPF_API
 Connect(
-    _Out_ IServerCookie& ServerCookie
+    void
 ) noexcept(true) = 0;
 
 /**
@@ -375,16 +305,13 @@ Connect(
  *        This method gracefully disconnects a client from the server.
  *        It waits for all outstanding communications with the server to end before terminating the connection.
  *
- * @param[in,out] ServerCookie - Uniquely identifies the connected client with this server.
- *                               Is retrieved via Connect method.
- *
  * @return A proper NTSTATUS error code to indicate success or failure.
  */
 _Must_inspect_result_
 virtual NTSTATUS
 XPF_API
 Disconnect(
-    _Inout_ IServerCookie& ServerCookie
+    void
 ) noexcept(true) = 0;
 
 /**
@@ -395,9 +322,6 @@ Disconnect(
  *
  * @param[in] Bytes - The bytes to be written.
  *
- * @param[in,out] ServerCookie  - Uniquely identifies the client in this server.
- *                                Is retrieved via AcceptClient method.
- *
  * @return A proper NTSTATUS error code to indicate success or failure.
  */
 _Must_inspect_result_
@@ -405,20 +329,17 @@ virtual NTSTATUS
 XPF_API
 SendData(
     _In_ size_t NumberOfBytes,
-    _In_ _Const_ const uint8_t* Bytes,
-    _Inout_ IServerCookie& ServerCookie
+    _In_ _Const_ const uint8_t* Bytes
 ) noexcept(true) = 0;
 
 /**
  * @brief Recieves data from server. If the server is disconnecting or was disconnected,
  *        this method will return a failure status.
  *
- * @param[in] NumberOfBytes - The number of bytes to read from the socket.
+ * @param[in,out] NumberOfBytes - The number of bytes to read from the server.
+ *                                On return this contains the actual number of bytes read.
  *
  * @param[in,out] Bytes - The read bytes.
- *
- * @param[in,out] ServerCookie  - Uniquely identifies the client in this server.
- *                                Is retrieved via AcceptClient method.
  *
  * @return A proper NTSTATUS error code to indicate success or failure.
  */
@@ -426,9 +347,8 @@ _Must_inspect_result_
 virtual NTSTATUS
 XPF_API
 ReceiveData(
-    _In_ size_t NumberOfBytes,
-    _Inout_ uint8_t* Bytes,
-    _Inout_ IServerCookie& ServerCookie
+    _Inout_ size_t* NumberOfBytes,
+    _Inout_ uint8_t* Bytes
 ) noexcept(true) = 0;
 
 /**

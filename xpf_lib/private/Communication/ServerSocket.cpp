@@ -29,8 +29,7 @@ struct ServerSocketData
     #else
         #error Unknown Platform
     #endif
-};  // struct ServerSocketDataForServer
-
+};  // struct ServerSocketData
 
 struct ServerSocketClientData : public xpf::IClientCookie
 {
@@ -42,8 +41,7 @@ struct ServerSocketClientData : public xpf::IClientCookie
     #else
         #error Unknown Platform
     #endif
-};
-
+};  // struct ServerSocketClientData
 };  // namespace xpf
 
 _Must_inspect_result_
@@ -53,6 +51,8 @@ xpf::ServerSocket::Start(
     void
 ) noexcept(true)
 {
+    XPF_MAX_PASSIVE_LEVEL();
+
     /* If the server was not properly initialized, we can't do much. */
     if ((!this->m_ServerLock.HasValue()) || (nullptr == this->m_ServerSocketData))
     {
@@ -77,6 +77,8 @@ xpf::ServerSocket::Stop(
     void
 ) noexcept(true)
 {
+    XPF_MAX_PASSIVE_LEVEL();
+
     /* If the server was not properly initialized, we can't do much. */
     if ((!this->m_ServerLock.HasValue()) || (nullptr == this->m_ServerSocketData))
     {
@@ -118,7 +120,7 @@ xpf::ServerSocket::CreateServerSocketData(
     }
 
     //
-    // First we allocate and construct the ServerSocketDataForServer.
+    // First we allocate and construct the ServerSocketData.
     //
     data = reinterpret_cast<xpf::ServerSocketData*>(xpf::MemoryAllocator::AllocateMemory(sizeof(xpf::ServerSocketData)));
     if (nullptr == data)
@@ -186,6 +188,7 @@ xpf::ServerSocket::CreateServerSocketData(
         ::freeaddrinfo(result);
         if (0 != gleResult)
         {
+            auto wsagle = ::WSAGetLastError(); wsagle;
             status = STATUS_CONNECTION_INVALID;
             goto CleanUp;
         }
@@ -197,6 +200,9 @@ xpf::ServerSocket::CreateServerSocketData(
             status = STATUS_CONNECTION_INVALID;
             goto CleanUp;
         }
+
+        /* All good. */
+        status = STATUS_SUCCESS;
     #else
         #error Unknown Platform
     #endif
@@ -216,6 +222,8 @@ xpf::ServerSocket::DestroyServerSocketData(
     _Inout_ void** ServerSocketData
 ) noexcept(true)
 {
+    XPF_MAX_PASSIVE_LEVEL();
+
     //
     // Can't free null pointer.
     //
@@ -223,7 +231,7 @@ xpf::ServerSocket::DestroyServerSocketData(
     {
         return;
     }
-    xpf::ServerSocketData* data = reinterpret_cast<xpf::ServerSocketData*>(ServerSocketData);
+    xpf::ServerSocketData* data = reinterpret_cast<xpf::ServerSocketData*>(*ServerSocketData);
 
     //
     // First clean platform specific data.
@@ -231,9 +239,7 @@ xpf::ServerSocket::DestroyServerSocketData(
     #if defined XPF_PLATFORM_WIN_UM
         if (INVALID_SOCKET != data->ListenSocket)
         {
-            int closeResult = ::closesocket(data->ListenSocket);
-            XPF_DEATH_ON_FAILURE(0 == closeResult);
-
+            (void) ::closesocket(data->ListenSocket);
             data->ListenSocket = INVALID_SOCKET;
         }
         if (0 != data->WsaLibData.wVersion)
@@ -263,6 +269,8 @@ xpf::ServerSocket::EstablishClientConnection(
     _Inout_ xpf::SharedPointer<xpf::IClientCookie>& ClientConnection
 ) noexcept(true)
 {
+    XPF_MAX_PASSIVE_LEVEL();
+
     /* We need the socket to listen to. */
     xpf::ServerSocketData* serverSocketData = reinterpret_cast<xpf::ServerSocketData*>(this->m_ServerSocketData);
 
@@ -298,6 +306,8 @@ xpf::ServerSocket::CloseClientConnection(
     _Inout_ xpf::SharedPointer<xpf::IClientCookie>& ClientConnection
 ) noexcept(true)
 {
+    XPF_MAX_PASSIVE_LEVEL();
+
     /* First we get to the underlying data. */
     auto clientCookie = xpf::DynamicSharedPointerCast<xpf::ServerSocketClientData>(ClientConnection);
     if (clientCookie.IsEmpty())
@@ -314,8 +324,7 @@ xpf::ServerSocket::CloseClientConnection(
             (void) ::shutdown(clientData.ClientSocket, SD_BOTH);
 
             /* Be a good citizen and clean the resources. */
-            int gleResult = ::closesocket(clientData.ClientSocket);
-            XPF_DEATH_ON_FAILURE(0 != gleResult);
+            (void) ::closesocket(clientData.ClientSocket);
 
             clientData.ClientSocket = INVALID_SOCKET;
         }
@@ -338,6 +347,8 @@ xpf::ServerSocket::FindClientConnection(
     _In_ _Const_ const xpf::SharedPointer<xpf::IClientCookie>& ClientCookie
 ) noexcept(true)
 {
+    XPF_MAX_PASSIVE_LEVEL();
+
     /* If the server was not properly initialized, we can't do much. */
     if ((!this->m_ServerLock.HasValue()) || (nullptr == this->m_ServerSocketData))
     {
@@ -389,6 +400,8 @@ xpf::ServerSocket::SendDataToClientConnection(
     _Inout_ xpf::SharedPointer<IClientCookie>& ClientConnection
 ) noexcept(true)
 {
+    XPF_MAX_PASSIVE_LEVEL();
+
     /* Validate the parameters. Enforce 64 kb limit. */
     if ((nullptr == Bytes) || (0 == NumberOfBytes) || (xpf::NumericLimits<uint16_t>::MaxValue() < NumberOfBytes))
     {
@@ -411,16 +424,17 @@ xpf::ServerSocket::SendDataToClientConnection(
 
     /* And now do the actual send. This is platform specific. */
     #if defined XPF_PLATFORM_WIN_UM
-        int gleResult = ::send((*clientConnection).ClientSocket,
+        int bytesSent = ::send((*clientConnection).ClientSocket,
                                 reinterpret_cast<const char*>(Bytes),
                                 static_cast<int>(NumberOfBytes),
                                 0);
-        switch (gleResult)
+        if (SOCKET_ERROR != bytesSent)
         {
-            case ERROR_SUCCESS:
-            {
-                return STATUS_SUCCESS;
-            }
+            return (static_cast<int>(NumberOfBytes) != bytesSent) ? STATUS_PARTIAL_COPY
+                                                                  : STATUS_SUCCESS;
+        }
+        switch (::WSAGetLastError())
+        {
             case WSAESHUTDOWN:          // The socket has been shut down.
             case WSAENOTCONN:           // The socket is not connected.
             case WSAECONNABORTED:       // The virtual circuit was terminated due to a time-out or other failure.
@@ -447,13 +461,16 @@ _Must_inspect_result_
 NTSTATUS
 XPF_API
 xpf::ServerSocket::ReceiveDataFromClientConnection(
-    _In_ size_t NumberOfBytes,
+    _Inout_ size_t* NumberOfBytes,
     _Inout_ uint8_t* Bytes,
     _Inout_ xpf::SharedPointer<IClientCookie>& ClientConnection
 ) noexcept(true)
 {
+    XPF_MAX_PASSIVE_LEVEL();
+
     /* Validate the parameters. Enforce 64 kb limit. */
-    if ((nullptr == Bytes) || (0 == NumberOfBytes) || (xpf::NumericLimits<uint16_t>::MaxValue() < NumberOfBytes))
+    if ((nullptr == Bytes) || (nullptr == NumberOfBytes) ||
+        (0 == *NumberOfBytes) || (xpf::NumericLimits<uint16_t>::MaxValue() < *NumberOfBytes))
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -474,16 +491,22 @@ xpf::ServerSocket::ReceiveDataFromClientConnection(
 
     /* And now do the actual send. This is platform specific. */
     #if defined XPF_PLATFORM_WIN_UM
-        int gleResult = ::recv((*clientConnection).ClientSocket,
-                                reinterpret_cast<char*>(Bytes),
-                                static_cast<int>(NumberOfBytes),
-                                0);
-        switch (gleResult)
+        int bytesReceived = ::recv((*clientConnection).ClientSocket,
+                                   reinterpret_cast<char*>(Bytes),
+                                   static_cast<int>(*NumberOfBytes),
+                                   0);
+        if (SOCKET_ERROR != bytesReceived)
         {
-            case ERROR_SUCCESS:
+            if (bytesReceived > static_cast<int>(*NumberOfBytes))
             {
-                return STATUS_SUCCESS;
+                return STATUS_BUFFER_OVERFLOW;
             }
+
+            *NumberOfBytes = static_cast<size_t>(bytesReceived);
+            return STATUS_SUCCESS;
+        }
+        switch (::WSAGetLastError())
+        {
             case WSAESHUTDOWN:          // The socket has been shut down.
             case WSAENOTCONN:           // The socket is not connected.
             case WSAECONNABORTED:       // The virtual circuit was terminated due to a time-out or other failure.
@@ -512,6 +535,8 @@ xpf::ServerSocket::AcceptClient(
     _Out_ xpf::SharedPointer<IClientCookie>& ClientCookie
 ) noexcept(true)
 {
+    XPF_MAX_PASSIVE_LEVEL();
+
     /* If the server was not properly initialized, we can't do much. */
     if ((!this->m_ServerLock.HasValue()) || (nullptr == this->m_ServerSocketData))
     {
@@ -559,6 +584,8 @@ xpf::ServerSocket::DisconnectClient(
     _Inout_ xpf::SharedPointer<IClientCookie>& ClientCookie
 ) noexcept(true)
 {
+    XPF_MAX_PASSIVE_LEVEL();
+
     /* If the server was not properly initialized, we can't do much. */
     if ((!this->m_ServerLock.HasValue()) || (nullptr == this->m_ServerSocketData))
     {
@@ -609,6 +636,8 @@ xpf::ServerSocket::SendData(
     _Inout_ xpf::SharedPointer<IClientCookie>& ClientCookie
 ) noexcept(true)
 {
+    XPF_MAX_PASSIVE_LEVEL();
+
     NTSTATUS status = STATUS_UNSUCCESSFUL;
     xpf::SharedPointer<IClientCookie> clientConnection = this->FindClientConnection(ClientCookie);
 
@@ -638,11 +667,13 @@ _Must_inspect_result_
 NTSTATUS
 XPF_API
 xpf::ServerSocket::ReceiveData(
-    _In_ size_t NumberOfBytes,
+    _Inout_ size_t* NumberOfBytes,
     _Inout_ uint8_t* Bytes,
     _Inout_ xpf::SharedPointer<IClientCookie>& ClientCookie
 ) noexcept(true)
 {
+    XPF_MAX_PASSIVE_LEVEL();
+
     NTSTATUS status = STATUS_UNSUCCESSFUL;
     xpf::SharedPointer<IClientCookie> clientConnection = this->FindClientConnection(ClientCookie);
 

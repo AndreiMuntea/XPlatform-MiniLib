@@ -27,7 +27,8 @@ ADD_LIBRARY( xpf_lib STATIC "xpf.hpp"
                             "private/Utility/EventFramework.cpp"
                             "private/Utility/ProtobufSerializer.cpp"
 
-                            "private/Communication/ServerSocket.cpp")
+                            "private/Communication/ServerSocket.cpp"
+                            "private/Communication/ClientSocket.cpp")
 
 
 # Run the linter on lib - can be enabled when needed.

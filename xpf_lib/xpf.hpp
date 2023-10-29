@@ -50,3 +50,4 @@
 
 #include "public/Communication/IServerClient.hpp"
 #include "public/Communication/ServerSocket.hpp"
+#include "public/Communication/ClientSocket.hpp"
