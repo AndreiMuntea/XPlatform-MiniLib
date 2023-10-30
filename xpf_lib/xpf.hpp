@@ -49,5 +49,6 @@
 #include "public/Utility/ProtobufSerializer.hpp"
 
 #include "public/Communication/IServerClient.hpp"
-#include "public/Communication/ServerSocket.hpp"
-#include "public/Communication/ClientSocket.hpp"
+#include "public/Communication/Sockets/BerkeleySocket.hpp"
+#include "public/Communication/Sockets/ServerSocket.hpp"
+#include "public/Communication/Sockets/ClientSocket.hpp"

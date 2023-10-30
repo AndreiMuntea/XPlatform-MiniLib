@@ -1,5 +1,5 @@
 /**
- * @file        xpf_lib/public/Communication/ServerSocket.hpp
+ * @file        xpf_lib/public/Communication/Sockets/ServerSocket.hpp
  *
  * @brief       This contains the server implementation using sockets.
  *
@@ -25,6 +25,7 @@
 #include "xpf_lib/public/Containers/String.hpp"
 #include "xpf_lib/public/Containers/Vector.hpp"
 
+#include "xpf_lib/public/Communication/Sockets/BerkeleySocket.hpp"
 #include "xpf_lib/public/Communication/IServerClient.hpp"
 
 
@@ -38,6 +39,9 @@ namespace xpf
 class ServerSocket : public xpf::IServer
 {
  public:
+/**
+ * @brief Copy and move semantics are deleted.
+ */
 XPF_CLASS_COPY_MOVE_BEHAVIOR(ServerSocket, delete);
 
 /**
@@ -244,58 +248,6 @@ xpf::SharedPointer<xpf::IClientCookie>
 XPF_API
 FindClientConnection(
     _In_ _Const_ const xpf::SharedPointer<xpf::IClientCookie>& ClientCookie
-) noexcept(true);
-
-
-/**
- * @brief Send data to a client connection. If the client is disconnecting or was disconnected,
- *        this method will return a failure status.
- *
- * @param[in] NumberOfBytes - The number of bytes to write to the socket
- *
- * @param[in] Bytes - The bytes to be written.
- *
- * @param[in,out] ClientConnection - Uniquely identifies the newly connected client in this server.
- *                                   Is retrieved via FindClientConnection method.
- *
- * @return STATUS_SUCCESS if the data was succesfully sent.
- *         STATUS_CONNECTION_ABORTED if the connection was terminated on client end.
- *         STATUS_NETWORK_BUSY if the connection is still valid, but we failed to send data over network.
- *         Another error status to describe non-network related errors.
- */
-_Must_inspect_result_
-NTSTATUS
-XPF_API
-SendDataToClientConnection(
-    _In_ size_t NumberOfBytes,
-    _In_ _Const_ const uint8_t* Bytes,
-    _Inout_ xpf::SharedPointer<IClientCookie>& ClientConnection
-) noexcept(true);
-
-/**
- * @brief Recieves data from a client connection. If the client is disconnecting or was disconnected,
- *        this method will return a failure status.
- *
- * @param[in] NumberOfBytes - The number of bytes to read from the socket.
- *
- * @param[in,out] NumberOfBytes - The number of bytes to read from the client.
- *                                On return this contains the actual number of bytes read.
- *
- * @param[in,out] ClientConnection  - Uniquely identifies the newly connected client in this server.
- *                                    Is retrieved via FindClientConnection method.
- *
- * @return STATUS_SUCCESS if the data was succesfully sent.
- *         STATUS_CONNECTION_ABORTED if the connection was terminated on client end.
- *         STATUS_NETWORK_BUSY if the connection is still valid, but we failed to get data from the network.
- *         Another error status to describe non-network related errors.
- */
-_Must_inspect_result_
-NTSTATUS
-XPF_API
-ReceiveDataFromClientConnection(
-    _Inout_ size_t* NumberOfBytes,
-    _Inout_ uint8_t* Bytes,
-    _Inout_ xpf::SharedPointer<IClientCookie>& ClientConnection
 ) noexcept(true);
 
  private:

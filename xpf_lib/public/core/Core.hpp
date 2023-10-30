@@ -187,9 +187,15 @@
  */
 #if defined XPF_PLATFORM_WIN_KM
 
+    /**
+     * @brief For the use of winsockets we require the Netio library.
+     */
+    #pragma comment(lib, "Netio.lib")
+
     #include <fltKernel.h>
     #include <ntstrsafe.h>
     #include <ntintsafe.h>
+    #include <Wsk.h>
 
 #elif defined XPF_PLATFORM_WIN_UM
 
@@ -538,9 +544,9 @@ static_assert(sizeof(uuid_t)  == 16, "uuid_t should be 16 byte(s)!");
      /*                                                         */          \
      /* @param[in] Other - The other object to construct from.  */          \
      /*                                                         */          \
-     ClassName(                                                             \
-         _In_ _Const_ const ClassName& Other                                \
-     ) noexcept(true) = Behavior;                                           \
+     ClassName(                                    /* NOLINT(*) */          \
+         _In_ _Const_ const ClassName& Other       /* NOLINT(*) */          \
+     ) noexcept(true) = Behavior;                  /* NOLINT(*) */          \
                                                                             \
      /**                                                        */          \
      /* @brief Copy assignment.                                 */          \
@@ -549,33 +555,9 @@ static_assert(sizeof(uuid_t)  == 16, "uuid_t should be 16 byte(s)!");
      /*                                                         */          \
      /* @return A reference to *this object after copy.         */          \
      /*                                                         */          \
-     ClassName& operator=(                                                  \
-         _In_ _Const_ const ClassName& Other                                \
-     ) noexcept(true) = Behavior;
-
-/**
- * @brief Helper macro to specify copy behavior for a class.
- */
-#define XPF_CLASS_COPY_BEHAVIOR(ClassName, Behavior)                        \
-     /**                                                        */          \
-     /* @brief Copy constructor.                                */          \
-     /*                                                         */          \
-     /* @param[in] Other - The other object to construct from.  */          \
-     /*                                                         */          \
-     ClassName(                                                             \
-         _In_ _Const_ const ClassName& Other                                \
-     ) noexcept(true) = Behavior;                                           \
-                                                                            \
-     /**                                                        */          \
-     /* @brief Copy assignment.                                 */          \
-     /*                                                         */          \
-     /* @param[in] Other - The other object to construct from.  */          \
-     /*                                                         */          \
-     /* @return A reference to *this object after copy.         */          \
-     /*                                                         */          \
-     ClassName& operator=(                                                  \
-         _In_ _Const_ const ClassName& Other                                \
-     ) noexcept(true) = Behavior;
+     ClassName& operator=(                         /* NOLINT(*) */         \
+         _In_ _Const_ const ClassName& Other       /* NOLINT(*) */         \
+     ) noexcept(true) = Behavior;                  /* NOLINT(*) */
 
  /**
   * @brief Helper macro to specify move behavior for a class.
@@ -587,9 +569,9 @@ static_assert(sizeof(uuid_t)  == 16, "uuid_t should be 16 byte(s)!");
      /* @param[in,out] Other - The other object to construct from.  */      \
      /*                      - Will be invalidated after this call. */      \
      /*                                                             */      \
-     ClassName(                                                             \
-         _Inout_ ClassName&& Other                                          \
-     ) noexcept(true) = Behavior;                                           \
+     ClassName(                                        /* NOLINT(*) */      \
+         _Inout_ ClassName&& Other                     /* NOLINT(*) */      \
+     ) noexcept(true) = Behavior;                      /* NOLINT(*) */      \
                                                                             \
      /**                                                            */      \
      /* @brief Move assignment.                                     */      \
@@ -599,9 +581,9 @@ static_assert(sizeof(uuid_t)  == 16, "uuid_t should be 16 byte(s)!");
      /*                                                             */      \
      /* @return A reference to *this object after move.             */      \
      /*                                                             */      \
-     ClassName& operator=(                                                  \
-         _Inout_ ClassName&& Other                                          \
-     ) noexcept(true) = Behavior;
+     ClassName& operator=(                             /* NOLINT(*) */      \
+         _Inout_ ClassName&& Other                     /* NOLINT(*) */      \
+     ) noexcept(true) = Behavior;                      /* NOLINT(*) */
 
  /**
   * @brief Helper macro to specify both copy and move behavior for a class.

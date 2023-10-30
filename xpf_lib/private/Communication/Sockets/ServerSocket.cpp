@@ -1,5 +1,5 @@
 /**
- * @file        xpf_lib/private/Communication/ServerSocket.cpp
+ * @file        xpf_lib/private/Communication/Sockets/ServerSocket.cpp
  *
  * @brief       Server-Side implementation using sockets.
  *
@@ -23,12 +23,9 @@ namespace xpf
 
 struct ServerSocketData
 {
-    #if defined XPF_PLATFORM_WIN_UM
-        WSAData WsaLibData = { 0 };
-        SOCKET ListenSocket = INVALID_SOCKET;
-    #else
-        #error Unknown Platform
-    #endif
+    struct addrinfo* AddressInfo = nullptr;
+    xpf::BerkeleySocket::Socket ServerSocket = nullptr;
+    xpf::BerkeleySocket::SocketApiProvider ApiProvider = nullptr;
 };  // struct ServerSocketData
 
 struct ServerSocketClientData : public xpf::IClientCookie
@@ -42,12 +39,7 @@ virtual ~ServerSocketClientData(void) noexcept(true) = default;
  public:
     uuid_t UniqueId = { 0 };
     xpf::RundownProtection ClientRundown;
-
-    #if defined XPF_PLATFORM_WIN_UM
-        SOCKET ClientSocket = INVALID_SOCKET;
-    #else
-        #error Unknown Platform
-    #endif
+    xpf::BerkeleySocket::Socket ClientSocket = nullptr;
 };  // struct ServerSocketClientData
 };  // namespace xpf
 
@@ -119,14 +111,6 @@ xpf::ServerSocket::CreateServerSocketData(
     NTSTATUS status = STATUS_UNSUCCESSFUL;
 
     //
-    // Sanity checks of parameters.
-    //
-    if (Ip.IsEmpty() || Port.IsEmpty())
-    {
-        return nullptr;
-    }
-
-    //
     // First we allocate and construct the ServerSocketData.
     //
     data = reinterpret_cast<xpf::ServerSocketData*>(xpf::MemoryAllocator::AllocateMemory(sizeof(xpf::ServerSocketData)));
@@ -136,83 +120,50 @@ xpf::ServerSocket::CreateServerSocketData(
     }
     xpf::MemoryAllocator::Construct(data);
 
-    //
-    // Now we preinitialize the platform specific data.
-    //
-    #if defined XPF_PLATFORM_WIN_UM
-        xpf::ApiZeroMemory(&data->WsaLibData,
-                           sizeof(data->WsaLibData));
-        data->ListenSocket = INVALID_SOCKET;
-    #else
-        #error Unknown Platform
-    #endif
+    status = xpf::BerkeleySocket::InitializeSocketApiProvider(&data->ApiProvider);
+    if (!NT_SUCCESS(status))
+    {
+        goto CleanUp;
+    }
 
-    //
-    // And finally initialize the socket.
-    //
-    #if defined XPF_PLATFORM_WIN_UM
-        struct addrinfo* result = nullptr;
-        int gleResult = 0;
+    /* Resolve the server address and port. */
+    status = xpf::BerkeleySocket::GetAddressInformation(data->ApiProvider,
+                                                        Ip,
+                                                        Port,
+                                                        &data->AddressInfo);
+    if (!NT_SUCCESS(status))
+    {
+        goto CleanUp;
+    }
 
-        struct addrinfo hints;
-        xpf::ApiZeroMemory(&hints, sizeof(hints));
+    /* Create a SOCKET for the server to listen for client connections. */
+    status = xpf::BerkeleySocket::CreateSocket(data->ApiProvider,
+                                               data->AddressInfo->ai_family,
+                                               data->AddressInfo->ai_socktype,
+                                               data->AddressInfo->ai_protocol,
+                                               &data->ServerSocket);
+    if (!NT_SUCCESS(status))
+    {
+        goto CleanUp;
+    }
 
-        /* Default to TCP and IPv4 always. */
-        hints.ai_family = AF_INET;
-        hints.ai_socktype = SOCK_STREAM;
-        hints.ai_protocol = IPPROTO_TCP;
-        hints.ai_flags = AI_PASSIVE;
+    /* Setup the TCP listening socket. */
+    status = xpf::BerkeleySocket::Bind(data->ApiProvider,
+                                       data->ServerSocket,
+                                       data->AddressInfo->ai_addr,
+                                       data->AddressInfo->ai_addrlen);
+    if (!NT_SUCCESS(status))
+    {
+        goto CleanUp;
+    }
 
-        /* Initialize the WinSock library. */
-        gleResult = ::WSAStartup(MAKEWORD(2, 2), &data->WsaLibData);
-        if (0 != gleResult)
-        {
-            xpf::ApiZeroMemory(&data->WsaLibData,
-                               sizeof(data->WsaLibData));
-            status = STATUS_CONNECTION_INVALID;
-            goto CleanUp;
-        }
-
-        /* Resolve the server address and port. */
-        gleResult = ::getaddrinfo(Ip.Buffer(), Port.Buffer(), &hints, &result);
-        if (0 != gleResult)
-        {
-            status = STATUS_CONNECTION_INVALID;
-            goto CleanUp;
-        }
-
-        /* Create a SOCKET for the server to listen for client connections. */
-        data->ListenSocket = ::socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-        if (INVALID_SOCKET == data->ListenSocket)
-        {
-            ::freeaddrinfo(result);
-            status = STATUS_CONNECTION_INVALID;
-            goto CleanUp;
-        }
-
-        /* Setup the TCP listening socket. */
-        gleResult = ::bind(data->ListenSocket, result->ai_addr, static_cast<int>(result->ai_addrlen));
-        ::freeaddrinfo(result);
-        if (0 != gleResult)
-        {
-            auto wsagle = ::WSAGetLastError(); wsagle;
-            status = STATUS_CONNECTION_INVALID;
-            goto CleanUp;
-        }
-
-        /* Put the socket in a listening state. */
-        gleResult = ::listen(data->ListenSocket, SOMAXCONN);
-        if (0 != gleResult)
-        {
-            status = STATUS_CONNECTION_INVALID;
-            goto CleanUp;
-        }
-
-        /* All good. */
-        status = STATUS_SUCCESS;
-    #else
-        #error Unknown Platform
-    #endif
+    /* Put the socket in a listening state. */
+    status = xpf::BerkeleySocket::Listen(data->ApiProvider,
+                                         data->ServerSocket);
+    if (!NT_SUCCESS(status))
+    {
+        goto CleanUp;
+    }
 
 CleanUp:
     if (!NT_SUCCESS(status))
@@ -240,26 +191,22 @@ xpf::ServerSocket::DestroyServerSocketData(
     }
     xpf::ServerSocketData* data = reinterpret_cast<xpf::ServerSocketData*>(*ServerSocketData);
 
-    //
-    // First clean platform specific data.
-    //
-    #if defined XPF_PLATFORM_WIN_UM
-        if (INVALID_SOCKET != data->ListenSocket)
-        {
-            (void) ::closesocket(data->ListenSocket);
-            data->ListenSocket = INVALID_SOCKET;
-        }
-        if (0 != data->WsaLibData.wVersion)
-        {
-            int cleanUpResult = ::WSACleanup();
-            XPF_DEATH_ON_FAILURE(0 == cleanUpResult);
-
-            xpf::ApiZeroMemory(&data->WsaLibData,
-                               sizeof(data->WsaLibData));
-        }
-    #else
-        #error Unknown Platform
-    #endif
+    if (nullptr != data->ServerSocket)
+    {
+        NTSTATUS shutdownStatus = xpf::BerkeleySocket::ShutdownSocket(data->ApiProvider,
+                                                                      &data->ServerSocket);
+        XPF_DEATH_ON_FAILURE(NT_SUCCESS(shutdownStatus));
+    }
+    if (nullptr != data->AddressInfo)
+    {
+        NTSTATUS freeStatus = xpf::BerkeleySocket::FreeAddressInformation(data->ApiProvider,
+                                                                          &data->AddressInfo);
+        XPF_DEATH_ON_FAILURE(NT_SUCCESS(freeStatus));
+    }
+    if (nullptr != data->ApiProvider)
+    {
+        xpf::BerkeleySocket::DeInitializeSocketApiProvider(&data->ApiProvider);
+    }
 
     //
     // And now destroy the object.
@@ -289,22 +236,12 @@ xpf::ServerSocket::EstablishClientConnection(
     }
     ServerSocketClientData& newClient = (*clientCookie);
 
-    /* Now wait for a new client. This is platform specific. */
-    #if defined XPF_PLATFORM_WIN_UM
-       newClient.ClientSocket = ::accept(serverSocketData->ListenSocket, nullptr, nullptr);
-       if (INVALID_SOCKET == newClient.ClientSocket)
-       {
-           return STATUS_CONNECTION_REFUSED;
-       }
-    #else
-        #error Unknown Platform
-    #endif
-
     /* Assign an unique uuid to this client. */
     xpf::ApiRandomUuid(&newClient.UniqueId);
 
-    /* Everything went good. We got a new client. */
-    return STATUS_SUCCESS;
+    return xpf::BerkeleySocket::Accept(serverSocketData->ApiProvider,
+                                       serverSocketData->ServerSocket,
+                                       &newClient.ClientSocket);
 }
 
 void
@@ -323,21 +260,13 @@ xpf::ServerSocket::CloseClientConnection(
     }
     ServerSocketClientData& clientData = (*clientCookie);
 
-    /* Now close the socket. This is platform specific. */
-    #if defined XPF_PLATFORM_WIN_UM
-        if (INVALID_SOCKET != clientData.ClientSocket)
-        {
-            /* The shutdown can fail if the client already closed the socket. Just move on. */
-            (void) ::shutdown(clientData.ClientSocket, SD_BOTH);
+    xpf::ServerSocketData* serverSocketData = reinterpret_cast<xpf::ServerSocketData*>(this->m_ServerSocketData);
 
-            /* Be a good citizen and clean the resources. */
-            (void) ::closesocket(clientData.ClientSocket);
-
-            clientData.ClientSocket = INVALID_SOCKET;
-        }
-    #else
-        #error Unknown Platform
-    #endif
+    if (nullptr != clientData.ClientSocket)
+    {
+        (void) xpf::BerkeleySocket::ShutdownSocket(serverSocketData->ApiProvider,
+                                                   &clientData.ClientSocket);
+    }
 
     /*
      * Wait for all send and recv operations to finish.
@@ -396,143 +325,6 @@ xpf::ServerSocket::FindClientConnection(
 
     /* Return whatever we found to the caller. */
     return xpf::DynamicSharedPointerCast<xpf::IClientCookie>(clientConnection);
-}
-
-_Must_inspect_result_
-NTSTATUS
-XPF_API
-xpf::ServerSocket::SendDataToClientConnection(
-    _In_ size_t NumberOfBytes,
-    _In_ _Const_ const uint8_t* Bytes,
-    _Inout_ xpf::SharedPointer<IClientCookie>& ClientConnection
-) noexcept(true)
-{
-    XPF_MAX_PASSIVE_LEVEL();
-
-    /* Validate the parameters. Enforce 64 kb limit. */
-    if ((nullptr == Bytes) || (0 == NumberOfBytes) || (xpf::NumericLimits<uint16_t>::MaxValue() < NumberOfBytes))
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    /* Then we get to the underlying data. */
-    auto clientConnection = xpf::DynamicSharedPointerCast<xpf::ServerSocketClientData>(ClientConnection);
-    if (clientConnection.IsEmpty())
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    /* If the connection is tearing down, we bail. */
-    xpf::RundownGuard connectionGuard((*clientConnection).ClientRundown);
-    if (!connectionGuard.IsRundownAcquired())
-    {
-        return STATUS_TOO_LATE;
-    }
-
-    /* And now do the actual send. This is platform specific. */
-    #if defined XPF_PLATFORM_WIN_UM
-        int bytesSent = ::send((*clientConnection).ClientSocket,
-                                reinterpret_cast<const char*>(Bytes),
-                                static_cast<int>(NumberOfBytes),
-                                0);
-        if (SOCKET_ERROR != bytesSent)
-        {
-            return (static_cast<int>(NumberOfBytes) != bytesSent) ? STATUS_PARTIAL_COPY
-                                                                  : STATUS_SUCCESS;
-        }
-        switch (::WSAGetLastError())
-        {
-            case WSAESHUTDOWN:          // The socket has been shut down.
-            case WSAENOTCONN:           // The socket is not connected.
-            case WSAECONNABORTED:       // The virtual circuit was terminated due to a time-out or other failure.
-                                        //     The application should close the socket as it is no longer usable.
-            case WSAECONNRESET:         // The virtual circuit was reset by the remote side executing a hard or abortive close.
-                                        //     The application should close the socket as it is no longer usable.
-            case WSAEHOSTUNREACH:       // The remote host cannot be reached from this host at this time.
-            case WSAENETRESET:          // The connection has been broken due to the keep-alive activity
-                                        //     detecting a failure while the operation was in progress.
-            {
-                return STATUS_CONNECTION_ABORTED;
-            }
-            default:
-            {
-                return STATUS_NETWORK_BUSY;
-            }
-        }
-    #else
-        #error Unknown Platform
-    #endif
-}
-
-_Must_inspect_result_
-NTSTATUS
-XPF_API
-xpf::ServerSocket::ReceiveDataFromClientConnection(
-    _Inout_ size_t* NumberOfBytes,
-    _Inout_ uint8_t* Bytes,
-    _Inout_ xpf::SharedPointer<IClientCookie>& ClientConnection
-) noexcept(true)
-{
-    XPF_MAX_PASSIVE_LEVEL();
-
-    /* Validate the parameters. Enforce 64 kb limit. */
-    if ((nullptr == Bytes) || (nullptr == NumberOfBytes) ||
-        (0 == *NumberOfBytes) || (xpf::NumericLimits<uint16_t>::MaxValue() < *NumberOfBytes))
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    /* Then we get to the underlying data. */
-    auto clientConnection = xpf::DynamicSharedPointerCast<xpf::ServerSocketClientData>(ClientConnection);
-    if (clientConnection.IsEmpty())
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    /* If the connection is tearing down, we bail. */
-    xpf::RundownGuard connectionGuard((*clientConnection).ClientRundown);
-    if (!connectionGuard.IsRundownAcquired())
-    {
-        return STATUS_TOO_LATE;
-    }
-
-    /* And now do the actual send. This is platform specific. */
-    #if defined XPF_PLATFORM_WIN_UM
-        int bytesReceived = ::recv((*clientConnection).ClientSocket,
-                                   reinterpret_cast<char*>(Bytes),
-                                   static_cast<int>(*NumberOfBytes),
-                                   0);
-        if (SOCKET_ERROR != bytesReceived)
-        {
-            if (bytesReceived > static_cast<int>(*NumberOfBytes))
-            {
-                return STATUS_BUFFER_OVERFLOW;
-            }
-
-            *NumberOfBytes = static_cast<size_t>(bytesReceived);
-            return STATUS_SUCCESS;
-        }
-        switch (::WSAGetLastError())
-        {
-            case WSAESHUTDOWN:          // The socket has been shut down.
-            case WSAENOTCONN:           // The socket is not connected.
-            case WSAECONNABORTED:       // The virtual circuit was terminated due to a time-out or other failure.
-                                        //     The application should close the socket as it is no longer usable.
-            case WSAECONNRESET:         // The virtual circuit was reset by the remote side executing a hard or abortive close.
-                                        //     The application should close the socket as it is no longer usable.
-            case WSAENETRESET:          // The connection has been broken due to the keep-alive activity
-                                        //     detecting a failure while the operation was in progress.
-            {
-                return STATUS_CONNECTION_ABORTED;
-            }
-            default:
-            {
-                return STATUS_NETWORK_BUSY;
-            }
-        }
-    #else
-        #error Unknown Platform
-    #endif
 }
 
 _Must_inspect_result_
@@ -650,10 +442,28 @@ xpf::ServerSocket::SendData(
 
     for (size_t retries = 0; retries < 5; ++retries)
     {
+        /* Then we get to the underlying data. */
+        auto connection = xpf::DynamicSharedPointerCast<xpf::ServerSocketClientData>(clientConnection);
+        if (connection.IsEmpty())
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        /* If the connection is tearing down, we bail. */
+        xpf::RundownGuard connectionGuard((*connection).ClientRundown);
+        if (!connectionGuard.IsRundownAcquired())
+        {
+            return STATUS_TOO_LATE;
+        }
+
+        /* We need the api provider. */
+        xpf::ServerSocketData* serverSocketData = reinterpret_cast<xpf::ServerSocketData*>(this->m_ServerSocketData);
+
         /* Now send the data to this client connection. */
-        status = this->SendDataToClientConnection(NumberOfBytes,
-                                                  Bytes,
-                                                  clientConnection);
+        status = xpf::BerkeleySocket::Send(serverSocketData->ApiProvider,
+                                           (*connection).ClientSocket,
+                                           NumberOfBytes,
+                                           Bytes);
         /* If the network was busy, we will retry. */
         if (STATUS_NETWORK_BUSY != status)
         {
@@ -686,10 +496,28 @@ xpf::ServerSocket::ReceiveData(
 
     for (size_t retries = 0; retries < 5; ++retries)
     {
+        /* Then we get to the underlying data. */
+        auto connection = xpf::DynamicSharedPointerCast<xpf::ServerSocketClientData>(clientConnection);
+        if (connection.IsEmpty())
+        {
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        /* If the connection is tearing down, we bail. */
+        xpf::RundownGuard connectionGuard((*connection).ClientRundown);
+        if (!connectionGuard.IsRundownAcquired())
+        {
+            return STATUS_TOO_LATE;
+        }
+
+        /* We need the api provider. */
+        xpf::ServerSocketData* serverSocketData = reinterpret_cast<xpf::ServerSocketData*>(this->m_ServerSocketData);
+
         /* Now send the data to this client connection. */
-        status = this->ReceiveDataFromClientConnection(NumberOfBytes,
-                                                       Bytes,
-                                                       clientConnection);
+        status = xpf::BerkeleySocket::Receive(serverSocketData->ApiProvider,
+                                              (*connection).ClientSocket,
+                                              NumberOfBytes,
+                                              Bytes);
         /* If the network was busy, we will retry. */
         if (STATUS_NETWORK_BUSY != status)
         {

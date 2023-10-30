@@ -43,6 +43,9 @@ namespace xpf
 class IStreamReader
 {
  public:
+/**
+ * @brief Copy and move semantics are deleted.
+ */
 XPF_CLASS_COPY_MOVE_BEHAVIOR(IStreamReader, delete);
 
 /**
@@ -89,6 +92,9 @@ ReadBytes(
 class IStreamWriter
 {
  public:
+/**
+ * @brief Copy and move semantics are deleted.
+ */
 XPF_CLASS_COPY_MOVE_BEHAVIOR(IStreamWriter, delete);
 
 /**
@@ -136,6 +142,9 @@ template <class AllocatorType = xpf::MemoryAllocator>
 class StreamReader final : public xpf::IStreamReader
 {
  public:
+/**
+ * @brief Copy and move semantics are deleted.
+ */
 XPF_CLASS_COPY_MOVE_BEHAVIOR(StreamReader, delete);
 
 /**
@@ -271,6 +280,9 @@ template <class AllocatorType = xpf::MemoryAllocator>
 class StreamWriter final : public xpf::IStreamWriter
 {
  public:
+/**
+ * @brief Copy and move semantics are deleted.
+ */
 XPF_CLASS_COPY_MOVE_BEHAVIOR(StreamWriter, delete);
 
 /**

@@ -208,3 +208,58 @@ XPF_TEST_SCENARIO(TestSocketClientServeir, SendReceive)
     XPF_TEST_EXPECT_TRUE(NT_SUCCESS(serverContext.ReturnStatus));
     XPF_TEST_EXPECT_TRUE(NT_SUCCESS(clientContext.ReturnStatus));
 }
+
+/**
+ * @brief       This tests the connection to httpbin. An actual site.
+ */
+XPF_TEST_SCENARIO(TestSocketClientServeir, HttpBinRequest)
+{
+    //
+    // Use https://httpbin.org/#/HTTP_Methods/get_get to connect to a real site.
+    // We just want to see that the resolution of ip address works.
+    // And we can get an 200 success response code.
+    //
+    xpf::ClientSocket client("httpbin.org", "80");
+    xpf::StringView<char> httpGetRequest = "GET /uuid HTTP/1.1\r\n"
+                                           "Host: httpbin.org\r\n"
+                                           "Connection: close\r\n"
+                                           "\r\n";
+    NTSTATUS status = client.Connect();
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
+
+    status = client.SendData(httpGetRequest.BufferSize(),
+                             reinterpret_cast<const uint8_t*>(httpGetRequest.Buffer()));
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
+
+    xpf::Buffer response;
+    status = response.Resize(4096);
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
+
+    xpf::ApiZeroMemory(response.GetBuffer(), response.GetSize());
+    size_t responseSize = response.GetSize();
+
+    //
+    // A sample of expected response:
+    //
+    // "HTTP/1.1 200 OK\r\n
+    // Date: Mon, 30 Oct 2023 14:57:15 GMT\r\n
+    // Content-Type: application/json\r\n
+    // Content-Length: 53\r\n
+    // Connection: close\r\n
+    // Server: gunicorn/19.9.0\r\n
+    // Access-Control-Allow-Origin: *\r\n
+    // Access-Control-Allow-Credentials: true\r\n
+    // \r\n
+    // {\n  \"uuid\": \"54496741-7c79-4d38-...
+    //
+    status = client.ReceiveData(&responseSize,
+                                response.GetBuffer());
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
+
+    xpf::StringView<char> actualResponse(reinterpret_cast<const char*>(response.GetBuffer()),
+                                         responseSize);
+    XPF_TEST_EXPECT_TRUE(actualResponse.Substring("HTTP/1.1 200 OK", true, nullptr));
+
+    status = client.Disconnect();
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
+}
