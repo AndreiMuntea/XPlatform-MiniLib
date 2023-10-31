@@ -245,7 +245,7 @@ xpf::ApiSleep(
     _In_ uint32_t NumberOfMilliSeconds
 ) noexcept(true)
 {
-    XPF_MAX_APC_LEVEL();
+    XPF_MAX_DISPATCH_LEVEL();
 
     #if defined XPF_PLATFORM_WIN_KM
         //
@@ -264,8 +264,11 @@ xpf::ApiSleep(
         //
         // We don't care about the return status.
         //
-        const NTSTATUS status = ::KeDelayExecutionThread(KernelMode, FALSE, &interval);
-        UNREFERENCED_PARAMETER(status);
+        if (APC_LEVEL >= ::KeGetCurrentIrql())
+        {
+            const NTSTATUS status = ::KeDelayExecutionThread(KernelMode, FALSE, &interval);
+            UNREFERENCED_PARAMETER(status);
+        }
 
     #elif defined XPF_PLATFORM_WIN_UM
         ::Sleep(NumberOfMilliSeconds);

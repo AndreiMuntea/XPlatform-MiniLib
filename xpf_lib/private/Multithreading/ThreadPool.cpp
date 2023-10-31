@@ -386,6 +386,8 @@ xpf::ThreadPool::DestroyThreadContext(
     _Inout_ xpf::SharedPointer<xpf::ThreadPoolThreadContext, xpf::CriticalMemoryAllocator>& ThreadContext
 ) noexcept(true)
 {
+    XPF_MAX_PASSIVE_LEVEL();
+
     //
     // Can't destroy empty thread context.
     //

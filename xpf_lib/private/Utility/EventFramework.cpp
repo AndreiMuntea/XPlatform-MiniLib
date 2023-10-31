@@ -528,6 +528,8 @@ xpf::EventBus::CloneListeners(
     void
 ) noexcept(true)
 {
+    XPF_MAX_PASSIVE_LEVEL();
+
     xpf::SharedPointer<xpf::EventBus::ListenersList, xpf::CriticalMemoryAllocator> clone;
 
     //

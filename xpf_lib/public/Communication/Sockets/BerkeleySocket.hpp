@@ -80,6 +80,20 @@ DeInitializeSocketApiProvider(
 
 
 /**
+ * @brief Address info structure is different on each platform.
+ *        Provide a more easier way to access.
+ */
+#if defined XPF_PLATFORM_WIN_UM
+    using AddressInfo = struct addrinfo;
+#elif defined XPF_PLATFORM_LINUX_UM
+    using AddressInfo = struct addrinfo;
+#elif defined XPF_PLATFORM_WIN_KM
+    using AddressInfo = ADDRINFOEXW;
+#else
+    #error Unknown Platform
+#endif
+
+/**
  * @brief The GetAddressInformation function provides protocol-independent translation from an ANSI host name to an address.
  *
  * @param[in] SocketApiProvider - An opaque pointer which was returned by InitializeSocketApiProvider.
@@ -107,7 +121,7 @@ GetAddressInformation(
     _In_ xpf::BerkeleySocket::SocketApiProvider SocketApiProvider,
     _In_ _Const_ const xpf::StringView<char>& NodeName,
     _In_ _Const_ const xpf::StringView<char>& ServiceName,
-    _Out_ struct addrinfo** AddrInfo
+    _Out_ xpf::BerkeleySocket::AddressInfo** AddrInfo
 ) noexcept(true);
 
 /**
@@ -126,7 +140,7 @@ NTSTATUS
 XPF_API
 FreeAddressInformation(
     _In_ xpf::BerkeleySocket::SocketApiProvider SocketApiProvider,
-    _Inout_ struct addrinfo** AddrInfo
+    _Inout_ xpf::BerkeleySocket::AddressInfo** AddrInfo
 ) noexcept(true);
 
 //

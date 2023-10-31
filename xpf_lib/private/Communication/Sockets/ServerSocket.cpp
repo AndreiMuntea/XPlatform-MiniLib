@@ -23,7 +23,7 @@ namespace xpf
 
 struct ServerSocketData
 {
-    struct addrinfo* AddressInfo = nullptr;
+    xpf::BerkeleySocket::AddressInfo* AddressInfo = nullptr;
     xpf::BerkeleySocket::Socket ServerSocket = nullptr;
     xpf::BerkeleySocket::SocketApiProvider ApiProvider = nullptr;
 };  // struct ServerSocketData
@@ -136,7 +136,7 @@ xpf::ServerSocket::CreateServerSocketData(
         goto CleanUp;
     }
 
-    for (struct addrinfo* crt = data->AddressInfo; nullptr != crt; crt = crt->ai_next)
+    for (xpf::BerkeleySocket::AddressInfo* crt = data->AddressInfo; nullptr != crt; crt = crt->ai_next)
     {
         /* Create a SOCKET for the server to listen for client connections. */
         status = xpf::BerkeleySocket::CreateSocket(data->ApiProvider,

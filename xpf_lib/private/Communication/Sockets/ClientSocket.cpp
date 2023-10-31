@@ -26,7 +26,7 @@ struct ClientSocketData
 {
     bool IsConnected = false;
 
-    struct addrinfo* AddressInfo = nullptr;
+    xpf::BerkeleySocket::AddressInfo* AddressInfo = nullptr;
     xpf::BerkeleySocket::Socket ServerSocket = nullptr;
     xpf::BerkeleySocket::SocketApiProvider ApiProvider = nullptr;
 };  // struct ClientSocketData
@@ -156,7 +156,7 @@ xpf::ClientSocket::Connect(
 
 
     /* Attempt to connect to one of the endpoints that getaddrinfo returned. */
-    for (struct addrinfo* crt = data->AddressInfo; nullptr != crt; crt = crt->ai_next)
+    for (xpf::BerkeleySocket::AddressInfo* crt = data->AddressInfo; nullptr != crt; crt = crt->ai_next)
     {
         /* Instantiate the socket. */
         NTSTATUS status = xpf::BerkeleySocket::CreateSocket(data->ApiProvider,
