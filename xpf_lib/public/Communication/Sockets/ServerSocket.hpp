@@ -87,7 +87,7 @@ virtual NTSTATUS
 XPF_API
 Start(
     void
-) noexcept(true);
+) noexcept(true) override;
 
 /**
  * @brief Stop the server gracefully.

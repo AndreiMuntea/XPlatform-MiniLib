@@ -236,7 +236,10 @@
     #include <errno.h>
     #include <iconv.h>
     #include <wchar.h>
+    #include <netdb.h>
+    #include <sys/types.h>
     #include <sys/time.h>
+    #include <sys/socket.h>
     #include <uuid/uuid.h>
     #include <cstdlib>
     #include <cassert>
@@ -555,8 +558,8 @@ static_assert(sizeof(uuid_t)  == 16, "uuid_t should be 16 byte(s)!");
      /*                                                         */          \
      /* @return A reference to *this object after copy.         */          \
      /*                                                         */          \
-     ClassName& operator=(                         /* NOLINT(*) */         \
-         _In_ _Const_ const ClassName& Other       /* NOLINT(*) */         \
+     ClassName& operator=(                         /* NOLINT(*) */          \
+         _In_ _Const_ const ClassName& Other       /* NOLINT(*) */          \
      ) noexcept(true) = Behavior;                  /* NOLINT(*) */
 
  /**

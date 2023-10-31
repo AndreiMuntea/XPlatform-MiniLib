@@ -25,6 +25,7 @@ xpf::ApiPanic(
     _In_ NTSTATUS Status
 ) noexcept(true)
 {
+    XPF_MAX_DISPATCH_LEVEL();
     XPF_VERIFY(!NT_SUCCESS(Status));
 
     #if defined XPF_PLATFORM_WIN_KM
@@ -46,6 +47,8 @@ xpf::ApiCopyMemory(
     _In_ size_t Size
 ) noexcept(true)
 {
+    XPF_MAX_DISPATCH_LEVEL();
+
     if ((nullptr == Destination) || (nullptr == Source) || (0 == Size))
     {
         return;
@@ -67,6 +70,8 @@ xpf::ApiZeroMemory(
     _In_ size_t Size
 ) noexcept(true)
 {
+    XPF_MAX_DISPATCH_LEVEL();
+
     if ((nullptr == Destination) || (0 == Size))
     {
         return;
@@ -87,6 +92,8 @@ xpf::ApiFreeMemory(
     _Inout_ void** MemoryBlock
 ) noexcept(true)
 {
+    XPF_MAX_DISPATCH_LEVEL();
+
     //
     // Sanity checks.
     //
@@ -129,6 +136,8 @@ xpf::ApiAllocateMemory(
     _In_ bool CriticalAllocation
 ) noexcept(true)
 {
+    XPF_MAX_DISPATCH_LEVEL();
+
     void* block = nullptr;
     size_t retries = 0;
 
@@ -236,6 +245,8 @@ xpf::ApiSleep(
     _In_ uint32_t NumberOfMilliSeconds
 ) noexcept(true)
 {
+    XPF_MAX_APC_LEVEL();
+
     #if defined XPF_PLATFORM_WIN_KM
         //
         // Specifies the absolute or relative time, in units of 100 nanoseconds,
@@ -281,6 +292,8 @@ xpf::ApiYieldProcesor(
     void
 ) noexcept(true)
 {
+    XPF_MAX_DISPATCH_LEVEL();
+
     #if defined XPF_PLATFORM_WIN_KM || defined XPF_PLATFORM_WIN_UM
         YieldProcessor();
     #elif defined XPF_PLATFORM_LINUX_UM
@@ -296,6 +309,8 @@ xpf::ApiCurrentTime(
     void
 ) noexcept(true)
 {
+    XPF_MAX_DISPATCH_LEVEL();
+
     #if defined XPF_PLATFORM_WIN_KM
         LARGE_INTEGER largeInteger;
         xpf::ApiZeroMemory(&largeInteger, sizeof(largeInteger));
@@ -362,6 +377,8 @@ xpf::ApiCharToLower(
     _In_ wchar_t Character
 ) noexcept(true)
 {
+    XPF_MAX_DISPATCH_LEVEL();
+
     #if defined XPF_PLATFORM_WIN_UM || defined XPF_PLATFORM_LINUX_UM
         return static_cast<wchar_t>(::towlower(static_cast<wint_t>(Character)));
     #elif defined XPF_PLATFORM_WIN_KM
@@ -394,6 +411,8 @@ xpf::ApiCharToUpper(
     _In_ wchar_t Character
 ) noexcept(true)
 {
+    XPF_MAX_DISPATCH_LEVEL();
+
     #if defined XPF_PLATFORM_WIN_UM || defined XPF_PLATFORM_LINUX_UM
         return static_cast<wchar_t>(::towupper(static_cast<wint_t>(Character)));
     #elif defined XPF_PLATFORM_WIN_KM
@@ -428,6 +447,8 @@ xpf::ApiEqualCharacters(
     _In_ bool CaseSensitive
 ) noexcept(true)
 {
+    XPF_MAX_DISPATCH_LEVEL();
+
     //
     // If the comparison is case insensitive we need to lowercase the characters
     // before doing the actual comparison.
@@ -447,6 +468,8 @@ xpf::ApiRandomUuid(
     _Out_ uuid_t* NewUuid
 ) noexcept(true)
 {
+    XPF_MAX_DISPATCH_LEVEL();
+
     NTSTATUS status = STATUS_UNSUCCESSFUL;
 
     uuid_t newUuid;
@@ -504,7 +527,7 @@ xpf::ApiRandomUuid(
     //
     if (!NT_SUCCESS(status))
     {
-        for (size_t i = 0; i < sizeof(newUuid); i++)
+        for (size_t i = 0; i < sizeof(newUuid); )
         {
             const uint64_t currentTime = xpf::ApiCurrentTime();
             uint8_t lastByte = currentTime % 0xFF;
@@ -512,13 +535,12 @@ xpf::ApiRandomUuid(
             const bool isHexDigit = ((lastByte >= '0' && lastByte <= '9') ||
                                      (lastByte >= 'A' && lastByte <= 'F') ||
                                      (lastByte >= 'a' && lastByte <= 'f'));
-            if (!isHexDigit)
+            if (isHexDigit)
             {
-                lastByte = '0' + (lastByte % 10);
+                uint8_t* destination = reinterpret_cast<uint8_t*>(&newUuid);
+                xpf::ApiCopyMemory(&destination[i], &lastByte, sizeof(lastByte));
+                i++;
             }
-
-            uint8_t* destination = reinterpret_cast<uint8_t*>(&newUuid);
-            xpf::ApiCopyMemory(&destination[i], &lastByte, sizeof(lastByte));
         }
     }
 
@@ -532,6 +554,8 @@ xpf::ApiAreUuidsEqual(
     _In_ const uuid_t Second
 ) noexcept(true)
 {
+    XPF_MAX_DISPATCH_LEVEL();
+
     #if defined XPF_PLATFORM_WIN_UM || defined XPF_PLATFORM_WIN_KM
         return (FALSE != IsEqualIID(First, Second));
     #elif defined XPF_PLATFORM_LINUX_UM

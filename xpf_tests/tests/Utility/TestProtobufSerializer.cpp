@@ -120,10 +120,10 @@ XPF_TEST_SCENARIO(TestProtobufSerializer, UnsignedValues)
     XPF_TEST_EXPECT_TRUE(serializedBytes[7] == 0b00010001);     /* 0010001 will be 00010001 */
 
     XPF_TEST_EXPECT_TRUE(protobuf.DeserializeUI64(deserializedValue, streamReader));
-    XPF_TEST_EXPECT_TRUE(deserializedValue == 9999999999999999);
+    XPF_TEST_EXPECT_TRUE(deserializedValue == 9999999999999999ull);
 
     /* 9 bytes - 2459565876494606882 == 0100010 0010001 0001000 1000100 0100010 0010001 0001000 1000100 0100010 */
-    XPF_TEST_EXPECT_TRUE(protobuf.SerializeUI64(2459565876494606882, streamWriter));
+    XPF_TEST_EXPECT_TRUE(protobuf.SerializeUI64(2459565876494606882ull, streamWriter));
     XPF_TEST_EXPECT_TRUE(streamReader.ReadBytes(9, &serializedBytes[0], true));
     XPF_TEST_EXPECT_TRUE(serializedBytes[0] == 0b10100010);     /* 0100010 will be 10100010 */
     XPF_TEST_EXPECT_TRUE(serializedBytes[1] == 0b11000100);     /* 1000100 will be 11000100 */
@@ -139,7 +139,7 @@ XPF_TEST_SCENARIO(TestProtobufSerializer, UnsignedValues)
     XPF_TEST_EXPECT_TRUE(deserializedValue == 2459565876494606882);
 
     /* 10 bytes - 18446744073709551615 == 0000001 1111111 1111111 1111111 1111111 1111111 1111111 1111111 1111111 1111111 */
-    XPF_TEST_EXPECT_TRUE(protobuf.SerializeUI64(18446744073709551615, streamWriter));
+    XPF_TEST_EXPECT_TRUE(protobuf.SerializeUI64(18446744073709551615ull, streamWriter));
     XPF_TEST_EXPECT_TRUE(streamReader.ReadBytes(10, &serializedBytes[0], true));
     XPF_TEST_EXPECT_TRUE(serializedBytes[0] == 0b11111111);     /* 1111111 will be 11111111 */
     XPF_TEST_EXPECT_TRUE(serializedBytes[1] == 0b11111111);     /* 1111111 will be 11111111 */
@@ -153,7 +153,7 @@ XPF_TEST_SCENARIO(TestProtobufSerializer, UnsignedValues)
     XPF_TEST_EXPECT_TRUE(serializedBytes[9] == 0b00000001);     /* 0000001 will be 00000001 */
 
     XPF_TEST_EXPECT_TRUE(protobuf.DeserializeUI64(deserializedValue, streamReader));
-    XPF_TEST_EXPECT_TRUE(deserializedValue == 18446744073709551615);
+    XPF_TEST_EXPECT_TRUE(deserializedValue == 18446744073709551615ull);
 }
 
 /**

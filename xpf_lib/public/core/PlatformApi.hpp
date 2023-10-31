@@ -44,6 +44,14 @@ ApiPanic(
 
 
 /**
+ * @brief Helper macro for verifying an invariant.
+ *        If the condition is not met, an assertion is raised regardless on configuration!
+ *        This is useful to validate logic bugs - both on debug and release.
+ */
+#define XPF_DEATH_ON_FAILURE(Expression)     ((Expression) ? true                                                       \
+                                                           : (xpf::ApiPanic(STATUS_UNHANDLED_EXCEPTION), false))
+
+/**
  * @brief Helpers macro for ASSERT and VERIFY.
  *        Similar with NT_ASSERT and NT_VERIFY from Windows.
  */
@@ -74,13 +82,6 @@ ApiPanic(
     #error Unknown Configuration
 #endif
 
-/**
- * @brief Helper macro for verifying an invariant.
- *        If the condition is not met, an assertion is raised regardless on configuration!
- *        This is useful to validate logic bugs - both on debug and release.
- */
-#define XPF_DEATH_ON_FAILURE(Expression)     ((Expression) ? true                                                       \
-                                                           : (xpf::ApiPanic(STATUS_UNHANDLED_EXCEPTION), false))
 namespace xpf
 {
 /**

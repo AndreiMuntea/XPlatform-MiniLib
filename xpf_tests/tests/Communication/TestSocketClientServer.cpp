@@ -93,6 +93,10 @@ MockServerCallback(
     xpf::StringView<char> responseData(response, recvDataSize);
     mockContext->ReturnStatus = responseData.Equals("General Kenobi!", true) ? STATUS_SUCCESS
                                                                              : STATUS_DATA_ERROR;
+    if (!NT_SUCCESS(mockContext->ReturnStatus))
+    {
+        return;
+    }
 
     /* All good. */
     mockContext->ReturnStatus = STATUS_SUCCESS;
@@ -138,8 +142,12 @@ MockClientCallback(
 
     /* Validate the hello buffer. */
     xpf::StringView<char> helloData(hello, recvDataSize);
-    mockContext->ReturnStatus = helloData.Equals("Hello There!", true) ? STATUS_SUCCESS
+    mockContext->ReturnStatus = helloData.Equals("Hello there!", true) ? STATUS_SUCCESS
                                                                        : STATUS_DATA_ERROR;
+    if (!NT_SUCCESS(mockContext->ReturnStatus))
+    {
+        return;
+    }
 
     /* Send a dummy buffer. */
     xpf::StringView<char> response = "General Kenobi!";

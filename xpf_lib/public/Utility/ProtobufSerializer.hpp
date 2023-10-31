@@ -49,26 +49,26 @@ virtual ~Protobuf(
 }
 
 /**
- * @brief Copy constructor - default.
+ * @brief Copy constructor - delete.
  * 
  * @param[in] Other - The other object to construct from.
  */
 Protobuf(
     _In_ _Const_ const Protobuf& Other
-) noexcept(true) = default;
+) noexcept(true) = delete;
 
 /**
- * @brief Move constructor - default.
+ * @brief Move constructor - delete.
  * 
  * @param[in,out] Other - The other object to construct from.
  *                        Will be invalidated after this call.
  */
 Protobuf(
     _Inout_ Protobuf&& Other
-) noexcept(true) = default;
+) noexcept(true) = delete;
 
 /**
- * @brief Copy assignment - default.
+ * @brief Copy assignment - delete.
  * 
  * @param[in] Other - The other object to construct from.
  * 
@@ -77,10 +77,10 @@ Protobuf(
 Protobuf&
 operator=(
     _In_ _Const_ const Protobuf& Other
-) noexcept(true) = default;
+) noexcept(true) = delete;
 
 /**
- * @brief Move assignment - default.
+ * @brief Move assignment - delete.
  * 
  * @param[in,out] Other - The other object to construct from.
  *                        Will be invalidated after this call.
@@ -90,7 +90,7 @@ operator=(
 Protobuf&
 operator=(
     _Inout_ Protobuf&& Other
-) noexcept(true) = default;
+) noexcept(true) = delete;
 
 /**
  * @brief This method is used to serialize a signed number.

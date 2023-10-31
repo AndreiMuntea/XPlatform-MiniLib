@@ -136,25 +136,52 @@ xpf::ServerSocket::CreateServerSocketData(
         goto CleanUp;
     }
 
-    /* Create a SOCKET for the server to listen for client connections. */
-    status = xpf::BerkeleySocket::CreateSocket(data->ApiProvider,
-                                               data->AddressInfo->ai_family,
-                                               data->AddressInfo->ai_socktype,
-                                               data->AddressInfo->ai_protocol,
-                                               &data->ServerSocket);
-    if (!NT_SUCCESS(status))
+    for (struct addrinfo* crt = data->AddressInfo; nullptr != crt; crt = crt->ai_next)
     {
+        /* Create a SOCKET for the server to listen for client connections. */
+        status = xpf::BerkeleySocket::CreateSocket(data->ApiProvider,
+                                                   crt->ai_family,
+                                                   crt->ai_socktype,
+                                                   crt->ai_protocol,
+                                                   &data->ServerSocket);
+        if (!NT_SUCCESS(status))
+        {
+            continue;
+        }
+
+        /* Setup the TCP listening socket. */
+        status = xpf::BerkeleySocket::Bind(data->ApiProvider,
+                                           data->ServerSocket,
+                                           crt->ai_addr,
+                                           static_cast<int>(crt->ai_addrlen));
+        if (!NT_SUCCESS(status))
+        {
+            NTSTATUS shutdownStatus = xpf::BerkeleySocket::ShutdownSocket(data->ApiProvider,
+                                                                          &data->ServerSocket);
+            XPF_DEATH_ON_FAILURE(NT_SUCCESS(shutdownStatus));
+            continue;
+        }
+
+        /* We're binded. */
+        break;
+    }
+
+    if (nullptr == data->ServerSocket)
+    {
+        status = STATUS_CONNECTION_REFUSED;
         goto CleanUp;
     }
 
-    /* Setup the TCP listening socket. */
-    status = xpf::BerkeleySocket::Bind(data->ApiProvider,
-                                       data->ServerSocket,
-                                       data->AddressInfo->ai_addr,
-                                       data->AddressInfo->ai_addrlen);
-    if (!NT_SUCCESS(status))
+    /* We no longer need the address info. */
+    if (nullptr != data->AddressInfo)
     {
-        goto CleanUp;
+        status = xpf::BerkeleySocket::FreeAddressInformation(data->ApiProvider,
+                                                             &data->AddressInfo);
+        data->AddressInfo = nullptr;
+        if (!NT_SUCCESS(status))
+        {
+            goto CleanUp;
+        }
     }
 
     /* Put the socket in a listening state. */
@@ -196,16 +223,21 @@ xpf::ServerSocket::DestroyServerSocketData(
         NTSTATUS shutdownStatus = xpf::BerkeleySocket::ShutdownSocket(data->ApiProvider,
                                                                       &data->ServerSocket);
         XPF_DEATH_ON_FAILURE(NT_SUCCESS(shutdownStatus));
+
+        data->ServerSocket = nullptr;
     }
     if (nullptr != data->AddressInfo)
     {
         NTSTATUS freeStatus = xpf::BerkeleySocket::FreeAddressInformation(data->ApiProvider,
                                                                           &data->AddressInfo);
         XPF_DEATH_ON_FAILURE(NT_SUCCESS(freeStatus));
+
+        data->AddressInfo = nullptr;
     }
     if (nullptr != data->ApiProvider)
     {
         xpf::BerkeleySocket::DeInitializeSocketApiProvider(&data->ApiProvider);
+        data->ApiProvider = nullptr;
     }
 
     //

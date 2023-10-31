@@ -100,16 +100,21 @@ xpf::ClientSocket::DestroyClientSocketData(
         NTSTATUS shutdownStatus = xpf::BerkeleySocket::ShutdownSocket(data->ApiProvider,
                                                                       &data->ServerSocket);
         XPF_DEATH_ON_FAILURE(NT_SUCCESS(shutdownStatus));
+
+        data->ServerSocket = nullptr;
     }
     if (nullptr != data->AddressInfo)
     {
         NTSTATUS freeStatus = xpf::BerkeleySocket::FreeAddressInformation(data->ApiProvider,
                                                                           &data->AddressInfo);
         XPF_DEATH_ON_FAILURE(NT_SUCCESS(freeStatus));
+
+        data->AddressInfo = nullptr;
     }
     if (nullptr != data->ApiProvider)
     {
         xpf::BerkeleySocket::DeInitializeSocketApiProvider(&data->ApiProvider);
+        data->ApiProvider = nullptr;
     }
 
     //
@@ -186,6 +191,15 @@ xpf::ClientSocket::Connect(
         return STATUS_CONNECTION_REFUSED;
     }
 
+    /* We no longer need the address info. */
+    if (nullptr != data->AddressInfo)
+    {
+        NTSTATUS freeStatus = xpf::BerkeleySocket::FreeAddressInformation(data->ApiProvider,
+                                                                          &data->AddressInfo);
+        data->AddressInfo = nullptr;
+        XPF_DEATH_ON_FAILURE(NT_SUCCESS(freeStatus));
+    }
+
     /* We managed to connect. */
     data->IsConnected = true;
     return STATUS_SUCCESS;
@@ -218,6 +232,8 @@ xpf::ClientSocket::Disconnect(
     NTSTATUS retStatus = xpf::BerkeleySocket::ShutdownSocket(data->ApiProvider,
                                                              &data->ServerSocket);
     data->IsConnected = false;
+    data->ServerSocket = nullptr;
+
     return retStatus;
 }
 

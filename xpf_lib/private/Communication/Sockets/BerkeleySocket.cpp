@@ -27,6 +27,8 @@ struct SocketApiProviderInternal
 {
     #if defined XPF_PLATFORM_WIN_UM
         WSAData WsaLibData = { 0 };
+    #elif defined XPF_PLATFORM_LINUX_UM
+        /* Linux has no data specific for now. */
     #else
         #error Unknown Platform
     #endif
@@ -36,6 +38,8 @@ struct SocketInternal
 {
     #if defined XPF_PLATFORM_WIN_UM
         SOCKET Socket = INVALID_SOCKET;
+    #elif defined XPF_PLATFORM_LINUX_UM
+        int Socket = -1;
     #else
         #error Unknown Platform
     #endif
@@ -84,6 +88,8 @@ xpf::BerkeleySocket::InitializeSocketApiProvider(
     #if defined XPF_PLATFORM_WIN_UM
         xpf::ApiZeroMemory(&apiProvider->WsaLibData,
                            sizeof(apiProvider->WsaLibData));
+    #elif defined XPF_PLATFORM_LINUX_UM
+        /* Linux has no data specific for now. */
     #else
         #error Unknown Platform
     #endif
@@ -99,6 +105,8 @@ xpf::BerkeleySocket::InitializeSocketApiProvider(
             xpf::MemoryAllocator::FreeMemory(reinterpret_cast<void**>(&apiProvider));
             return STATUS_CONNECTION_INVALID;
         }
+    #elif defined XPF_PLATFORM_LINUX_UM
+        /* Linux has no data specific for now. */
     #else
         #error Unknown Platform
     #endif
@@ -139,6 +147,8 @@ xpf::BerkeleySocket::DeInitializeSocketApiProvider(
 
         xpf::ApiZeroMemory(&apiProvider->WsaLibData,
                            sizeof(apiProvider->WsaLibData));
+    #elif defined XPF_PLATFORM_LINUX_UM
+        /* Linux has no data specific for now. */
     #else
         #error Unknown Platform
     #endif
@@ -183,8 +193,8 @@ xpf::BerkeleySocket::GetAddressInformation(
     //
     // Platform specific query.
     //
-    #if defined XPF_PLATFORM_WIN_UM
-        int result = ::getaddrinfo(NodeName.Buffer(), ServiceName.Buffer(), nullptr, AddrInfo);
+    #if defined XPF_PLATFORM_WIN_UM || defined XPF_PLATFORM_LINUX_UM
+        int result = getaddrinfo(NodeName.Buffer(), ServiceName.Buffer(), nullptr, AddrInfo);
         if (0 != result)
         {
             *AddrInfo = nullptr;
@@ -229,8 +239,8 @@ xpf::BerkeleySocket::FreeAddressInformation(
     //
     // Platform specific cleanup.
     //
-    #if defined XPF_PLATFORM_WIN_UM
-        ::freeaddrinfo(*AddrInfo);
+    #if defined XPF_PLATFORM_WIN_UM || defined XPF_PLATFORM_LINUX_UM
+        freeaddrinfo(*AddrInfo);
     #else
         #error Unknown Platform
     #endif
@@ -284,6 +294,8 @@ xpf::BerkeleySocket::CreateSocket(
     //
     #if defined XPF_PLATFORM_WIN_UM
         newSocket->Socket = INVALID_SOCKET;
+    #elif defined XPF_PLATFORM_LINUX_UM
+        newSocket->Socket = -1;
     #else
         #error Unknown Platform
     #endif
@@ -294,6 +306,14 @@ xpf::BerkeleySocket::CreateSocket(
     #if defined XPF_PLATFORM_WIN_UM
         newSocket->Socket = ::socket(AddressFamily, Type, Protocol);
         if (INVALID_SOCKET == newSocket->Socket)
+        {
+            xpf::MemoryAllocator::Destruct(newSocket);
+            xpf::MemoryAllocator::FreeMemory(reinterpret_cast<void**>(&newSocket));
+            return STATUS_CONNECTION_INVALID;
+        }
+    #elif defined XPF_PLATFORM_LINUX_UM
+        newSocket->Socket = socket(AddressFamily, Type, Protocol);
+        if (-1 == newSocket->Socket)
         {
             xpf::MemoryAllocator::Destruct(newSocket);
             xpf::MemoryAllocator::FreeMemory(reinterpret_cast<void**>(&newSocket));
@@ -343,6 +363,13 @@ xpf::BerkeleySocket::ShutdownSocket(
             (void) ::closesocket(socket->Socket);
             socket->Socket = INVALID_SOCKET;
         }
+    #elif defined XPF_PLATFORM_LINUX_UM
+        if (-1 != socket->Socket)
+        {
+            (void) shutdown(socket->Socket, SHUT_RDWR);
+            (void) close(socket->Socket);
+            socket->Socket = -1;
+        }
     #else
         #error Unknown Platform
     #endif
@@ -388,8 +415,8 @@ xpf::BerkeleySocket::Bind(
     //
     // Platform specific bind
     //
-    #if defined XPF_PLATFORM_WIN_UM
-        int gleResult = ::bind(socket->Socket, LocalAddress, Length);
+    #if defined XPF_PLATFORM_WIN_UM || defined XPF_PLATFORM_LINUX_UM
+        int gleResult = bind(socket->Socket, LocalAddress, Length);
         if (0 != gleResult)
         {
             return STATUS_INVALID_CONNECTION;
@@ -436,6 +463,12 @@ xpf::BerkeleySocket::Listen(
         {
             return STATUS_INVALID_CONNECTION;
         }
+    #elif defined XPF_PLATFORM_LINUX_UM
+        int gleResult = listen(socket->Socket, 0x7fffffff);
+        if (0 != gleResult)
+        {
+            return STATUS_INVALID_CONNECTION;
+        }
     #else
         #error Unknown Platform
     #endif
@@ -474,8 +507,8 @@ xpf::BerkeleySocket::Connect(
     //
     // Platform specific connect.
     //
-    #if defined XPF_PLATFORM_WIN_UM
-        int gleResult = ::connect(socket->Socket, Address, Length);
+    #if defined XPF_PLATFORM_WIN_UM || defined XPF_PLATFORM_LINUX_UM
+        int gleResult = connect(socket->Socket, Address, Length);
         if (0 != gleResult)
         {
             return STATUS_INVALID_CONNECTION;
@@ -539,6 +572,14 @@ xpf::BerkeleySocket::Accept(
             xpf::MemoryAllocator::FreeMemory(reinterpret_cast<void**>(&newSocket));
             return STATUS_CONNECTION_REFUSED;
         }
+    #elif defined XPF_PLATFORM_LINUX_UM
+        newSocket->Socket = accept(socket->Socket, nullptr, nullptr);
+        if (-1 == newSocket->Socket)
+        {
+            xpf::MemoryAllocator::Destruct(newSocket);
+            xpf::MemoryAllocator::FreeMemory(reinterpret_cast<void**>(&newSocket));
+            return STATUS_CONNECTION_REFUSED;
+        }
     #else
         #error Unknown Platform
     #endif
@@ -589,7 +630,7 @@ xpf::BerkeleySocket::Send(
                                0);
         if (SOCKET_ERROR != bytesSent)
         {
-            return (static_cast<int>(NumberOfBytes) != bytesSent) ? STATUS_PARTIAL_COPY
+            return (static_cast<int>(NumberOfBytes) != bytesSent) ? STATUS_INVALID_BUFFER_SIZE
                                                                   : STATUS_SUCCESS;
         }
         switch (::WSAGetLastError())
@@ -603,6 +644,29 @@ xpf::BerkeleySocket::Send(
             case WSAEHOSTUNREACH:       // The remote host cannot be reached from this host at this time.
             case WSAENETRESET:          // The connection has been broken due to the keep-alive activity
                                         //     detecting a failure while the operation was in progress.
+            {
+                return STATUS_CONNECTION_ABORTED;
+            }
+            default:
+            {
+                return STATUS_NETWORK_BUSY;
+            }
+        }
+    #elif defined XPF_PLATFORM_LINUX_UM
+        ssize_t bytesSent = send(socket->Socket,
+                                 Bytes,
+                                 NumberOfBytes,
+                                 MSG_NOSIGNAL);
+        if (-1 != bytesSent)
+        {
+            return (static_cast<int>(NumberOfBytes) != bytesSent) ? STATUS_INVALID_BUFFER_SIZE
+                                                                  : STATUS_SUCCESS;
+        }
+        switch (errno)
+        {
+            case EPIPE:                 // The local end has been shut down on a connection oriented.
+            case ENOTSOCK:              // The file descriptor sockfd does not refer to a socket.
+            case ENOTCONN:              // The socket is not connected, and no target has been given.
             {
                 return STATUS_CONNECTION_ABORTED;
             }
@@ -674,6 +738,48 @@ xpf::BerkeleySocket::Receive(
                                         //     The application should close the socket as it is no longer usable.
             case WSAENETRESET:          // The connection has been broken due to the keep-alive activity
                                         //     detecting a failure while the operation was in progress.
+            {
+                return STATUS_CONNECTION_ABORTED;
+            }
+            default:
+            {
+                return STATUS_NETWORK_BUSY;
+            }
+        }
+    #elif defined XPF_PLATFORM_LINUX_UM
+        ssize_t bytesReceived = ::recv(socket->Socket,
+                                       Bytes,
+                                       *NumberOfBytes,
+                                       0);
+        //
+        // When a stream socket peer has performed an orderly shutdown, the
+        // return value will be 0 (the traditional "end-of-file" return).
+        //
+        if (0 == bytesReceived)
+        {
+            return STATUS_CONNECTION_ABORTED;
+        }
+
+        //
+        // These calls return the number of bytes received, or -1 if an
+        // error occurred.  In the event of an error, errno is set to
+        // indicate the error.
+        //
+        if (-1 != bytesReceived)
+        {
+            if (bytesReceived > static_cast<ssize_t>(*NumberOfBytes))
+            {
+                return STATUS_BUFFER_OVERFLOW;
+            }
+
+            *NumberOfBytes = static_cast<ssize_t>(bytesReceived);
+            return STATUS_SUCCESS;
+        }
+
+        switch (errno)
+        {
+            case ENOTSOCK:              // The file descriptor sockfd does not refer to a socket.
+            case ENOTCONN:              // The socket is not connected, and no target has been given.
             {
                 return STATUS_CONNECTION_ABORTED;
             }

@@ -33,7 +33,7 @@
      * @brief Helper MACRO to convert an error to an NTSTATUS.
      *        Just set the first bit.
      */
-    #define NTSTATUS_FROM_PLATFORM_ERROR(x)     ((NTSTATUS) (((x) | 0xC0000000)))
+    #define NTSTATUS_FROM_PLATFORM_ERROR(x)     ((NTSTATUS) (((x) | 0xE0000000)))
 
     //
     // SUCCESS TYPES
@@ -48,16 +48,23 @@
     #define STATUS_UNSUCCESSFUL                 ((NTSTATUS)0xC0000001L)
     #define STATUS_INVALID_HANDLE               ((NTSTATUS)0xC0000008L)
     #define STATUS_INVALID_PARAMETER            ((NTSTATUS)0xC000000DL)
+    #define STATUS_DATA_ERROR                   ((NTSTATUS)0xC000003EL)
     #define STATUS_QUOTA_EXCEEDED               ((NTSTATUS)0xC0000044L)
     #define STATUS_MUTANT_NOT_OWNED             ((NTSTATUS)0xC0000046L)
     #define STATUS_INTEGER_OVERFLOW             ((NTSTATUS)0xC0000095L)
     #define STATUS_INSUFFICIENT_RESOURCES       ((NTSTATUS)0xC000009AL)
     #define STATUS_NOT_SUPPORTED                ((NTSTATUS)0xC00000BBL)
+    #define STATUS_NETWORK_BUSY                 ((NTSTATUS)0xC00000BFL)
     #define STATUS_INTERNAL_ERROR               ((NTSTATUS)0xC00000E5L)
+    #define STATUS_INVALID_CONNECTION           ((NTSTATUS)0xC0000140L)
     #define STATUS_UNHANDLED_EXCEPTION          ((NTSTATUS)0xC0000144L)
     #define STATUS_TOO_LATE                     ((NTSTATUS)0xC0000189L)
     #define STATUS_INVALID_BUFFER_SIZE          ((NTSTATUS)0xC0000206L)
     #define STATUS_NOT_FOUND                    ((NTSTATUS)0xC0000225L)
+    #define STATUS_CONNECTION_REFUSED           ((NTSTATUS)0xC0000236L)
+    #define STATUS_CONNECTION_INVALID           ((NTSTATUS)0xC000023AL)
+    #define STATUS_CONNECTION_ABORTED           ((NTSTATUS)0xC0000241L)
     #define STATUS_SHUTDOWN_IN_PROGRESS         ((NTSTATUS)0xC00002FEL)
     #define STATUS_INVALID_STATE_TRANSITION     ((NTSTATUS)0xC000A003L)
+
 #endif
