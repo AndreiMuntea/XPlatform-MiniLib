@@ -158,6 +158,16 @@ xpf::ClientSocket::Connect(
     /* Attempt to connect to one of the endpoints that getaddrinfo returned. */
     for (xpf::BerkeleySocket::AddressInfo* crt = data->AddressInfo; nullptr != crt; crt = crt->ai_next)
     {
+        /* Ensure we have valid protocol and type */
+        if (crt->ai_protocol == 0)
+        {
+            crt->ai_protocol = IPPROTO_TCP;
+        }
+        if (crt->ai_socktype == 0)
+        {
+            crt->ai_socktype = SOCK_STREAM;
+        }
+
         /* Instantiate the socket. */
         NTSTATUS status = xpf::BerkeleySocket::CreateSocket(data->ApiProvider,
                                                             crt->ai_family,

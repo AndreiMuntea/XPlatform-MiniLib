@@ -19,6 +19,7 @@
  */
 XPF_SECTION_DEFAULT;
 
+[[noreturn]]
 void
 XPF_API
 xpf::ApiPanic(
@@ -29,6 +30,9 @@ xpf::ApiPanic(
     XPF_VERIFY(!NT_SUCCESS(Status));
 
     #if defined XPF_PLATFORM_WIN_KM
+        /* This can't be called at dispatch level. But if this is paged out, we still get bugcheck. */
+        /* No biggie. We'll just lie to the static analyzer here. */
+        _Analysis_assume_(KeGetCurrentIrql() <= APC_LEVEL);
         ::ExRaiseStatus(Status);
     #elif defined XPF_PLATFORM_WIN_UM
         ::RaiseException(ERROR_UNHANDLED_EXCEPTION, 0, 0, NULL);

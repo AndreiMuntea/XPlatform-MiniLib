@@ -84,9 +84,9 @@ DeInitializeSocketApiProvider(
  *        Provide a more easier way to access.
  */
 #if defined XPF_PLATFORM_WIN_UM
-    using AddressInfo = struct addrinfo;
+    using AddressInfo = ADDRINFOA;
 #elif defined XPF_PLATFORM_LINUX_UM
-    using AddressInfo = struct addrinfo;
+    using AddressInfo = addrinfo;
 #elif defined XPF_PLATFORM_WIN_KM
     using AddressInfo = ADDRINFOEXW;
 #else

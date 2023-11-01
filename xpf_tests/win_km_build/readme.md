@@ -30,7 +30,7 @@ A reboot is required.
 
 To start the driver you can copy the `.sys` file to virtual machine after doing the aformentioned steps then just install as a simple driver:
 ```
-    sc create xtest binPath= c:\path\to\sys\xpf_tests_winkm.sys
+    sc create xtest binPath= c:\path\to\sys\xpf_tests_winkm.sys type= kernel
     sc start xtest
 ```
 The test will start running (the start will be blocked until they are finished.)

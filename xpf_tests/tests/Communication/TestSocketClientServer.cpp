@@ -45,6 +45,7 @@ MockServerCallback(
     auto mockContext = reinterpret_cast<MockServerThreadContext*>(Context);
     if (nullptr == mockContext)
     {
+        XPF_ASSERT(false);
         return;
     }
 
@@ -52,6 +53,8 @@ MockServerCallback(
     mockContext->ReturnStatus = (*mockContext->Server).Start();
     if (!NT_SUCCESS(mockContext->ReturnStatus))
     {
+        XPF_ASSERT(false);
+        (*(mockContext->RunningEvent)).Set();
         return;
     }
 
@@ -63,6 +66,7 @@ MockServerCallback(
     mockContext->ReturnStatus = (*mockContext->Server).AcceptClient(newClient);
     if (!NT_SUCCESS(mockContext->ReturnStatus))
     {
+        XPF_ASSERT(false);
         return;
     }
 
@@ -73,6 +77,7 @@ MockServerCallback(
                                                                 newClient);
     if (!NT_SUCCESS(mockContext->ReturnStatus))
     {
+        XPF_ASSERT(false);
         return;
     }
 
@@ -86,6 +91,7 @@ MockServerCallback(
                                                                    newClient);
     if (!NT_SUCCESS(mockContext->ReturnStatus))
     {
+        XPF_ASSERT(false);
         return;
     }
 
@@ -95,6 +101,7 @@ MockServerCallback(
                                                                              : STATUS_DATA_ERROR;
     if (!NT_SUCCESS(mockContext->ReturnStatus))
     {
+        XPF_ASSERT(false);
         return;
     }
 
@@ -115,6 +122,7 @@ MockClientCallback(
     auto mockContext = reinterpret_cast<MockClientThreadContext*>(Context);
     if (nullptr == mockContext)
     {
+        XPF_ASSERT(false);
         return;
     }
 
@@ -125,6 +133,7 @@ MockClientCallback(
     mockContext->ReturnStatus = (*mockContext->Client).Connect();
     if (!NT_SUCCESS(mockContext->ReturnStatus))
     {
+        XPF_ASSERT(false);
         return;
     }
 
@@ -137,6 +146,7 @@ MockClientCallback(
                                                                    reinterpret_cast<uint8_t*>(hello));
     if (!NT_SUCCESS(mockContext->ReturnStatus))
     {
+        XPF_ASSERT(false);
         return;
     }
 
@@ -146,6 +156,7 @@ MockClientCallback(
                                                                        : STATUS_DATA_ERROR;
     if (!NT_SUCCESS(mockContext->ReturnStatus))
     {
+        XPF_ASSERT(false);
         return;
     }
 
@@ -155,6 +166,7 @@ MockClientCallback(
                                                                 reinterpret_cast<const uint8_t*>(response.Buffer()));
     if (!NT_SUCCESS(mockContext->ReturnStatus))
     {
+        XPF_ASSERT(false);
         return;
     }
 

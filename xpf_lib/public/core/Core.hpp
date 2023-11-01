@@ -187,11 +187,6 @@
  */
 #if defined XPF_PLATFORM_WIN_KM
 
-    /**
-     * @brief For the use of winsockets we require the Netio library.
-     */
-    #pragma comment(lib, "Netio.lib")
-
     #include <fltKernel.h>
     #include <ntstrsafe.h>
     #include <ntintsafe.h>
@@ -287,7 +282,7 @@
      *        This is valid only for windows KM.
      */
     #define XPF_MAX_PASSIVE_LEVEL()         XPF_ASSERT(::KeGetCurrentIrql() == PASSIVE_LEVEL);          \
-                                            _Analysis_assume_(::KeGetCurrentIrql() == PASSIVE_LEVEL);   \
+                                            _Analysis_assume_(KeGetCurrentIrql() == PASSIVE_LEVEL);     \
                                             PAGED_CODE();
 
     /**
@@ -295,14 +290,14 @@
      *        This is valid only for windows KM.
      */
     #define XPF_MAX_APC_LEVEL()             XPF_ASSERT(::KeGetCurrentIrql() <= APC_LEVEL);              \
-                                            _Analysis_assume_(::KeGetCurrentIrql() == APC_LEVEL);       \
+                                            _Analysis_assume_(KeGetCurrentIrql() <= APC_LEVEL);         \
                                             PAGED_CODE();
 
     /**
      * @brief Asserts on debug that the code is indeed running at max DISPATCH LEVEL.
      */
     #define XPF_MAX_DISPATCH_LEVEL()        XPF_ASSERT(::KeGetCurrentIrql() <= DISPATCH_LEVEL);         \
-                                            _Analysis_assume_(::KeGetCurrentIrql() == DISPATCH_LEVEL);
+                                            _Analysis_assume_(KeGetCurrentIrql() <= DISPATCH_LEVEL);
 
     /**
      * @brief The platform convention for placement new is CLRCALL or CDECL.

@@ -100,7 +100,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='WinKmDebug|Win32'">
     <Link>
-      <AdditionalDependencies>xpf_lib_winkm.lib;fltmgr.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>xpf_lib_winkm.lib;fltmgr.lib;netio.lib;;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)\..\..\out\build\$(Configuration)-$(Platform)\;</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
@@ -113,7 +113,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='WinKmRelease|Win32'">
     <Link>
-      <AdditionalDependencies>xpf_lib_winkm.lib;fltmgr.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>xpf_lib_winkm.lib;fltmgr.lib;netio.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)\..\..\out\build\$(Configuration)-$(Platform)\;</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
@@ -126,7 +126,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='WinKmDebug|x64'">
     <Link>
-      <AdditionalDependencies>xpf_lib_winkm.lib;fltmgr.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>xpf_lib_winkm.lib;fltmgr.lib;netio.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)\..\..\out\build\$(Configuration)-$(Platform)\;</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
@@ -139,7 +139,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='WinKmRelease|x64'">
     <Link>
-      <AdditionalDependencies>xpf_lib_winkm.lib;fltmgr.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>xpf_lib_winkm.lib;fltmgr.lib;netio.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)\..\..\out\build\$(Configuration)-$(Platform)\;</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>

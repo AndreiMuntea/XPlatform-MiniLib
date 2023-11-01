@@ -138,6 +138,16 @@ xpf::ServerSocket::CreateServerSocketData(
 
     for (xpf::BerkeleySocket::AddressInfo* crt = data->AddressInfo; nullptr != crt; crt = crt->ai_next)
     {
+        /* Ensure we have valid protocol and type */
+        if (crt->ai_protocol == 0)
+        {
+            crt->ai_protocol = IPPROTO_TCP;
+        }
+        if (crt->ai_socktype == 0)
+        {
+            crt->ai_socktype = SOCK_STREAM;
+        }
+
         /* Create a SOCKET for the server to listen for client connections. */
         status = xpf::BerkeleySocket::CreateSocket(data->ApiProvider,
                                                    crt->ai_family,

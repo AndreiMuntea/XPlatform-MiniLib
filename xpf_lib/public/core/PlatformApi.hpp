@@ -35,6 +35,7 @@ namespace xpf
  *         only to prevent inconistent states / errors from where we can't recover
  *         and is not safe to continue.
  */
+[[noreturn]]
 void
 XPF_API
 ApiPanic(

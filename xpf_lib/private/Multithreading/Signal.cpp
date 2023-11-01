@@ -384,13 +384,29 @@ xpf::Signal::Wait(
         // We don't handle indepenedent statuses here. Only care about SUCCESS or not.
         //
         XPF_DEATH_ON_FAILURE(nullptr != this->m_SignalHandle.Handle);
-        _Analysis_assume_(nullptr != this->m_SignalHandle.Handle);
 
-        const NTSTATUS status = ::KeWaitForSingleObject(this->m_SignalHandle.Handle,
-                                                        Executive,
-                                                        KernelMode,
-                                                        FALSE,
-                                                        &interval);
+        //
+        // If we are at dispatch level, ensure the interval is 0 so we don't actually wait.
+        // We'll simply not satisfy the wait if the signal is not already signaled.
+        //
+        if (KeGetCurrentIrql() == DISPATCH_LEVEL)
+        {
+            interval.QuadPart = 0;
+        }
+
+        //
+        // This actually works at irql == DISPATCH, but the analyzer is confused.
+        // We just need the interval to be non null and non zero.
+        // Trick it here.
+        //
+        _Analysis_assume_(KeGetCurrentIrql() <= APC_LEVEL);
+            const NTSTATUS status = ::KeWaitForSingleObject(this->m_SignalHandle.Handle,
+                                                            Executive,
+                                                            KernelMode,
+                                                            FALSE,
+                                                            &interval);
+        _Analysis_assume_(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+
         waitSatisfied = (STATUS_SUCCESS == status) ? true
                                                    : false;
 

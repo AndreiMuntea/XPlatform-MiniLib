@@ -91,7 +91,71 @@ XPF_SECTION_DEFAULT;
     }
 XPF_SECTION_PAGED;
 
-static void XPF_API
+_Must_inspect_result_
+static inline NTSTATUS XPF_API
+WskCreateUnicodeStringFromStringView(
+    _In_ _Const_ const xpf::StringView<char>& View,
+    _Out_ UNICODE_STRING* String
+) noexcept(true)
+{
+    XPF_MAX_PASSIVE_LEVEL();
+
+    ANSI_STRING ansiView;
+    ::RtlInitEmptyAnsiString(&ansiView, nullptr, 0);
+
+    UNICODE_STRING unicodeString;
+    ::RtlInitEmptyUnicodeString(&unicodeString, nullptr, 0);
+
+    /* Empty view is not supported. */
+    if ((View.IsEmpty()) || (NULL == String))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+    ::RtlInitEmptyUnicodeString(String, nullptr, 0);
+
+    /* Get to the underlying ansi view. */
+    NTSTATUS status = ::RtlInitAnsiStringEx(&ansiView, View.Buffer());
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    /* Now convert it to ustr. */
+    status = ::RtlAnsiStringToUnicodeString(&unicodeString, &ansiView, TRUE);
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    /* Ensure we got a valid string. */
+    status = ::RtlValidateUnicodeString(0, &unicodeString);
+    if (!NT_SUCCESS(status))
+    {
+        ::RtlFreeUnicodeString(&unicodeString);
+        return status;
+    }
+
+    /* All good. */
+    String->Buffer = unicodeString.Buffer;
+    String->Length = unicodeString.Length;
+    String->MaximumLength = unicodeString.MaximumLength;
+    return STATUS_SUCCESS;
+}
+
+static inline void XPF_API
+WskFreeUnicodeString(
+    _Inout_ UNICODE_STRING* String
+) noexcept(true)
+{
+    XPF_MAX_PASSIVE_LEVEL();
+
+    if (NULL != String)
+    {
+        ::RtlFreeUnicodeString(String);
+    }
+}
+
+static inline void XPF_API
 WskContextCreate(
     _Inout_ xpf::BerkeleySocket::WINKM_WSK_CONTEXT* Context
 ) noexcept(true)
@@ -112,8 +176,10 @@ WskContextCreate(
     /* It is not ideal, but not expected to fail. However, we can improve in future. For now this is easier. */
     while (NULL == Context->Irp)
     {
-        Context->Irp = ::IoAllocateIrp(xpf::NumericLimits<CCHAR>::MaxValue(),
-                                       FALSE);
+        /* Theoretically a filter could be below us, but legacy filters are no longer officially supported. */
+        /* On MSDN we also see it using 1 for the number of stack locations. */
+        /* https://learn.microsoft.com/en-us/windows-hardware/drivers/network/using-irps-with-winsock-kernel-functions */
+        Context->Irp = ::IoAllocateIrp(1, FALSE);
         if (NULL == Context->Irp)
         {
             xpf::ApiSleep(100);
@@ -129,7 +195,7 @@ WskContextCreate(
                              TRUE);
 }
 
-static void XPF_API
+static inline void XPF_API
 WskContextDestroy(
     _Inout_ xpf::BerkeleySocket::WINKM_WSK_CONTEXT* Context
 ) noexcept(true)
@@ -144,7 +210,7 @@ WskContextDestroy(
 }
 
 _Must_inspect_result_
-static NTSTATUS XPF_API
+static inline NTSTATUS XPF_API
 WskContextRetrieveCompletionStatus(
     _In_ NTSTATUS ReturnedStatus,
     _Inout_ xpf::BerkeleySocket::WINKM_WSK_CONTEXT* Context
@@ -152,6 +218,7 @@ WskContextRetrieveCompletionStatus(
 {
     XPF_MAX_PASSIVE_LEVEL();
 
+    /* If the status is pending, we wait until everything is completed. */
     if (STATUS_PENDING == ReturnedStatus)
     {
         NTSTATUS status = ::KeWaitForSingleObject(&Context->CompletionEvent,
@@ -168,7 +235,7 @@ WskContextRetrieveCompletionStatus(
 }
 
 template <class WskApi, typename... Arguments>
-static NTSTATUS XPF_API
+static inline NTSTATUS XPF_API
 WskCallApi(
     const WskApi WskApiFunction,
     PVOID* IoStatusInformation,
@@ -400,6 +467,7 @@ xpf::BerkeleySocket::GetAddressInformation(
     // Platform specific query.
     //
     #if defined XPF_PLATFORM_WIN_UM || defined XPF_PLATFORM_LINUX_UM
+        UNREFERENCED_PARAMETER(apiProvider);
         int result = getaddrinfo(NodeName.Buffer(), ServiceName.Buffer(), nullptr, AddrInfo);
         if (0 != result)
         {
@@ -409,40 +477,22 @@ xpf::BerkeleySocket::GetAddressInformation(
             goto CleanUp;
         }
     #elif defined XPF_PLATFORM_WIN_KM
-        ANSI_STRING nodeNameAnsi;
-        ::RtlInitEmptyAnsiString(&nodeNameAnsi, nullptr, 0);
-
-        ANSI_STRING serviceNameAnsi;
-        ::RtlInitEmptyAnsiString(&serviceNameAnsi, nullptr, 0);
-
         UNICODE_STRING nodeNameUnicode;
         ::RtlInitEmptyUnicodeString(&nodeNameUnicode, nullptr, 0);
 
         UNICODE_STRING serviceNameUnicode;
         ::RtlInitEmptyUnicodeString(&serviceNameUnicode, nullptr, 0);
 
-        /* Get the more familiar ANSI_STRING format. */
-        status = ::RtlInitAnsiStringEx(&nodeNameAnsi, NodeName.Buffer());
+        /* Convert the view to unicode string. */
+        status = xpf::BerkeleySocket::WskCreateUnicodeStringFromStringView(NodeName, &nodeNameUnicode);
         if (!NT_SUCCESS(status))
         {
             goto CleanUp;
         }
-        status = ::RtlInitAnsiStringEx(&serviceNameAnsi, ServiceName.Buffer());
+        status = xpf::BerkeleySocket::WskCreateUnicodeStringFromStringView(ServiceName, &serviceNameUnicode);
         if (!NT_SUCCESS(status))
         {
-            goto CleanUp;
-        }
-
-        /* Now convert them to unicode. */
-        status = ::RtlAnsiStringToUnicodeString(&nodeNameUnicode, &nodeNameAnsi, TRUE);
-        if (!NT_SUCCESS(status))
-        {
-            goto CleanUp;
-        }
-        status = ::RtlAnsiStringToUnicodeString(&serviceNameUnicode, &serviceNameAnsi, TRUE);
-        if (!NT_SUCCESS(status))
-        {
-            ::RtlFreeUnicodeString(&nodeNameUnicode);
+            xpf::BerkeleySocket::WskFreeUnicodeString(&nodeNameUnicode);
             goto CleanUp;
         }
 
@@ -460,8 +510,8 @@ xpf::BerkeleySocket::GetAddressInformation(
                                                  (PETHREAD)NULL);
 
         /* And before going further, we cleanup the resources. */
-        ::RtlFreeUnicodeString(&nodeNameUnicode);
-        ::RtlFreeUnicodeString(&serviceNameUnicode);
+        xpf::BerkeleySocket::WskFreeUnicodeString(&nodeNameUnicode);
+        xpf::BerkeleySocket::WskFreeUnicodeString(&serviceNameUnicode);
 
         /* If we failed, we don't return garbage. */
         if (!NT_SUCCESS(status))
@@ -509,6 +559,7 @@ xpf::BerkeleySocket::FreeAddressInformation(
     // Platform specific cleanup.
     //
     #if defined XPF_PLATFORM_WIN_UM || defined XPF_PLATFORM_LINUX_UM
+        UNREFERENCED_PARAMETER(apiProvider);
         freeaddrinfo(*AddrInfo);
  
     #elif defined XPF_PLATFORM_WIN_KM
@@ -567,8 +618,10 @@ xpf::BerkeleySocket::CreateSocket(
     // Now preinitialize the data.
     //
     #if defined XPF_PLATFORM_WIN_UM
+        UNREFERENCED_PARAMETER(apiProvider);
         newSocket->Socket = INVALID_SOCKET;
     #elif defined XPF_PLATFORM_LINUX_UM
+        UNREFERENCED_PARAMETER(apiProvider);
         newSocket->Socket = -1;
     #elif defined XPF_PLATFORM_WIN_KM
         newSocket->ListenSocket = nullptr;
@@ -597,7 +650,6 @@ xpf::BerkeleySocket::CreateSocket(
             return STATUS_CONNECTION_INVALID;
         }
     #elif defined XPF_PLATFORM_WIN_KM
-
         /* First the listen socket. */
         NTSTATUS status = xpf::BerkeleySocket::WskCallApi(&apiProvider->WskProviderNpi.Dispatch->WskSocket,
                                                           reinterpret_cast<PVOID*>(&newSocket->ListenSocket),
@@ -702,7 +754,7 @@ xpf::BerkeleySocket::ShutdownSocket(
         {
             /* This shouldn't be null. It is a logic bug somewhere in code. Die here if this invariant is violated. */
             auto socketInterface = reinterpret_cast<const WSK_PROVIDER_CONNECTION_DISPATCH*>(socket->ConnectionSocket->Dispatch);
-            XPF_DEATH_ON_FAILURE(nullptr == socketInterface);
+            XPF_DEATH_ON_FAILURE(nullptr != socketInterface);
             _Analysis_assume_(nullptr != socketInterface);
 
             /* Close the socket. */
@@ -719,7 +771,7 @@ xpf::BerkeleySocket::ShutdownSocket(
         {
             /* This shouldn't be null. It is a logic bug somewhere in code. Die here if this invariant is violated. */
             auto socketInterface = reinterpret_cast<const WSK_PROVIDER_LISTEN_DISPATCH*>(socket->ListenSocket->Dispatch);
-            XPF_DEATH_ON_FAILURE(nullptr == socketInterface);
+            XPF_DEATH_ON_FAILURE(nullptr != socketInterface);
             _Analysis_assume_(nullptr != socketInterface);
 
             /* Close the socket. */
@@ -794,7 +846,7 @@ xpf::BerkeleySocket::Bind(
 
         /* This shouldn't be null. It is a logic bug somewhere in code. Die here if this invariant is violated. */
         auto socketInterface = reinterpret_cast<const WSK_PROVIDER_LISTEN_DISPATCH*>(socket->ListenSocket->Dispatch);
-        XPF_DEATH_ON_FAILURE(nullptr == socketInterface);
+        XPF_DEATH_ON_FAILURE(nullptr != socketInterface);
         _Analysis_assume_(nullptr != socketInterface);
         
         /* Do the actual call. */
@@ -914,13 +966,30 @@ xpf::BerkeleySocket::Connect(
 
         /* This shouldn't be null. It is a logic bug somewhere in code. Die here if this invariant is violated. */
         auto socketInterface = reinterpret_cast<const WSK_PROVIDER_CONNECTION_DISPATCH*>(socket->ConnectionSocket->Dispatch);
-        XPF_DEATH_ON_FAILURE(nullptr == socketInterface);
-        _Analysis_assume_(nullptr != socketInterface);
+        XPF_DEATH_ON_FAILURE(nullptr != socketInterface);
+
+        /* If the socket is not bounded to a local address, we'll fail with DEVICE_NOT_READY. */
+        SOCKADDR_IN localAddress;
+        xpf::ApiZeroMemory(&localAddress, sizeof(localAddress));
+
+        localAddress.sin_family = Address->sa_family;
+
+        /* Bind to local address. */
+        static_assert(sizeof(localAddress) == sizeof(SOCKADDR), "Invariant!");
+        status = xpf::BerkeleySocket::WskCallApi(&socketInterface->WskBind,
+                                                 NULL,
+                                                 socket->ConnectionSocket,
+                                                 reinterpret_cast<PSOCKADDR>(&localAddress),
+                                                 ULONG{ 0 });
+        if (!NT_SUCCESS(status))
+        {
+            return status;
+        }
         
         /* Do the actual call. */
         status = xpf::BerkeleySocket::WskCallApi(&socketInterface->WskConnect,
                                                  NULL,
-                                                 socket->ListenSocket,
+                                                 socket->ConnectionSocket,
                                                  reinterpret_cast<PSOCKADDR>(remoteAddressBuffer.GetBuffer()),
                                                  ULONG{ 0 });
         /* Something failed. */
@@ -996,15 +1065,15 @@ xpf::BerkeleySocket::Accept(
             return STATUS_CONNECTION_REFUSED;
         }
     #elif defined XPF_PLATFORM_WIN_KM
+        /* This shouldn't be null. It is a logic bug somewhere in code. Die here if this invariant is violated. */
+        auto socketInterface = reinterpret_cast<const WSK_PROVIDER_LISTEN_DISPATCH*>(socket->ListenSocket->Dispatch);
+        XPF_DEATH_ON_FAILURE(nullptr != socketInterface);
+        _Analysis_assume_(nullptr != socketInterface);
+        
         /* We'll get only the connection socket here. The listen socket will not be created. */
         newSocket->ConnectionSocket = nullptr;
         newSocket->ListenSocket = nullptr;
 
-        /* This shouldn't be null. It is a logic bug somewhere in code. Die here if this invariant is violated. */
-        auto socketInterface = reinterpret_cast<const WSK_PROVIDER_LISTEN_DISPATCH*>(socket->ListenSocket->Dispatch);
-        XPF_DEATH_ON_FAILURE(nullptr == socketInterface);
-        _Analysis_assume_(nullptr != socketInterface);
-        
         /* Do the actual call. */
         NTSTATUS status = xpf::BerkeleySocket::WskCallApi(&socketInterface->WskAccept,
                                                           reinterpret_cast<PVOID*>(&newSocket->ConnectionSocket),
@@ -1017,6 +1086,8 @@ xpf::BerkeleySocket::Accept(
         /* Something failed. */
         if (!NT_SUCCESS(status))
         {
+            xpf::MemoryAllocator::Destruct(newSocket);
+            xpf::MemoryAllocator::FreeMemory(reinterpret_cast<void**>(&newSocket));
             return status;
         }
     #else
@@ -1115,9 +1186,69 @@ xpf::BerkeleySocket::Send(
             }
         }
     #elif defined XPF_PLATFORM_WIN_KM
-        // TODO
-        UNREFERENCED_PARAMETER(socket);
-        return STATUS_NOT_IMPLEMENTED;
+        NTSTATUS status = STATUS_UNSUCCESSFUL;
+        
+        /* This shouldn't be null. It is a logic bug somewhere in code. Die here if this invariant is violated. */
+        auto socketInterface = reinterpret_cast<const WSK_PROVIDER_CONNECTION_DISPATCH*>(socket->ConnectionSocket->Dispatch);
+        XPF_DEATH_ON_FAILURE(nullptr != socketInterface);
+        _Analysis_assume_(nullptr != socketInterface);
+
+        /* We need to convert the buffer in a wsk buffer. This is a bit more legwork. */
+        WSK_BUF wskBuffer;
+        xpf::ApiZeroMemory(&wskBuffer, sizeof(wskBuffer));
+
+        wskBuffer.Offset = 0;
+        wskBuffer.Length = NumberOfBytes;
+        wskBuffer.Mdl = ::IoAllocateMdl((PVOID)Bytes,
+                                        static_cast<ULONG>(NumberOfBytes),
+                                        FALSE,
+                                        FALSE,
+                                        NULL);
+        if (NULL == wskBuffer.Mdl)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* Now we need to make the buffer resident. */
+        __try
+        {
+            ::MmProbeAndLockPages(wskBuffer.Mdl, KernelMode, IoReadAccess);
+            status = STATUS_SUCCESS;
+        }
+        __except (EXCEPTION_EXECUTE_HANDLER)
+        {
+            status = STATUS_ACCESS_VIOLATION;
+        }
+        if (!NT_SUCCESS(status))
+        {
+            ::IoFreeMdl(wskBuffer.Mdl);
+            return status;
+        }
+
+        /* Now do the actual call. */
+        PVOID sentBytes = 0;
+        status = xpf::BerkeleySocket::WskCallApi(&socketInterface->WskSend,
+                                                 &sentBytes,
+                                                 socket->ConnectionSocket,
+                                                 &wskBuffer,
+                                                 0);
+        /* Free the resources. */
+        ::MmUnlockPages(wskBuffer.Mdl);
+        ::IoFreeMdl(wskBuffer.Mdl);
+
+        /* Now inspect the status. */
+        if (NT_SUCCESS(status))
+        {
+            ULONG actualSentBytes = (ULONG)(ULONG_PTR)(sentBytes);
+            return (static_cast<ULONG>(NumberOfBytes) != actualSentBytes) ? STATUS_INVALID_BUFFER_SIZE
+                                                                          : STATUS_SUCCESS;
+        }
+        if (STATUS_FILE_FORCED_CLOSED == status)
+        {
+            return STATUS_CONNECTION_ABORTED;
+        }
+        return STATUS_NETWORK_BUSY;
+
     #else
         #error Unknown Platform
     #endif
@@ -1232,9 +1363,73 @@ xpf::BerkeleySocket::Receive(
             }
         }
     #elif defined XPF_PLATFORM_WIN_KM
-        // TODO
-        UNREFERENCED_PARAMETER(socket);
-        return STATUS_NOT_IMPLEMENTED;
+        NTSTATUS status = STATUS_UNSUCCESSFUL;
+        
+        /* This shouldn't be null. It is a logic bug somewhere in code. Die here if this invariant is violated. */
+        auto socketInterface = reinterpret_cast<const WSK_PROVIDER_CONNECTION_DISPATCH*>(socket->ConnectionSocket->Dispatch);
+        XPF_DEATH_ON_FAILURE(nullptr != socketInterface);
+        _Analysis_assume_(nullptr != socketInterface);
+
+        /* We need to convert the buffer in a wsk buffer. This is a bit more legwork. */
+        WSK_BUF wskBuffer;
+        xpf::ApiZeroMemory(&wskBuffer, sizeof(wskBuffer));
+
+        wskBuffer.Offset = 0;
+        wskBuffer.Length = *NumberOfBytes;
+        wskBuffer.Mdl = ::IoAllocateMdl((PVOID)Bytes,
+                                        static_cast<ULONG>(*NumberOfBytes),
+                                        FALSE,
+                                        FALSE,
+                                        NULL);
+        if (NULL == wskBuffer.Mdl)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* Now we need to make the buffer resident. */
+        __try
+        {
+            ::MmProbeAndLockPages(wskBuffer.Mdl, KernelMode, IoWriteAccess);
+            status = STATUS_SUCCESS;
+        }
+        __except (EXCEPTION_EXECUTE_HANDLER)
+        {
+            status = STATUS_ACCESS_VIOLATION;
+        }
+        if (!NT_SUCCESS(status))
+        {
+            ::IoFreeMdl(wskBuffer.Mdl);
+            return status;
+        }
+
+        /* Now do the actual call. */
+        PVOID receivedBytes = 0;
+        status = xpf::BerkeleySocket::WskCallApi(&socketInterface->WskReceive,
+                                                 &receivedBytes,
+                                                 socket->ConnectionSocket,
+                                                 &wskBuffer,
+                                                 0);
+        /* Free the resources. */
+        ::MmUnlockPages(wskBuffer.Mdl);
+        ::IoFreeMdl(wskBuffer.Mdl);
+
+        /* Now inspect the status. */
+        if (NT_SUCCESS(status))
+        {
+            ULONG actualReceivedBytes = (ULONG)(ULONG_PTR)(receivedBytes);
+            if (actualReceivedBytes > static_cast<ULONG>(*NumberOfBytes))
+            {
+                return STATUS_BUFFER_OVERFLOW;
+            }
+
+            *NumberOfBytes = actualReceivedBytes;
+            return STATUS_SUCCESS;
+        }
+        if (STATUS_FILE_FORCED_CLOSED == status)
+        {
+            return STATUS_CONNECTION_ABORTED;
+        }
+        return STATUS_NETWORK_BUSY;
     #else
         #error Unknown Platform
     #endif
