@@ -173,6 +173,7 @@ xpf::ClientSocket::Connect(
                                                             crt->ai_family,
                                                             crt->ai_socktype,
                                                             crt->ai_protocol,
+                                                            false,
                                                             &data->ServerSocket);
         if (!NT_SUCCESS(status))
         {

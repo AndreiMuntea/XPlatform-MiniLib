@@ -166,6 +166,9 @@ using Socket = void*;
  *
  * @param[in] Protocol          - IPPROTO_TCP for TCP.
  *
+ * @param[in] IsListeningSocket - If true, the socket will be use in listening calls,
+ *                                if false it will be a connection socket.
+ *
  * @param[out] CreatedSocket    - The newly created socket.
  *
  * @return a proper NTSTATUS error code.
@@ -179,6 +182,7 @@ CreateSocket(
     _In_ int AddressFamily,
     _In_ int Type,
     _In_ int Protocol,
+    _In_ bool IsListeningSocket,
     _Out_ xpf::BerkeleySocket::Socket* CreatedSocket
 ) noexcept(true);
 

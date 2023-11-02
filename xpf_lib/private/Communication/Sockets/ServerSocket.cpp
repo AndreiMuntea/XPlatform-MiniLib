@@ -153,6 +153,7 @@ xpf::ServerSocket::CreateServerSocketData(
                                                    crt->ai_family,
                                                    crt->ai_socktype,
                                                    crt->ai_protocol,
+                                                   true,
                                                    &data->ServerSocket);
         if (!NT_SUCCESS(status))
         {
