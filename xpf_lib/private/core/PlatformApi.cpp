@@ -19,7 +19,6 @@
  */
 XPF_SECTION_DEFAULT;
 
-[[noreturn]]
 void
 XPF_API
 xpf::ApiPanic(

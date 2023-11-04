@@ -237,19 +237,6 @@ CloseClientConnection(
     _Inout_ xpf::SharedPointer<xpf::IClientCookie>& ClientConnection
 ) noexcept(true);
 
-/**
- * @brief Finds the client connection associated with a client cookie.
- *
- * @param[in] ClientCookie - The cookie of the client.
- *
- * @return void.
- */
-xpf::SharedPointer<xpf::IClientCookie>
-XPF_API
-FindClientConnection(
-    _In_ _Const_ const xpf::SharedPointer<xpf::IClientCookie>& ClientCookie
-) noexcept(true);
-
  private:
      void* m_ServerSocketData = nullptr;
 

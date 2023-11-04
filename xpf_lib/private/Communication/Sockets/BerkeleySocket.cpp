@@ -790,7 +790,7 @@ xpf::BerkeleySocket::Bind(
     {
         return STATUS_INVALID_PARAMETER;
     }
-    if (0 <= Length || Length > static_cast<int>(sizeof(sockaddr)))
+    if (Length <= 0 || Length > static_cast<int>(sizeof(sockaddr)))
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -811,6 +811,7 @@ xpf::BerkeleySocket::Bind(
 
         SOCKADDR localAddress;
         xpf::ApiZeroMemory(&localAddress, sizeof(localAddress));
+
 
         /* Handle differently depending on socket type. */
         if (socket->IsListeningSocket)
@@ -933,7 +934,7 @@ xpf::BerkeleySocket::Connect(
     {
         return STATUS_INVALID_PARAMETER;
     }
-    if (0 <= Length || Length > static_cast<int>(sizeof(sockaddr)))
+    if (Length <= 0 || Length > static_cast<int>(sizeof(sockaddr)))
     {
         return STATUS_INVALID_PARAMETER;
     }

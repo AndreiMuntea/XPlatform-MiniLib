@@ -320,56 +320,6 @@ xpf::ServerSocket::CloseClientConnection(
     clientData.ClientRundown.WaitForRelease();
 }
 
-xpf::SharedPointer<xpf::IClientCookie>
-XPF_API
-xpf::ServerSocket::FindClientConnection(
-    _In_ _Const_ const xpf::SharedPointer<xpf::IClientCookie>& ClientCookie
-) noexcept(true)
-{
-    XPF_MAX_PASSIVE_LEVEL();
-
-    /* If the server was not properly initialized, we can't do much. */
-    if ((!this->m_ServerLock.HasValue()) || (nullptr == this->m_ServerSocketData))
-    {
-        return xpf::SharedPointer<xpf::IClientCookie>();
-    }
-
-    xpf::SharedPointer<xpf::ServerSocketClientData> clientConnection;
-    {
-        /* If the server did not start. Can't send data. */
-        xpf::SharedLockGuard serverGuard{ *this->m_ServerLock };
-        if (!this->m_IsStarted)
-        {
-            return xpf::SharedPointer<xpf::IClientCookie>();
-        }
-
-        /* First we get to the underlying data. */
-        auto clientCookie = xpf::DynamicSharedPointerCast<xpf::ServerSocketClientData>(ClientCookie);
-        if (clientCookie.IsEmpty())
-        {
-            return xpf::SharedPointer<xpf::IClientCookie>();
-        }
-
-        /* Now we search for this client. */
-        for (size_t i = 0; i < this->m_Clients.Size(); ++i)
-        {
-            /* Check if this client has the same UUID as the one we are searching. */
-            const auto& client = xpf::DynamicSharedPointerCast<xpf::ServerSocketClientData>(this->m_Clients[i]);
-            if (client.IsEmpty() || !xpf::ApiAreUuidsEqual((*clientCookie).UniqueId, (*client).UniqueId))
-            {
-                continue;
-            }
-
-            /* Found the client connection. */
-            clientConnection = client;
-            break;
-        }
-    }
-
-    /* Return whatever we found to the caller. */
-    return xpf::DynamicSharedPointerCast<xpf::IClientCookie>(clientConnection);
-}
-
 _Must_inspect_result_
 NTSTATUS
 XPF_API
@@ -481,17 +431,16 @@ xpf::ServerSocket::SendData(
     XPF_MAX_PASSIVE_LEVEL();
 
     NTSTATUS status = STATUS_UNSUCCESSFUL;
-    xpf::SharedPointer<IClientCookie> clientConnection = this->FindClientConnection(ClientCookie);
+
+    /* We get to the underlying data. */
+    auto connection = xpf::DynamicSharedPointerCast<xpf::ServerSocketClientData>(ClientCookie);
+    if (connection.IsEmpty())
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
 
     for (size_t retries = 0; retries < 5; ++retries)
     {
-        /* Then we get to the underlying data. */
-        auto connection = xpf::DynamicSharedPointerCast<xpf::ServerSocketClientData>(clientConnection);
-        if (connection.IsEmpty())
-        {
-            return STATUS_INVALID_PARAMETER;
-        }
-
         /* If the connection is tearing down, we bail. */
         xpf::RundownGuard connectionGuard((*connection).ClientRundown);
         if (!connectionGuard.IsRundownAcquired())
@@ -535,17 +484,16 @@ xpf::ServerSocket::ReceiveData(
     XPF_MAX_PASSIVE_LEVEL();
 
     NTSTATUS status = STATUS_UNSUCCESSFUL;
-    xpf::SharedPointer<IClientCookie> clientConnection = this->FindClientConnection(ClientCookie);
+
+    /* We get to the underlying data. */
+    auto connection = xpf::DynamicSharedPointerCast<xpf::ServerSocketClientData>(ClientCookie);
+    if (connection.IsEmpty())
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
 
     for (size_t retries = 0; retries < 5; ++retries)
     {
-        /* Then we get to the underlying data. */
-        auto connection = xpf::DynamicSharedPointerCast<xpf::ServerSocketClientData>(clientConnection);
-        if (connection.IsEmpty())
-        {
-            return STATUS_INVALID_PARAMETER;
-        }
-
         /* If the connection is tearing down, we bail. */
         xpf::RundownGuard connectionGuard((*connection).ClientRundown);
         if (!connectionGuard.IsRundownAcquired())

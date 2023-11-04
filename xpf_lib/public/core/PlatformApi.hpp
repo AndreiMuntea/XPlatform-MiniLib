@@ -35,7 +35,6 @@ namespace xpf
  *         only to prevent inconistent states / errors from where we can't recover
  *         and is not safe to continue.
  */
-[[noreturn]]
 void
 XPF_API
 ApiPanic(
@@ -183,6 +182,26 @@ ApiYieldProcesor(
 ) noexcept(true);
 
 /**
+ * @brief Limits the compiler optimizations that can reorder memory accesses across the point of the call..
+ *
+ * @return None.
+ */
+inline void
+XPF_API
+ApiCompilerBarrier(
+    void
+) noexcept(true)
+{
+    #if defined XPF_COMPILER_MSVC
+        _ReadWriteBarrier();
+    #elif defined XPF_COMPILER_GCC || defined XPF_COMPILER_CLANG
+        asm volatile("" ::: "memory");
+    #else
+        #error Unknown Compiler
+    #endif
+}
+
+/**
  * @brief Retrieves a 64-bit value representing the number of 100-nanosecond intervals since January 1, 1601 (UTC).
  * 
  * @return System time as a count of 100-nanosecond intervals since January 1, 1601.
@@ -225,6 +244,11 @@ ApiAtomicIncrement(
     //
     XPF_DEATH_ON_FAILURE(xpf::AlgoIsNumberAligned(xpf::AlgoPointerToValue(Number),
                                                   alignof(Type)));
+
+    //
+    // We don't want the compiler to play around with these instructions.
+    //
+    xpf::ApiCompilerBarrier();
 
     #if defined XPF_COMPILER_MSVC
 
@@ -288,6 +312,11 @@ ApiAtomicDecrement(
     //
     XPF_DEATH_ON_FAILURE(xpf::AlgoIsNumberAligned(xpf::AlgoPointerToValue(Number),
                                                   alignof(Type)));
+
+    //
+    // We don't want the compiler to play around with these instructions.
+    //
+    xpf::ApiCompilerBarrier();
 
     #if defined XPF_COMPILER_MSVC
 
@@ -360,6 +389,11 @@ ApiAtomicCompareExchange(
     XPF_DEATH_ON_FAILURE(xpf::AlgoIsNumberAligned(xpf::AlgoPointerToValue(Destination),
                                                   alignof(Type)));
 
+    //
+    // We don't want the compiler to play around with these instructions.
+    //
+    xpf::ApiCompilerBarrier();
+
     #if defined XPF_COMPILER_MSVC
 
         if constexpr (xpf::IsSameType<Type, uint8_t> || xpf::IsSameType<Type, int8_t>)
@@ -422,6 +456,11 @@ ApiAtomicCompareExchangePointer(
 {
     XPF_DEATH_ON_FAILURE(xpf::AlgoIsNumberAligned(xpf::AlgoPointerToValue(Destination),
                                                   alignof(void*)));
+
+    //
+    // We don't want the compiler to play around with these instructions.
+    //
+    xpf::ApiCompilerBarrier();
 
     #if defined XPF_COMPILER_MSVC
 
