@@ -64,56 +64,16 @@ virtual ~Base(
 }
 
 /**
- * @brief Copy constructor - can be implemented when needed.
- * 
- * @param[in] Other - The other object to construct from.
+ * @brief Copy and move are deleted.
  */
-Base(
-    _In_ _Const_ const Base& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - can be implemented when needed.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-Base(
-    _Inout_ Base&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - can be implemented when needed.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-Base&
-operator=(
-    _In_ _Const_ const Base& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - can be implemented when needed.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-Base&
-operator=(
-    _Inout_ Base&& Other
-) noexcept(true) = delete;
-
+XPF_CLASS_COPY_MOVE_BEHAVIOR(Base, delete);
 
 /**
  * @brief Gets the underlying buffer.
  * 
  * @return the underlying buffer.
  */
-void*
+inline void*
 Buffer(
     void
 ) noexcept(true)
@@ -126,7 +86,7 @@ Buffer(
  * 
  * @return a const reference to the underlying buffer.
  */
-const void*
+inline const void*
 Buffer(
     void
 ) const noexcept(true)
@@ -165,48 +125,37 @@ virtual ~Derived(
 ) noexcept(true) = default;
 
 /**
- * @brief Copy constructor - can be implemented when needed.
- * 
- * @param[in] Other - The other object to construct from.
+ * @brief Copy and move are deleted.
  */
-Derived(
-    _In_ _Const_ const Derived& Other
-) noexcept(true) = delete;
+XPF_CLASS_COPY_MOVE_BEHAVIOR(Derived, delete);
+};
+
+class VirtualInheritanceDerived : public virtual Derived
+{
+public:
+/**
+ * @brief Default constructor.
+ * 
+ * @param[in] BufferSize - the size of the buffer to be allocated.
+ */
+VirtualInheritanceDerived(
+    _In_ size_t BufferSize
+) noexcept(true) : Derived(BufferSize)
+{
+    XPF_NOTHING();
+}
 
 /**
- * @brief Move constructor - can be implemented when needed.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
+ * @brief Destructor.
  */
-Derived(
-    _Inout_ Derived&& Other
-) noexcept(true) = delete;
+virtual ~VirtualInheritanceDerived(
+    void
+) noexcept(true) = default;
 
 /**
- * @brief Copy assignment - can be implemented when needed.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
+ * @brief Copy and move are deleted.
  */
-Derived&
-operator=(
-    _In_ _Const_ const Derived& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - can be implemented when needed.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-Derived&
-operator=(
-    _Inout_ Derived&& Other
-) noexcept(true) = delete;
+XPF_CLASS_COPY_MOVE_BEHAVIOR(VirtualInheritanceDerived, delete);
 };
 
 };  // namespace mocks

@@ -190,3 +190,22 @@ XPF_TEST_SCENARIO(TestSharedPointer, DynamicSharedPointerCastDifferentType)
     XPF_TEST_EXPECT_TRUE(!ptr3.IsEmpty());
     XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
 }
+
+/**
+ * @brief       This tests the dynamic cast with different and virtual inheritance.
+ *              This will make the address a bit different.
+ */
+XPF_TEST_SCENARIO(TestSharedPointer, DynamicSharedPointerCastVirtualInheritance)
+{
+    xpf::mocks::VirtualInheritanceDerived object(100);
+    xpf::mocks::Base* objectBase = static_cast<xpf::mocks::Base*>(xpf::AddressOf(object));
+
+    XPF_TEST_EXPECT_TRUE(xpf::AlgoPointerToValue(xpf::AddressOf(object)) != xpf::AlgoPointerToValue(objectBase))
+
+    auto ptr1 = xpf::MakeShared<xpf::mocks::VirtualInheritanceDerived>(100);
+    XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
+
+    auto ptr2 = xpf::DynamicSharedPointerCast<xpf::mocks::Base>(ptr1);
+    XPF_TEST_EXPECT_TRUE(ptr2.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
+}

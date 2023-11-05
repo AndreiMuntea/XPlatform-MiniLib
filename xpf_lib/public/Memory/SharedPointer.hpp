@@ -562,6 +562,19 @@ DynamicSharedPointerCast(
     const auto& otherAllocator = Pointer.m_CompressedPair.First();
     const auto& otherRefCounter = Pointer.m_CompressedPair.Second();
 
+    //
+    // The initial pointer and the casted pointer should have the same address.
+    // If they do not, the conversion can't happen. Return an empty pointer.
+    // We can do something smarter in future, but for now, we don't encourage undefined behavior.
+    // So treat this as an unsafe cast.
+    //
+    const InitialType* initialPointer = Pointer.RawPointer();
+    const CastedType* castedPointer = static_cast<const CastedType*>(initialPointer);
+    if (xpf::AlgoPointerToValue(initialPointer) != xpf::AlgoPointerToValue(castedPointer))
+    {
+        return newPointer;
+    }
+
     refCounter = otherRefCounter;
     allocator = otherAllocator;
 

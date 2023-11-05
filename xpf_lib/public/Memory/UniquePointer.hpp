@@ -304,7 +304,7 @@ MakeUnique(
     //
     // Try to allocate memory and construct an object of type U.
     //
-    rawPointer = reinterpret_cast<TypeU*>(allocator.AllocateMemory(sizeof(TypeU)));
+    rawPointer = static_cast<TypeU*>(allocator.AllocateMemory(sizeof(TypeU)));
     if (nullptr != rawPointer)
     {
         xpf::ApiZeroMemory(rawPointer, sizeof(TypeU));
@@ -340,6 +340,19 @@ DynamicUniquePointerCast(
     auto& otherAllocator = Pointer.m_CompressedPair.First();
     auto& otherRawPointer = Pointer.m_CompressedPair.Second();
 
+    //
+    // The initial pointer and the casted pointer should have the same address.
+    // If they do not, the conversion can't happen. Return an empty pointer.
+    // We can do something smarter in future, but for now, we don't encourage undefined behavior.
+    // So treat this as an unsafe cast.
+    //
+    const InitialType* initialPointer = otherRawPointer;
+    const CastedType* castedPointer = static_cast<const CastedType*>(initialPointer);
+    if (xpf::AlgoPointerToValue(initialPointer) != xpf::AlgoPointerToValue(castedPointer))
+    {
+        return newPointer;
+    }
+
     rawPointer = reinterpret_cast<decltype(rawPointer)>(otherRawPointer);
     allocator = otherAllocator;
 
@@ -347,6 +360,4 @@ DynamicUniquePointerCast(
 
     return newPointer;
 }
-
-
 };  // namespace xpf
