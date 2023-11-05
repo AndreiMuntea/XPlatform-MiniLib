@@ -51,51 +51,10 @@ MemoryAllocator(
     void
 ) noexcept(true) = default;
 
-
 /**
- * @brief Default copy constructor.
- * 
- * @param[in] Other - The other object to construct from.
+ * @brief This class can be moved and copied.
  */
-MemoryAllocator(
-    _In_ _Const_ const MemoryAllocator& Other
-) noexcept(true) = default;
-
-/**
- * @brief Default move constructor.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-MemoryAllocator(
-    _Inout_ MemoryAllocator&& Other
-) noexcept(true) = default;
-
-/**
- * @brief Default copy assignment.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-MemoryAllocator&
-operator=(
-    _In_ _Const_ const MemoryAllocator& Other
-) noexcept(true) = default;
-
-/**
- * @brief Default move assignment.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-MemoryAllocator&
-operator=(
-    _Inout_ MemoryAllocator&& Other
-) noexcept(true) = default;
-
+XPF_CLASS_COPY_MOVE_BEHAVIOR(MemoryAllocator, default);
 
 /**
  * @brief Allocates a block of memory with the required size.
@@ -193,7 +152,7 @@ class CriticalMemoryAllocator
 /**
  * @brief Default constructor.
  */
-     CriticalMemoryAllocator(
+CriticalMemoryAllocator(
     void
 ) noexcept(true) = default;
 
@@ -205,51 +164,10 @@ class CriticalMemoryAllocator
     void
 ) noexcept(true) = default;
 
-
 /**
- * @brief Default copy constructor.
- * 
- * @param[in] Other - The other object to construct from.
+ * @brief This class can be moved and copied.
  */
-CriticalMemoryAllocator(
-    _In_ _Const_ const CriticalMemoryAllocator& Other
-) noexcept(true) = default;
-
-/**
- * @brief Default move constructor.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-CriticalMemoryAllocator(
-    _Inout_ CriticalMemoryAllocator&& Other
-) noexcept(true) = default;
-
-/**
- * @brief Default copy assignment.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-CriticalMemoryAllocator&
-operator=(
-    _In_ _Const_ const CriticalMemoryAllocator& Other
-) noexcept(true) = default;
-
-/**
- * @brief Default move assignment.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-CriticalMemoryAllocator&
-operator=(
-    _Inout_ CriticalMemoryAllocator&& Other
-) noexcept(true) = default;
-
+XPF_CLASS_COPY_MOVE_BEHAVIOR(CriticalMemoryAllocator, default);
 
 /**
  * @brief Allocates a block of memory with the required size.

@@ -205,7 +205,7 @@ XPF_TEST_SCENARIO(TestSharedPointer, DynamicSharedPointerCastVirtualInheritance)
     auto ptr1 = xpf::MakeShared<xpf::mocks::VirtualInheritanceDerived>(100);
     XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
 
-    auto ptr2 = xpf::DynamicSharedPointerCast<xpf::mocks::Base>(ptr1);
+    xpf::SharedPointer<xpf::mocks::Base> ptr2 = xpf::DynamicSharedPointerCast<xpf::mocks::Base>(ptr1);
     XPF_TEST_EXPECT_TRUE(ptr2.IsEmpty());
     XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
 }

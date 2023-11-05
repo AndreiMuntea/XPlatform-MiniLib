@@ -212,10 +212,10 @@ const xpf_test::TestScenarioCallback* gXpfEndMarker = nullptr;
     #define XPF_TEST_EXPECT_DEATH_INTERNAL(Statement, DeathExpected, File, Line)                                    \
     {                                                                                                               \
         mXpfConditionHasGeneratedDeath = false;                                                                     \
-        auto mXpfConditionSEHLambda = [&]() {                                                                       \
+        auto __mXpfConditionSEHLambda = [&]() {                                                                     \
             __try                                                                                                   \
             {                                                                                                       \
-                { (void)(Statement); }                                                                              \
+                (void)(Statement);                                                                                  \
                 mXpfConditionHasGeneratedDeath = false;                                                             \
             }                                                                                                       \
             __except(EXCEPTION_EXECUTE_HANDLER)                                                                     \
@@ -223,7 +223,7 @@ const xpf_test::TestScenarioCallback* gXpfEndMarker = nullptr;
                mXpfConditionHasGeneratedDeath = true;                                                               \
             }                                                                                                       \
         };                                                                                                          \
-        mXpfConditionSEHLambda();                                                                                   \
+        __mXpfConditionSEHLambda();                                                                                 \
         XPF_TEST_EXPECT_TRUE_INTERNAL(mXpfConditionHasGeneratedDeath == DeathExpected, File, Line);                 \
     }
 #elif defined XPF_PLATFORM_LINUX_UM
@@ -286,6 +286,22 @@ const xpf_test::TestScenarioCallback* gXpfEndMarker = nullptr;
  */
 #define XPF_TEST_EXPECT_NO_DEATH(Statement)     XPF_TEST_EXPECT_DEATH_INTERNAL(Statement, false, __FILE__, __LINE__)
 
+/**
+ * @brief       This Macro is used to in tests to evaluate for example a code path that triggers an assert on debug.
+ *              On windows UM and KM platforms the "crash" means a SEH exception which is expcted and will be handled.
+ *              On linux UM it is a signal, see ApiPanic().
+ */
+#if defined XPF_CONFIGURATION_DEBUG
+    /*
+     * @brief   On debug we expect a death. 
+     */
+    #define XPF_TEST_EXPECT_DEATH_ON_DEBUG   XPF_TEST_EXPECT_DEATH
+#else
+    /*
+     * @brief   On release we do not expect a death. 
+     */
+    #define XPF_TEST_EXPECT_DEATH_ON_DEBUG   XPF_TEST_EXPECT_NO_DEATH
+#endif  // XPF_PLATFORM_DEBUG
 
 
 /**

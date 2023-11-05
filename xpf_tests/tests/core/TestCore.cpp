@@ -21,11 +21,7 @@
  */
 XPF_TEST_SCENARIO(TestCore, AssertDeathOnDebug)
 {
-    #if defined XPF_CONFIGURATION_DEBUG
-        XPF_TEST_EXPECT_DEATH(XPF_ASSERT(false));
-    #else
-        XPF_TEST_EXPECT_NO_DEATH(XPF_ASSERT(false));
-    #endif
+    XPF_TEST_EXPECT_DEATH_ON_DEBUG(XPF_ASSERT(false));
 }
 
 
@@ -35,11 +31,7 @@ XPF_TEST_SCENARIO(TestCore, AssertDeathOnDebug)
  */
 XPF_TEST_SCENARIO(TestCore, VerifyDeathOnDebug)
 {
-    #if defined XPF_CONFIGURATION_DEBUG
-        XPF_TEST_EXPECT_DEATH(XPF_VERIFY(false));
-    #else
-        XPF_TEST_EXPECT_NO_DEATH(XPF_VERIFY(false));
-    #endif
+    XPF_TEST_EXPECT_DEATH_ON_DEBUG(XPF_VERIFY(false));
 }
 
 
@@ -50,13 +42,9 @@ XPF_TEST_SCENARIO(TestCore, VerifyDeathOnDebug)
 XPF_TEST_SCENARIO(TestCore, AssertEvaluateOnDebug)
 {
     int value = 0;
+    XPF_UNREFERENCED_PARAMETER(value);
 
-    #if defined XPF_CONFIGURATION_DEBUG
-        XPF_TEST_EXPECT_DEATH(XPF_ASSERT(value != 0));
-    #else
-        XPF_UNREFERENCED_PARAMETER(value);
-        XPF_TEST_EXPECT_NO_DEATH(XPF_ASSERT(value != 0));
-    #endif
+    XPF_TEST_EXPECT_DEATH_ON_DEBUG(XPF_ASSERT(value != 0));
 }
 
 
