@@ -546,7 +546,7 @@ static_assert(sizeof(uuid_t)  == 16, "uuid_t should be 16 byte(s)!");
      /* @param[in] Other - The other object to construct from.  */          \
      /*                                                         */          \
      ClassName(                                    /* NOLINT(*) */          \
-         _In_ _Const_ const ClassName& Other       /* NOLINT(*) */          \
+         const ClassName& Other                    /* NOLINT(*) */          \
      ) noexcept(true) = Behavior;                  /* NOLINT(*) */          \
                                                                             \
      /**                                                        */          \
@@ -557,7 +557,7 @@ static_assert(sizeof(uuid_t)  == 16, "uuid_t should be 16 byte(s)!");
      /* @return A reference to *this object after copy.         */          \
      /*                                                         */          \
      ClassName& operator=(                         /* NOLINT(*) */          \
-         _In_ _Const_ const ClassName& Other       /* NOLINT(*) */          \
+         const ClassName& Other                    /* NOLINT(*) */          \
      ) noexcept(true) = Behavior;                  /* NOLINT(*) */
 
  /**
@@ -571,7 +571,7 @@ static_assert(sizeof(uuid_t)  == 16, "uuid_t should be 16 byte(s)!");
      /*                      - Will be invalidated after this call. */      \
      /*                                                             */      \
      ClassName(                                        /* NOLINT(*) */      \
-         _Inout_ ClassName&& Other                     /* NOLINT(*) */      \
+         ClassName&& Other                             /* NOLINT(*) */      \
      ) noexcept(true) = Behavior;                      /* NOLINT(*) */      \
                                                                             \
      /**                                                            */      \
@@ -583,12 +583,12 @@ static_assert(sizeof(uuid_t)  == 16, "uuid_t should be 16 byte(s)!");
      /* @return A reference to *this object after move.             */      \
      /*                                                             */      \
      ClassName& operator=(                             /* NOLINT(*) */      \
-         _Inout_ ClassName&& Other                     /* NOLINT(*) */      \
+         ClassName&& Other                             /* NOLINT(*) */      \
      ) noexcept(true) = Behavior;                      /* NOLINT(*) */
 
  /**
   * @brief Helper macro to specify both copy and move behavior for a class.
   */
 #define XPF_CLASS_COPY_MOVE_BEHAVIOR(ClassName, Behavior)                   \
-        XPF_CLASS_MOVE_BEHAVIOR(ClassName, Behavior)                        \
-        XPF_CLASS_COPY_BEHAVIOR(ClassName, Behavior)
+            XPF_CLASS_MOVE_BEHAVIOR(ClassName, Behavior)                    \
+            XPF_CLASS_COPY_BEHAVIOR(ClassName, Behavior)

@@ -508,8 +508,6 @@ xpf::ApiRandomUuid(
             }
 
             const BOOL releaseStatus = ::CryptReleaseContext(prov, 0);
-
-            /* This was properly acquired, it shouldn't fail to release! */
             XPF_DEATH_ON_FAILURE(FALSE != releaseStatus);
         }
 
@@ -536,7 +534,7 @@ xpf::ApiRandomUuid(
         for (size_t i = 0; i < sizeof(newUuid); )
         {
             const uint64_t currentTime = xpf::ApiCurrentTime();
-            uint8_t lastByte = currentTime % 0xFF;
+            const uint8_t lastByte = currentTime % 0xFF;
 
             const bool isHexDigit = ((lastByte >= '0' && lastByte <= '9') ||
                                      (lastByte >= 'A' && lastByte <= 'F') ||

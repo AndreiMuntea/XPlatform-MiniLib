@@ -71,21 +71,23 @@ typedef struct _WINKM_WSK_CONTEXT
 // The completion routine must be declared in non-paged code.
 //
 XPF_SECTION_DEFAULT;
-    static NTSTATUS NTAPI
-    WskCompletionRoutine(
-        _In_ PDEVICE_OBJECT	DeviceObject,
-        _In_ PIRP Irp,
-        _In_ PKEVENT CompletionEvent
-    ) noexcept(true)
-    {
-        XPF_MAX_DISPATCH_LEVEL();
 
-        UNREFERENCED_PARAMETER(DeviceObject);
-        UNREFERENCED_PARAMETER(Irp);
+static NTSTATUS NTAPI
+WskCompletionRoutine(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp,
+    _In_ PKEVENT CompletionEvent
+) noexcept(true)
+{
+    XPF_MAX_DISPATCH_LEVEL();
 
-        (VOID) ::KeSetEvent(CompletionEvent, IO_NO_INCREMENT, FALSE);
-        return STATUS_MORE_PROCESSING_REQUIRED;
-    }
+    UNREFERENCED_PARAMETER(DeviceObject);
+    UNREFERENCED_PARAMETER(Irp);
+
+    (VOID) ::KeSetEvent(CompletionEvent, IO_NO_INCREMENT, FALSE);
+    return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
 XPF_SECTION_PAGED;
 
 _Must_inspect_result_
@@ -166,16 +168,19 @@ WskContextCreate(
     ::KeInitializeEvent(&Context->CompletionEvent,
                         EVENT_TYPE::SynchronizationEvent,
                         FALSE);
-
-    /* And now the IRP - We can do something smarter here. But for now use max value. */
-    /* We can come back to this in future when we notice a real problem. */
-    /* Some requests are critical. So we can't fail. Attempt until we succeed! */
-    /* It is not ideal, but not expected to fail. However, we can improve in future. For now this is easier. */
+    //
+    // And now the IRP - We can do something smarter here. But for now use max value.
+    // We can come back to this in future when we notice a real problem.
+    // Some requests are critical. So we can't fail. Attempt until we succeed!
+    // It is not ideal, but not expected to fail. However, we can improve in future. For now this is easier.
+    //
     while (NULL == Context->Irp)
     {
-        /* Theoretically a filter could be below us, but legacy filters are no longer officially supported. */
-        /* On MSDN we also see it using 1 for the number of stack locations. */
-        /* https://learn.microsoft.com/en-us/windows-hardware/drivers/network/using-irps-with-winsock-kernel-functions */
+        //
+        // Theoretically a filter could be below us, but legacy filters are no longer officially supported.
+        // On MSDN we also see it using 1 for the number of stack locations.
+        // https://learn.microsoft.com/en-us/windows-hardware/drivers/network/using-irps-with-winsock-kernel-functions
+        //
         Context->Irp = ::IoAllocateIrp(1, FALSE);
         if (NULL == Context->Irp)
         {
@@ -500,11 +505,11 @@ xpf::BerkeleySocket::GetAddressInformation(
                                                  &nodeNameUnicode,
                                                  &serviceNameUnicode,
                                                  ULONG{0},
-                                                 (GUID*)NULL,
-                                                 (PADDRINFOEXW)NULL,
+                                                 reinterpret_cast<GUID*>(NULL),
+                                                 reinterpret_cast<PADDRINFOEXW>(NULL),
                                                  AddrInfo,
-                                                 (PEPROCESS)NULL,
-                                                 (PETHREAD)NULL);
+                                                 reinterpret_cast<PEPROCESS>(NULL),
+                                                 reinterpret_cast<PETHREAD>(NULL));
 
         /* And before going further, we cleanup the resources. */
         xpf::BerkeleySocket::WskFreeUnicodeString(&nodeNameUnicode);
@@ -556,9 +561,9 @@ xpf::BerkeleySocket::FreeAddressInformation(
     // Platform specific cleanup.
     //
     #if defined XPF_PLATFORM_WIN_UM || defined XPF_PLATFORM_LINUX_UM
-    XPF_UNREFERENCED_PARAMETER(apiProvider);
+        XPF_UNREFERENCED_PARAMETER(apiProvider);
         freeaddrinfo(*AddrInfo);
- 
+
     #elif defined XPF_PLATFORM_WIN_KM
         apiProvider->WskProviderNpi.Dispatch->WskFreeAddressInfo(apiProvider->WskProviderNpi.Client,
                                                                  *AddrInfo);
@@ -987,7 +992,7 @@ xpf::BerkeleySocket::Connect(
         {
             return status;
         }
-        
+
         /* Do the actual call. */
         status = xpf::BerkeleySocket::WskCallApi(&socketInterface->WskConnect,
                                                  NULL,
@@ -1077,7 +1082,7 @@ xpf::BerkeleySocket::Accept(
         /* This shouldn't be null. It is a logic bug somewhere in code. Die here if this invariant is violated. */
         auto socketInterface = reinterpret_cast<const WSK_PROVIDER_LISTEN_DISPATCH*>(socket->Socket->Dispatch);
         XPF_DEATH_ON_FAILURE(nullptr != socketInterface);
-        
+
         /* Do the actual call. */
         NTSTATUS status = xpf::BerkeleySocket::WskCallApi(&socketInterface->WskAccept,
                                                           reinterpret_cast<PVOID*>(&newSocket->Socket),
@@ -1199,7 +1204,7 @@ xpf::BerkeleySocket::Send(
         }
     #elif defined XPF_PLATFORM_WIN_KM
         NTSTATUS status = STATUS_UNSUCCESSFUL;
-        
+
         /* This shouldn't be null. It is a logic bug somewhere in code. Die here if this invariant is violated. */
         auto socketInterface = reinterpret_cast<const WSK_PROVIDER_CONNECTION_DISPATCH*>(socket->Socket->Dispatch);
         XPF_DEATH_ON_FAILURE(nullptr != socketInterface);
@@ -1226,7 +1231,7 @@ xpf::BerkeleySocket::Send(
             ::MmProbeAndLockPages(wskBuffer.Mdl, KernelMode, IoReadAccess);
             status = STATUS_SUCCESS;
         }
-        __except (EXCEPTION_EXECUTE_HANDLER)
+        __except(EXCEPTION_EXECUTE_HANDLER)
         {
             status = STATUS_ACCESS_VIOLATION;
         }
@@ -1383,7 +1388,7 @@ xpf::BerkeleySocket::Receive(
         }
     #elif defined XPF_PLATFORM_WIN_KM
         NTSTATUS status = STATUS_UNSUCCESSFUL;
-        
+
         /* This shouldn't be null. It is a logic bug somewhere in code. Die here if this invariant is violated. */
         auto socketInterface = reinterpret_cast<const WSK_PROVIDER_CONNECTION_DISPATCH*>(socket->Socket->Dispatch);
         XPF_DEATH_ON_FAILURE(nullptr != socketInterface);
@@ -1411,7 +1416,7 @@ xpf::BerkeleySocket::Receive(
             ::MmProbeAndLockPages(wskBuffer.Mdl, KernelMode, IoWriteAccess);
             status = STATUS_SUCCESS;
         }
-        __except (EXCEPTION_EXECUTE_HANDLER)
+        __except(EXCEPTION_EXECUTE_HANDLER)
         {
             status = STATUS_ACCESS_VIOLATION;
         }

@@ -33,12 +33,14 @@ namespace xpf
  */
 class IClientCookie
 {
- public:
+ protected:
 /**
- * @brief Copy and move semantics are deleted.
+ * @brief Copy and move semantics are defaulted.
+ *        It's each class responsibility to handle them.
  */
-XPF_CLASS_COPY_MOVE_BEHAVIOR(IClientCookie, delete);
+XPF_CLASS_COPY_MOVE_BEHAVIOR(IClientCookie, default);
 
+ public:
 /**
  * @brief IClientCookie constructor - default.
  */
@@ -60,12 +62,14 @@ virtual ~IClientCookie(
  */
 class IServer
 {
- public:
+ protected:
 /**
- * @brief Copy and move semantics are deleted.
+ * @brief Copy and move semantics are defaulted.
+ *        It's each class responsibility to handle them.
  */
-XPF_CLASS_COPY_MOVE_BEHAVIOR(IServer, delete);
+XPF_CLASS_COPY_MOVE_BEHAVIOR(IServer, default);
 
+ public:
 /**
  * @brief IServer constructor - default.
  */
@@ -195,12 +199,14 @@ ReceiveData(
  */
 class IClient
 {
- public:
+ protected:
 /**
- * @brief Copy and move semantics are deleted.
+ * @brief Copy and move semantics are defaulted.
+ *        It's each class responsibility to handle them.
  */
-XPF_CLASS_COPY_MOVE_BEHAVIOR(IClient, delete);
+XPF_CLASS_COPY_MOVE_BEHAVIOR(IClient, default);
 
+ public:
 /**
  * @brief IClient constructor - default.
  */

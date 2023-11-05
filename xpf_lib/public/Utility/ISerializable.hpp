@@ -30,6 +30,13 @@ namespace xpf
  */
 class ISerializer
 {
+ protected:
+/**
+ * @brief Copy and move semantics are defaulted.
+ *        It's each class responsibility to handle them.
+ */
+XPF_CLASS_COPY_MOVE_BEHAVIOR(ISerializer, default);
+
  public:
 /**
  * @brief ISerializer constructor - default.
@@ -154,50 +161,6 @@ DeserializeBinaryBlob(
     _Out_ xpf::Vector<uint8_t>& Buffer,     // NOLINT(runtime/references)
     _Inout_ xpf::IStreamReader& Stream
 ) noexcept(true) = 0;
-
-/**
- * @brief Copy constructor - delete.
- * 
- * @param[in] Other - The other object to construct from.
- */
-ISerializer(
-    _In_ _Const_ const ISerializer& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - delete.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-ISerializer(
-    _Inout_ ISerializer&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - delete.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-ISerializer&
-operator=(
-    _In_ _Const_ const ISerializer& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - delete.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-ISerializer&
-operator=(
-    _Inout_ ISerializer&& Other
-) noexcept(true) = delete;
 };  // class ISerializer
 
 /**
@@ -206,6 +169,13 @@ operator=(
  */
 class ISerializable
 {
+ protected:
+/**
+ * @brief Copy and move semantics are defaulted.
+ *        It's each class responsibility to handle them.
+ */
+XPF_CLASS_COPY_MOVE_BEHAVIOR(ISerializable, default);
+
  public:
 /**
  * @brief ISerializable constructor - default.
@@ -255,49 +225,5 @@ DeserializeFrom(
     _Inout_ xpf::ISerializer& Serializer,       // NOLINT(runtime/references)
     _Inout_ xpf::IStreamReader& Stream
 ) const noexcept(true) = 0;
-
-/**
- * @brief Copy constructor - delete.
- * 
- * @param[in] Other - The other object to construct from.
- */
-ISerializable(
-    _In_ _Const_ const ISerializable& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - delete.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-ISerializable(
-    _Inout_ ISerializable&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - delete.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-ISerializable&
-operator=(
-    _In_ _Const_ const ISerializable& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - delete.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-ISerializable&
-operator=(
-    _Inout_ ISerializable && Other
-) noexcept(true) = delete;
 };  // class ISerializable
 };  // namespace xpf

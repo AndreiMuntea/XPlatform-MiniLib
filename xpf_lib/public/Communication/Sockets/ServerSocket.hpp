@@ -36,7 +36,7 @@ namespace xpf
  * @brief   This class provides the server functionality using sockets.
  *          It contains platform-specific implementation.
  */
-class ServerSocket : public xpf::IServer
+class ServerSocket final : public xpf::IServer
 {
  public:
 /**
@@ -83,7 +83,7 @@ virtual ~ServerSocket(
  * @return A proper NTSTATUS error code to indicate success or failure.
  */
 _Must_inspect_result_
-virtual NTSTATUS
+NTSTATUS
 XPF_API
 Start(
     void

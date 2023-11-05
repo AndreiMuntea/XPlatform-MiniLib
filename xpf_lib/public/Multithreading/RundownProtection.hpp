@@ -54,48 +54,9 @@ RundownProtection(
 }
 
 /**
- * @brief Copy constructor - deleted
- * 
- * @param[in] Other - The other object to construct from.
+ * @brief Copy and move semantics are deleted.
  */
-RundownProtection(
-    _In_ _Const_ const RundownProtection& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-RundownProtection(
-    _Inout_ RundownProtection&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - deleted
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-RundownProtection&
-operator=(
-    _In_ _Const_ const RundownProtection& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-RundownProtection&
-operator=(
-    _Inout_ RundownProtection&& Other
-) noexcept(true) = delete;
+XPF_CLASS_COPY_MOVE_BEHAVIOR(RundownProtection, delete);
 
 /**
  * @brief Tries to acquire run-down protection on a shared object so the caller can safely access the object.

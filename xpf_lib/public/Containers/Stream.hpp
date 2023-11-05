@@ -42,12 +42,14 @@ namespace xpf
  */
 class IStreamReader
 {
- public:
+ protected:
 /**
- * @brief Copy and move semantics are deleted.
+ * @brief Copy and move semantics are defaulted.
+ *        It's each class responsibility to handle them.
  */
-XPF_CLASS_COPY_MOVE_BEHAVIOR(IStreamReader, delete);
+XPF_CLASS_COPY_MOVE_BEHAVIOR(IStreamReader, default);
 
+ public:
 /**
  * @brief IStreamReader constructor - default.
  */
@@ -91,12 +93,14 @@ ReadBytes(
  */
 class IStreamWriter
 {
- public:
+ protected:
 /**
- * @brief Copy and move semantics are deleted.
+ * @brief Copy and move semantics are defaulted.
+ *        It's each class responsibility to handle them.
  */
-XPF_CLASS_COPY_MOVE_BEHAVIOR(IStreamWriter, delete);
+XPF_CLASS_COPY_MOVE_BEHAVIOR(IStreamWriter, default);
 
+ public:
 /**
  * @brief IStreamWriter constructor - default.
  */
@@ -145,7 +149,7 @@ class StreamReader final : public xpf::IStreamReader
 /**
  * @brief Copy and move semantics are deleted.
  */
-XPF_CLASS_COPY_MOVE_BEHAVIOR(StreamReader, delete);
+XPF_CLASS_COPY_MOVE_BEHAVIOR(StreamReader<AllocatorType>, delete);
 
 /**
  * @brief StreamReader constructor - default.
@@ -283,7 +287,7 @@ class StreamWriter final : public xpf::IStreamWriter
 /**
  * @brief Copy and move semantics are deleted.
  */
-XPF_CLASS_COPY_MOVE_BEHAVIOR(StreamWriter, delete);
+XPF_CLASS_COPY_MOVE_BEHAVIOR(StreamWriter<AllocatorType>, delete);
 
 /**
  * @brief StreamWriter constructor - default.

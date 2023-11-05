@@ -106,48 +106,9 @@ Signal(
 }
 
 /**
- * @brief Copy constructor - deleted
- * 
- * @param[in] Other - The other object to construct from.
+ * @brief Copy and move semantics are deleted.
  */
-Signal(
-    _In_ _Const_ const Signal& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-Signal(
-    _Inout_ Signal&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - deleted
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-Signal&
-operator=(
-    _In_ _Const_ const Signal& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-Signal&
-operator=(
-    _Inout_ Signal&& Other
-) noexcept(true) = delete;
+XPF_CLASS_COPY_MOVE_BEHAVIOR(Signal, delete);
 
 /**
  * @brief Sets the specified signal object to the signaled state.

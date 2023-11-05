@@ -49,48 +49,9 @@ virtual ~Protobuf(
 }
 
 /**
- * @brief Copy constructor - delete.
- * 
- * @param[in] Other - The other object to construct from.
+ * @brief Copy and move semantics are deleted.
  */
-Protobuf(
-    _In_ _Const_ const Protobuf& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - delete.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-Protobuf(
-    _Inout_ Protobuf&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - delete.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-Protobuf&
-operator=(
-    _In_ _Const_ const Protobuf& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - delete.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-Protobuf&
-operator=(
-    _Inout_ Protobuf&& Other
-) noexcept(true) = delete;
+XPF_CLASS_COPY_MOVE_BEHAVIOR(Protobuf, delete);
 
 /**
  * @brief This method is used to serialize a signed number.

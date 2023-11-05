@@ -53,8 +53,8 @@ xpf::ClientSocket::CreateClientSocketData(
     {
         return nullptr;
     }
-    xpf::MemoryAllocator::Construct(data);
 
+    xpf::MemoryAllocator::Construct(data);
     data->IsConnected = false;
 
     status = xpf::BerkeleySocket::InitializeSocketApiProvider(&data->ApiProvider);
@@ -63,6 +63,9 @@ xpf::ClientSocket::CreateClientSocketData(
         goto CleanUp;
     }
 
+    //
+    // Resolve the server address and port.
+    //
     status = xpf::BerkeleySocket::GetAddressInformation(data->ApiProvider, Ip, Port, &data->AddressInfo);
     if (!NT_SUCCESS(status))
     {
@@ -95,6 +98,10 @@ xpf::ClientSocket::DestroyClientSocketData(
     }
     xpf::ClientSocketData* data = reinterpret_cast<xpf::ClientSocketData*>(*ClientSocketData);
 
+    //
+    // Shutdown the server socket, if any.
+    // If we created a socket, we don't expect the shutdown to fail.
+    //
     if (nullptr != data->ServerSocket)
     {
         NTSTATUS shutdownStatus = xpf::BerkeleySocket::ShutdownSocket(data->ApiProvider,
@@ -103,6 +110,11 @@ xpf::ClientSocket::DestroyClientSocketData(
 
         data->ServerSocket = nullptr;
     }
+
+    //
+    // Clean addrinfo, if we have some.
+    // If we managed to get the addrinfo, we don't expect the free to fail.
+    //
     if (nullptr != data->AddressInfo)
     {
         NTSTATUS freeStatus = xpf::BerkeleySocket::FreeAddressInformation(data->ApiProvider,
@@ -111,6 +123,10 @@ xpf::ClientSocket::DestroyClientSocketData(
 
         data->AddressInfo = nullptr;
     }
+
+    //
+    // And close the socket api provider.
+    //
     if (nullptr != data->ApiProvider)
     {
         xpf::BerkeleySocket::DeInitializeSocketApiProvider(&data->ApiProvider);
@@ -139,7 +155,9 @@ xpf::ClientSocket::Connect(
 {
     XPF_MAX_PASSIVE_LEVEL();
 
-    /* If the client was not properly initialized, we can't do much. */
+    //
+    // If the client was not properly initialized, we can't do much.
+    //
     if ((!this->m_ClientLock.HasValue()) || (nullptr == this->m_ClientSocketData))
     {
         return STATUS_INVALID_STATE_TRANSITION;
@@ -147,28 +165,29 @@ xpf::ClientSocket::Connect(
 
     xpf::ExclusiveLockGuard guard{ *this->m_ClientLock };
 
-    /* If the client is already connected, we bail. */
+    //
+    // If the client is already connected, we bail.
+    //
     xpf::ClientSocketData* data = reinterpret_cast<xpf::ClientSocketData*>(this->m_ClientSocketData);
     if ((nullptr == data) || (data->IsConnected))
     {
         return STATUS_INVALID_STATE_TRANSITION;
     }
 
-
-    /* Attempt to connect to one of the endpoints that getaddrinfo returned. */
     for (xpf::BerkeleySocket::AddressInfo* crt = data->AddressInfo; nullptr != crt; crt = crt->ai_next)
     {
-        /* Ensure we have valid protocol and type */
-        if (crt->ai_protocol == 0)
-        {
-            crt->ai_protocol = IPPROTO_TCP;
-        }
-        if (crt->ai_socktype == 0)
-        {
-            crt->ai_socktype = SOCK_STREAM;
-        }
+        //
+        // Ensure we have valid protocol and type.
+        //
+        crt->ai_protocol = (crt->ai_protocol == 0) ? IPPROTO_TCP
+                                                   : crt->ai_protocol;
+        crt->ai_socktype = (crt->ai_socktype == 0) ? SOCK_STREAM
+                                                   : crt->ai_socktype;
 
-        /* Instantiate the socket. */
+        //
+        // Create the connection socket.
+        // On fail, we simply retry the next address.
+        //
         NTSTATUS status = xpf::BerkeleySocket::CreateSocket(data->ApiProvider,
                                                             crt->ai_family,
                                                             crt->ai_socktype,
@@ -180,7 +199,10 @@ xpf::ClientSocket::Connect(
             continue;
         }
 
-        /* Connect to the socket. */
+        //
+        // Connect to the other end.
+        // On fail, we simply retry the next address.
+        //
         status = xpf::BerkeleySocket::Connect(data->ApiProvider,
                                               data->ServerSocket,
                                               crt->ai_addr,
@@ -193,16 +215,24 @@ xpf::ClientSocket::Connect(
             continue;
         }
 
-        /* We're connected. */
+        //
+        // We're connected.
+        //
         break;
     }
 
+    //
+    // After we moved through all addresses, we need a valid one,
+    // otherwise this is a failure.
+    //
     if (nullptr == data->ServerSocket)
     {
         return STATUS_CONNECTION_REFUSED;
     }
 
-    /* We no longer need the address info. */
+    //
+    // We no longer need the address info.
+    //
     if (nullptr != data->AddressInfo)
     {
         NTSTATUS freeStatus = xpf::BerkeleySocket::FreeAddressInformation(data->ApiProvider,
@@ -211,7 +241,6 @@ xpf::ClientSocket::Connect(
         XPF_DEATH_ON_FAILURE(NT_SUCCESS(freeStatus));
     }
 
-    /* We managed to connect. */
     data->IsConnected = true;
     return STATUS_SUCCESS;
 }
@@ -225,7 +254,9 @@ xpf::ClientSocket::Disconnect(
 {
     XPF_MAX_PASSIVE_LEVEL();
 
-    /* If the client was not properly initialized, we can't do much. */
+    //
+    // If the client was not properly initialized, we can't do much.
+    //
     if ((!this->m_ClientLock.HasValue()) || (nullptr == this->m_ClientSocketData))
     {
         return STATUS_INVALID_STATE_TRANSITION;
@@ -233,7 +264,9 @@ xpf::ClientSocket::Disconnect(
 
     xpf::ExclusiveLockGuard guard{ *this->m_ClientLock };
 
-    /* If the client is already disconnected, we bail. */
+    //
+    // If the client is already disconnected, we bail.
+    //
     xpf::ClientSocketData* data = reinterpret_cast<xpf::ClientSocketData*>(this->m_ClientSocketData);
     if ((nullptr == data) || (!data->IsConnected))
     {
@@ -260,7 +293,9 @@ xpf::ClientSocket::SendData(
 
     NTSTATUS status = STATUS_UNSUCCESSFUL;
 
-    /* If the client was not properly initialized, we can't do much. */
+    //
+    // If the client was not properly initialized, we can't do much.
+    //
     if ((!this->m_ClientLock.HasValue()) || (nullptr == this->m_ClientSocketData))
     {
         return STATUS_INVALID_STATE_TRANSITION;
@@ -270,19 +305,23 @@ xpf::ClientSocket::SendData(
     {
         xpf::SharedLockGuard guard{ *this->m_ClientLock };
 
+        //
+        // We get to the underlying data.
+        //
         xpf::ClientSocketData* data = reinterpret_cast<xpf::ClientSocketData*>(this->m_ClientSocketData);
         if ((nullptr == data) || (!data->IsConnected))
         {
             return STATUS_INVALID_STATE_TRANSITION;
         }
 
-        /* Now send the data to this client connection. */
+        //
+        // Now send the data over the connection.
+        // If the network was busy, we will retry.
+        //
         status = xpf::BerkeleySocket::Send(data->ApiProvider,
                                            data->ServerSocket,
                                            NumberOfBytes,
                                            Bytes);
-
-        /* If the network was busy, we will retry. */
         if (STATUS_NETWORK_BUSY != status)
         {
             break;
@@ -290,7 +329,9 @@ xpf::ClientSocket::SendData(
         xpf::ApiSleep(20);
     }
 
-    /* If the connection was aborted, we disconnect on our end as well. */
+    //
+    // If the connection was aborted, we disconnect on our end as well.
+    //
     if (STATUS_CONNECTION_ABORTED == status)
     {
         (void) this->Disconnect();
@@ -310,7 +351,9 @@ xpf::ClientSocket::ReceiveData(
 
     NTSTATUS status = STATUS_UNSUCCESSFUL;
 
-    /* If the client was not properly initialized, we can't do much. */
+    //
+    // If the client was not properly initialized, we can't do much.
+    //
     if ((!this->m_ClientLock.HasValue()) || (nullptr == this->m_ClientSocketData))
     {
         return STATUS_INVALID_STATE_TRANSITION;
@@ -320,19 +363,23 @@ xpf::ClientSocket::ReceiveData(
     {
         xpf::SharedLockGuard guard{ *this->m_ClientLock };
 
+        //
+        // We get to the underlying data.
+        //
         xpf::ClientSocketData* data = reinterpret_cast<xpf::ClientSocketData*>(this->m_ClientSocketData);
         if ((nullptr == data) || (!data->IsConnected))
         {
             return STATUS_INVALID_STATE_TRANSITION;
         }
 
-        /* Now send the data to this client connection. */
+        //
+        // Now send the data over the connection.
+        // If the network was busy, we will retry.
+        //
         status = xpf::BerkeleySocket::Receive(data->ApiProvider,
                                               data->ServerSocket,
                                               NumberOfBytes,
                                               Bytes);
-
-        /* If the network was busy, we will retry. */
         if (STATUS_NETWORK_BUSY != status)
         {
             break;
@@ -340,7 +387,9 @@ xpf::ClientSocket::ReceiveData(
         xpf::ApiSleep(20);
     }
 
-    /* If the connection was aborted, we disconnect on our end as well. */
+    //
+    // If the connection was aborted, we disconnect on our end as well.
+    //
     if (STATUS_CONNECTION_ABORTED == status)
     {
         (void) this->Disconnect();

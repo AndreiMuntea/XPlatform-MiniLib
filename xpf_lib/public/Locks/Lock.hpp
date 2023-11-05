@@ -49,48 +49,9 @@ virtual ~ExclusiveLock(
 ) noexcept(true) = default;
 
 /**
- * @brief Copy constructor - deleted.
- * 
- * @param[in] Other - The other object to construct from.
+ * @brief Copy and move semantics are deleted.
  */
-ExclusiveLock(
-    _In_ _Const_ const ExclusiveLock& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-ExclusiveLock(
-    _Inout_ ExclusiveLock&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - deleted.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-ExclusiveLock&
-operator=(
-    _In_ _Const_ const ExclusiveLock& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-ExclusiveLock&
-operator=(
-    _Inout_ ExclusiveLock&& Other
-) noexcept(true) = delete;
+XPF_CLASS_COPY_MOVE_BEHAVIOR(ExclusiveLock, delete);
 
 /**
  * @brief Acquires the lock exclusive granting read-write access.
@@ -138,53 +99,17 @@ SharedLock(
 /**
  * @brief Default destructor.
  */
-~SharedLock(
+virtual ~SharedLock(
     void
-) = default;
+) noexcept(true)
+{
+    XPF_NOTHING();
+}
 
 /**
- * @brief Copy constructor - deleted.
- * 
- * @param[in] Other - The other object to construct from.
+ * @brief Copy and move semantics are deleted.
  */
-SharedLock(
-    _In_ _Const_ const SharedLock& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-SharedLock(
-    _Inout_ SharedLock&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - deleted.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-SharedLock&
-operator=(
-    _In_ _Const_ const SharedLock& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-SharedLock&
-operator=(
-    _Inout_ SharedLock&& Other
-) noexcept(true) = delete;
+XPF_CLASS_COPY_MOVE_BEHAVIOR(SharedLock, delete);
 
 /**
  * @brief Acquires the lock shared granting read access.
@@ -271,48 +196,9 @@ ExclusiveLockGuard(
 }
 
 /**
- * @brief Copy constructor - deleted.
- * 
- * @param[in] Other - The other object to construct from.
+ * @brief Copy and move semantics are deleted.
  */
-ExclusiveLockGuard(
-    _In_ _Const_ const ExclusiveLockGuard& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-ExclusiveLockGuard(
-    _Inout_ ExclusiveLockGuard&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - deleted.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-ExclusiveLockGuard&
-operator=(
-    _In_ _Const_ const ExclusiveLockGuard& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-ExclusiveLockGuard&
-operator=(
-    _Inout_ ExclusiveLockGuard&& Other
-) noexcept(true) = delete;
+XPF_CLASS_COPY_MOVE_BEHAVIOR(ExclusiveLockGuard, delete);
 
  private:
      ExclusiveLock& m_ExclusiveLock;
@@ -387,48 +273,10 @@ SharedLockGuard(
 }
 
 /**
- * @brief Copy constructor - deleted.
- * 
- * @param[in] Other - The other object to construct from.
+ * @brief Copy and move semantics are deleted.
  */
-SharedLockGuard(
-    _In_ _Const_ const SharedLockGuard& Other
-) noexcept(true) = delete;
+XPF_CLASS_COPY_MOVE_BEHAVIOR(SharedLockGuard, delete);
 
-/**
- * @brief Move constructor - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-SharedLockGuard(
-    _Inout_ SharedLockGuard&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - deleted.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-SharedLockGuard&
-operator=(
-    _In_ _Const_ const SharedLockGuard& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-SharedLockGuard&
-operator=(
-    _Inout_ SharedLockGuard&& Other
-) noexcept(true) = delete;
  private:
      SharedLock& m_SharedLock;
 

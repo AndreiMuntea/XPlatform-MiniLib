@@ -78,6 +78,13 @@ enum class EventDispatchType
  */
 class IEvent
 {
+ protected:
+/**
+ * @brief Copy and move semantics are defaulted.
+ *        It's each class responsibility to handle them.
+ */
+XPF_CLASS_COPY_MOVE_BEHAVIOR(IEvent, default);
+
  public:
 /**
  * @brief IEvent constructor - default.
@@ -104,55 +111,6 @@ XPF_API
 EventId(
     void
 ) const noexcept(true) = 0;
-
-//
-// Copy and move should be handled by each event class.
-// We'll default them in the base interface here.
-//
- protected:
-/**
- * @brief Copy constructor - default.
- * 
- * @param[in] Other - The other object to construct from.
- */
-IEvent(
-    _In_ _Const_ const IEvent& Other
-) noexcept(true) = default;
-
-/**
- * @brief Move constructor - default.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-IEvent(
-    _Inout_ IEvent&& Other
-) noexcept(true) = default;
-
-/**
- * @brief Copy assignment - default.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-IEvent&
-operator=(
-    _In_ _Const_ const IEvent& Other
-) noexcept(true) = default;
-
-/**
- * @brief Move assignment - default.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-IEvent&
-operator=(
-    _Inout_ IEvent&& Other
-) noexcept(true) = default;
 };  // class IEvent;
 
 /**
@@ -161,6 +119,13 @@ operator=(
  */
 class IEventListener
 {
+ protected:
+/**
+ * @brief Copy and move semantics are defaulted.
+ *        It's each class responsibility to handle them.
+ */
+XPF_CLASS_COPY_MOVE_BEHAVIOR(IEventListener, default);
+
  public:
 /**
  * @brief IEventListener constructor - default.
@@ -197,56 +162,6 @@ OnEvent(
     _In_ _Const_ const xpf::SharedPointer<xpf::IEvent>& Event,
     _Inout_ xpf::EventBus* Bus
 ) noexcept(true) = 0;
-
-
-//
-// Copy and move should be handled by each event listener class.
-// We'll default them in the base interface here.
-//
- protected:
-/**
- * @brief Copy constructor - default.
- * 
- * @param[in] Other - The other object to construct from.
- */
-IEventListener(
-    _In_ _Const_ const IEventListener& Other
-) noexcept(true) = default;
-
-/**
- * @brief Move constructor - default.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-IEventListener(
-    _Inout_ IEventListener&& Other
-) noexcept(true) = default;
-
-/**
- * @brief Copy assignment - default.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-IEventListener&
-operator=(
-    _In_ _Const_ const IEventListener& Other
-) noexcept(true) = default;
-
-/**
- * @brief Move assignment - default.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-IEventListener&
-operator=(
-    _Inout_ IEventListener&& Other
-) noexcept(true) = default;
 };  // class IEventListener;
 
 /**
@@ -317,6 +232,11 @@ EventBus(
 
  public:
 /**
+ * @brief Copy and move are deleted
+ */
+XPF_CLASS_COPY_MOVE_BEHAVIOR(EventBus, delete);
+
+/**
  * @brief EventBus destructor - default.
  */
 ~EventBus(
@@ -325,50 +245,6 @@ EventBus(
 {
     this->Rundown();
 }
-
-/**
- * @brief Copy constructor - deleted.
- * 
- * @param[in] Other - The other object to construct from.
- */
-EventBus(
-    _In_ _Const_ const EventBus& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-EventBus(
-    _Inout_ EventBus&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - deleted.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-EventBus&
-operator=(
-    _In_ _Const_ const EventBus& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-EventBus&
-operator=(
-    _Inout_ EventBus&& Other
-) noexcept(true) = delete;
 
 /**
  * @brief This method is used to register a new listener within the event framework.

@@ -127,49 +127,9 @@ ThreadPool(
 }
 
 /**
- * @brief Copy constructor - deleted.
- * 
- * @param[in] Other - The other object to construct from.
+ * @brief Copy and move semantics are deleted.
  */
-ThreadPool(
-    _In_ _Const_ const ThreadPool& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-ThreadPool(
-    _Inout_ ThreadPool&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - deleted.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-ThreadPool&
-operator=(
-    _In_ _Const_ const ThreadPool& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-ThreadPool&
-operator=(
-    _Inout_ ThreadPool&& Other
-) noexcept(true) = delete;
-
+XPF_CLASS_COPY_MOVE_BEHAVIOR(ThreadPool, delete);
 
 /**
  * @brief Enqueues a work item to be executed on the threadpool.

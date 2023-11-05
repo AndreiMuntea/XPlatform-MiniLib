@@ -58,48 +58,9 @@ virtual ~ReadWriteLock(
 }
 
 /**
- * @brief Copy constructor - deleted.
- * 
- * @param[in] Other - The other object to construct from.
+ * @brief Copy and move semantics are deleted.
  */
-ReadWriteLock(
-    _In_ _Const_ const ReadWriteLock& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-ReadWriteLock(
-    _Inout_ ReadWriteLock&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - deleted.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-ReadWriteLock&
-operator=(
-    _In_ _Const_ const ReadWriteLock& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-ReadWriteLock&
-operator=(
-    _Inout_ ReadWriteLock&& Other
-) noexcept(true) = delete;
+XPF_CLASS_COPY_MOVE_BEHAVIOR(ReadWriteLock, delete);
 
 /**
  * @brief Acquires the lock exclusive granting read-write access.

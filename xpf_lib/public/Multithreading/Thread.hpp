@@ -104,48 +104,9 @@ Thread(
 }
 
 /**
- * @brief Copy constructor - deleted.
- * 
- * @param[in] Other - The other object to construct from.
+ * @brief Copy and move semantics are deleted.
  */
-Thread(
-    _In_ _Const_ const Thread& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-Thread(
-    _Inout_ Thread&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - deleted.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-Thread&
-operator=(
-    _In_ _Const_ const Thread& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-Thread&
-operator=(
-    _Inout_ Thread&& Other
-) noexcept(true) = delete;
+XPF_CLASS_COPY_MOVE_BEHAVIOR(Thread, delete);
 
 /**
  * @brief Schedules a given callback to run on a thread.

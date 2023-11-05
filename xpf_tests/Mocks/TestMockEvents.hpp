@@ -25,20 +25,25 @@ namespace mocks
 /**
  * @brief This is a dummy mock event containing a value.
  */
-class MockEvent : public xpf::IEvent
+class MockEvent final : public xpf::IEvent
 {
  public:
 /**
+ * @brief Copy and move are deleted.
+ */
+XPF_CLASS_COPY_MOVE_BEHAVIOR(MockEvent, delete);
+
+/**
  * @brief Default constructor.
  *
- * @param Value - the value of this event.
+ * @param[in] Value - the value of this event.
  *
- * @param EventId - the ID of this event.
+ * @param[in] EventId - the ID of this event.
  */
 MockEvent(
     _In_ uint32_t Value,
     _In_ _Const_ const xpf::EVENT_ID& EventId
-) noexcept(true) : IEvent()
+) noexcept(true) : xpf::IEvent()
 {
     this->m_Value = Value;
     this->m_EventId = EventId;
@@ -47,53 +52,12 @@ MockEvent(
 /**
  * @brief Destructor.
  */
-~MockEvent(
+virtual ~MockEvent(
     void
-) = default;
-
-/**
- * @brief Copy constructor - can be implemented when needed.
- * 
- * @param[in] Other - The other object to construct from.
- */
-MockEvent(
-    _In_ _Const_ const MockEvent& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - can be implemented when needed.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-MockEvent(
-    _Inout_ MockEvent&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - can be implemented when needed.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-MockEvent&
-operator=(
-    _In_ _Const_ const MockEvent& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - can be implemented when needed.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-MockEvent&
-operator=(
-    _Inout_ MockEvent&& Other
-) noexcept(true) = delete;
+) noexcept(true)
+{
+    XPF_NOTHING();
+}
 
 /**
  * @brief Getter for underlying value.
@@ -133,72 +97,36 @@ EventId(
  *        It registers to a single event, specified in the constructor.
  *        Counts the number of skipped events and also increments the value for MockEvents.
  */
-class MockEventListener : public xpf::IEventListener
+class MockEventListener final : public xpf::IEventListener
 {
  public:
 /**
+ * @brief Copy and Move are defaulted. 
+ */
+XPF_CLASS_COPY_MOVE_BEHAVIOR(MockEventListener, default);
+
+/**
  * @brief Default constructor.
  *
- * @param EventId - the value of the interesting event.
+ * @param[in] EventId - the value of the interesting event.
  */
 MockEventListener(
     _In_ xpf::EVENT_ID EventId
-) noexcept(true) : IEventListener()
+) noexcept(true) : IEventListener(),
+                   m_EventId{ EventId}
 {
-    this->m_EventId = EventId;
+    XPF_NOTHING();
 }
 
 /**
  * @brief Destructor.
  */
-~MockEventListener(
+virtual ~MockEventListener(
     void
-) = default;
-
-/**
- * @brief Copy constructor - default
- * 
- * @param[in] Other - The other object to construct from.
- */
-MockEventListener(
-    _In_ _Const_ const MockEventListener& Other
-) noexcept(true) = default;
-
-/**
- * @brief Move constructor - default
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-MockEventListener(
-    _Inout_ MockEventListener&& Other
-) noexcept(true) = default;
-
-/**
- * @brief Copy assignment - default
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-MockEventListener&
-operator=(
-    _In_ _Const_ const MockEventListener& Other
-) noexcept(true) = default;
-
-/**
- * @brief Move assignment - default
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-MockEventListener&
-operator=(
-    _Inout_ MockEventListener&& Other
-) noexcept(true) = default;
-
+) noexcept(true)
+{
+    XPF_NOTHING();
+}
 
 /**
  * @brief                 This method is used to generically handle an event.
@@ -215,7 +143,7 @@ operator=(
  *
  * @return void.
  */
-inline void
+void
 XPF_API
 OnEvent(
     _In_ _Const_ const xpf::SharedPointer<xpf::IEvent>& Event,

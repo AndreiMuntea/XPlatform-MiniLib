@@ -61,48 +61,9 @@ virtual ~BusyLock(
 }
 
 /**
- * @brief Copy constructor - deleted.
- * 
- * @param[in] Other - The other object to construct from.
+ * @brief Copy and move semantics are deleted.
  */
-BusyLock(
-    _In_ _Const_ const BusyLock& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move constructor - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- */
-BusyLock(
-    _Inout_ BusyLock&& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Copy assignment - deleted.
- * 
- * @param[in] Other - The other object to construct from.
- * 
- * @return A reference to *this object after copy.
- */
-BusyLock&
-operator=(
-    _In_ _Const_ const BusyLock& Other
-) noexcept(true) = delete;
-
-/**
- * @brief Move assignment - deleted.
- * 
- * @param[in,out] Other - The other object to construct from.
- *                        Will be invalidated after this call.
- * 
- * @return A reference to *this object after move.
- */
-BusyLock&
-operator=(
-    _Inout_ BusyLock&& Other
-) noexcept(true) = delete;
+XPF_CLASS_COPY_MOVE_BEHAVIOR(BusyLock, delete);
 
 /**
  * @brief Acquires the lock exclusive granting read-write access.
