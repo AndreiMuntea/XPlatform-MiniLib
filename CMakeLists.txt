@@ -20,9 +20,15 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     else()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
     endif()
-    # Treat warning as errors
-    add_compile_options("/WX")
-
+    # Set the compile options
+    add_compile_options("/WX"           # Treat warning as errors
+                        "/Os")          # Favor size
+    # Set the link options
+    add_link_options("/INCREMENTAL:YES"     # Opt in of incremental linking.
+                     "/LTCG:INCREMENTAL"    # Generate code during link time.
+                     "/CETCOMPAT"           # Binary is CET Shadow Stack compatible.
+                     "/OPT:REF"             # Remove unreferenced functions and data.
+                     "/OPT:ICF=5")          # Identical COMDAT folding with 5 passes.
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     # Warning level
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-long-long -pedantic -Waddress -Waddress-of-packed-member -Wno-unused-value -Wno-self-assign-overloaded -Wno-unused-command-line-argument")
