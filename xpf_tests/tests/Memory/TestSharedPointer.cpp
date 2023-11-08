@@ -24,7 +24,7 @@ XPF_TEST_SCENARIO(TestSharedPointer, DefaultConstructorDestructor)
     xpf::SharedPointer<int> ptr;
     XPF_TEST_EXPECT_TRUE(ptr.IsEmpty());
 
-    auto ptrSize = sizeof(void*);           // reference counter
+    auto ptrSize = 2 * sizeof(void*);           // reference counter
     XPF_TEST_EXPECT_TRUE(sizeof(ptr) == ptrSize);
 }
 
@@ -206,6 +206,6 @@ XPF_TEST_SCENARIO(TestSharedPointer, DynamicSharedPointerCastVirtualInheritance)
     XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
 
     xpf::SharedPointer<xpf::mocks::Base> ptr2 = xpf::DynamicSharedPointerCast<xpf::mocks::Base>(ptr1);
-    XPF_TEST_EXPECT_TRUE(ptr2.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
     XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
 }

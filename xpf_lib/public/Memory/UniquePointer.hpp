@@ -122,7 +122,7 @@ IsEmpty(
     void
 ) const noexcept(true)
 {
-    const auto& rawPointer = this->m_CompressedPair.Second();
+    const auto& rawPointer = this->m_CompressedPair.Second().ObjectBase;
     return (nullptr == rawPointer);
 }
 
@@ -143,13 +143,15 @@ Reset(
     //
 
     auto& allocator = this->m_CompressedPair.First();
-    auto& rawPointer = this->m_CompressedPair.Second();
+    auto& memoryBlock = this->m_CompressedPair.Second();
 
     if (!this->IsEmpty())
     {
-        xpf::MemoryAllocator::Destruct(rawPointer);
-        allocator.FreeMemory(reinterpret_cast<void**>(&rawPointer));
-        rawPointer = nullptr;
+        xpf::MemoryAllocator::Destruct(memoryBlock.ObjectBase);
+        allocator.FreeMemory(reinterpret_cast<void**>(&memoryBlock.AllocationBase));
+
+        memoryBlock.AllocationBase = nullptr;
+        memoryBlock.ObjectBase = nullptr;
     }
 }
 
@@ -179,19 +181,21 @@ Assign(
     //
 
     auto& allocator = this->m_CompressedPair.First();
-    auto& rawPointer = this->m_CompressedPair.Second();
+    auto& memoryBlock = this->m_CompressedPair.Second();
 
     auto& otherAllocator = Other.m_CompressedPair.First();
-    auto& otherRawPointer = Other.m_CompressedPair.Second();
+    auto& otherMemoryBlock = Other.m_CompressedPair.Second();
 
     if (this != xpf::AddressOf(Other))
     {
         this->Reset();
 
         allocator = otherAllocator;
-        rawPointer = otherRawPointer;
+        memoryBlock.AllocationBase = otherMemoryBlock.AllocationBase;
+        memoryBlock.ObjectBase = otherMemoryBlock.ObjectBase;
 
-        otherRawPointer = nullptr;
+        otherMemoryBlock.ObjectBase = nullptr;
+        otherMemoryBlock.AllocationBase = nullptr;
     }
 }
 
@@ -206,7 +210,7 @@ operator*(
     void
 ) noexcept(true)
 {
-    auto& rawPointer = this->m_CompressedPair.Second();
+    auto& rawPointer = this->m_CompressedPair.Second().ObjectBase;
 
     if (nullptr == rawPointer)
     {
@@ -226,7 +230,7 @@ operator*(
     void
 ) const noexcept(true)
 {
-    const auto& rawPointer = this->m_CompressedPair.Second();
+    const auto& rawPointer = this->m_CompressedPair.Second().ObjectBase;
 
     if (nullptr == rawPointer)
     {
@@ -268,13 +272,39 @@ DynamicUniquePointerCast(
 
  private:
     /**
+     * @brief This is required as when dealing with multiple inheritance,
+     *        or virtual inheritance, the object base might be different than
+     *        the allocation base. We need to point to the right object,
+     *        while also keeping track of the allocation so we know where to free it.
+     */
+    struct MemoryBlock
+    {
+        /**
+         * @brief This represents the start of the allocation.
+         *        This will be used when destroying the object.
+         */
+         void* AllocationBase = nullptr;
+        /**
+         * @brief This represents the actual raw pointer.
+         *        This can change when dynamic-casting between types.
+         *        As we'll need to point to the actual object that is required by caller.
+         *        Luckily, static_cast<> will handle this kind of relationship correctly.
+         */
+         Type* ObjectBase = nullptr;
+    };  // MemoryBlock
+
+    /**
      * @brief Using a compressed pair here will guarantee that we benefit
      *        from empty base class optimization as most allocators are stateless.
-     *        So the sizeof(unique_ptr) will actually be equal to sizeof(void*).
+     *        So the sizeof(unique_ptr) will not contain the size of allocator.
      *        This comes with the cost of making the code a bit more harder to read,
-     *        but using some allocator& and rawPointer& when needed I think it's reasonable.
+     *        but using some references when needed I think it's reasonable.
+     *
+     * @note  For now this is 2 * sizeof(void*) as the MemoryBlock stores two pointers.
+     *        We can do better in future to reduce this to the size of a single pointer.
+     *        For now this is acceptable.
      */
-    xpf::CompressedPair<AllocatorType, Type*> m_CompressedPair;
+    xpf::CompressedPair<AllocatorType, MemoryBlock> m_CompressedPair;
 };  // class UniquePointer
 
 
@@ -299,21 +329,22 @@ MakeUnique(
     //
     UniquePointer<TypeU, AllocatorTypeU> uniquePtr;
     auto& allocator = uniquePtr.m_CompressedPair.First();
-    auto& rawPointer = uniquePtr.m_CompressedPair.Second();
+    auto& memoryBlock = uniquePtr.m_CompressedPair.Second();
 
     //
     // Try to allocate memory and construct an object of type U.
     //
-    rawPointer = static_cast<TypeU*>(allocator.AllocateMemory(sizeof(TypeU)));
-    if (nullptr != rawPointer)
+    memoryBlock.AllocationBase = allocator.AllocateMemory(sizeof(TypeU));
+    if (nullptr != memoryBlock.AllocationBase)
     {
-        xpf::ApiZeroMemory(rawPointer, sizeof(TypeU));
-        xpf::MemoryAllocator::Construct(rawPointer,
+        xpf::ApiZeroMemory(memoryBlock.AllocationBase, sizeof(TypeU));
+        memoryBlock.ObjectBase = static_cast<TypeU*>(memoryBlock.AllocationBase);
+
+        xpf::MemoryAllocator::Construct(memoryBlock.ObjectBase,
                                         xpf::Forward<Arguments>(ConstructorArguments)...);
     }
     return uniquePtr;
 }
-
 
 template<class CastedType,
          class InitialType,
@@ -335,28 +366,17 @@ DynamicUniquePointerCast(
     // On release it will be optimized away - as these will be inline calls.
     //
     auto& allocator = newPointer.m_CompressedPair.First();
-    auto& rawPointer = newPointer.m_CompressedPair.Second();
+    auto& memoryBlock = newPointer.m_CompressedPair.Second();
 
     auto& otherAllocator = Pointer.m_CompressedPair.First();
-    auto& otherRawPointer = Pointer.m_CompressedPair.Second();
+    auto& otherMemoryBlock = Pointer.m_CompressedPair.Second();
 
-    //
-    // The initial pointer and the casted pointer should have the same address.
-    // If they do not, the conversion can't happen. Return an empty pointer.
-    // We can do something smarter in future, but for now, we don't encourage undefined behavior.
-    // So treat this as an unsafe cast.
-    //
-    const InitialType* initialPointer = otherRawPointer;
-    const CastedType* castedPointer = static_cast<const CastedType*>(initialPointer);
-    if (xpf::AlgoPointerToValue(initialPointer) != xpf::AlgoPointerToValue(castedPointer))
-    {
-        return newPointer;
-    }
-
-    rawPointer = reinterpret_cast<decltype(rawPointer)>(otherRawPointer);
+    memoryBlock.AllocationBase = otherMemoryBlock.AllocationBase;
+    memoryBlock.ObjectBase = static_cast<CastedType*>(otherMemoryBlock.ObjectBase);
     allocator = otherAllocator;
 
-    otherRawPointer = nullptr;
+    otherMemoryBlock.AllocationBase = nullptr;
+    otherMemoryBlock.ObjectBase = nullptr;
 
     return newPointer;
 }

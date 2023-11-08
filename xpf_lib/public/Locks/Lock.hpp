@@ -86,7 +86,7 @@ UnLockExclusive(
  * @brief This is the base class for a shared lock.
  *        All other shared lock classes must inherit this one.
  */
-class SharedLock : public ExclusiveLock
+class SharedLock : public virtual ExclusiveLock
 {
  public:
 /**

@@ -130,9 +130,12 @@ virtual ~Derived(
 XPF_CLASS_COPY_MOVE_BEHAVIOR(Derived, delete);
 };
 
+/**
+ * @brief Dummy class that inherits virtual from derived.
+ */
 class VirtualInheritanceDerived : public virtual Derived
 {
-public:
+ public:
 /**
  * @brief Default constructor.
  * 

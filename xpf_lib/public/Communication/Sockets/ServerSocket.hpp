@@ -36,7 +36,7 @@ namespace xpf
  * @brief   This class provides the server functionality using sockets.
  *          It contains platform-specific implementation.
  */
-class ServerSocket final : public xpf::IServer
+class ServerSocket final : public virtual xpf::IServer
 {
  public:
 /**

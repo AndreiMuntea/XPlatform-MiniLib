@@ -26,7 +26,7 @@ namespace xpf
  *        It is not recursive. So don't attempt to acquire it on the same
  *        thread before releasing it.
  */
-class ReadWriteLock final : public SharedLock
+class ReadWriteLock final : public virtual SharedLock
 {
  private:
 /**

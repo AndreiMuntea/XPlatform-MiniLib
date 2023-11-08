@@ -135,7 +135,7 @@ IsEmpty(
     void
 ) const noexcept(true)
 {
-    const auto& referenceCounter = this->m_CompressedPair.Second();
+    const auto& referenceCounter = this->m_CompressedPair.Second().ReferenceCounter;
     return (nullptr == referenceCounter);
 }
 
@@ -179,17 +179,18 @@ Assign(
     //
 
     auto& allocator = this->m_CompressedPair.First();
-    auto& rawPointer = this->m_CompressedPair.Second();
+    auto& memoryBlock = this->m_CompressedPair.Second();
 
     auto& otherAllocator = Other.m_CompressedPair.First();
-    auto& otherRawPointer = Other.m_CompressedPair.Second();
+    auto& otherMemoryBlock = Other.m_CompressedPair.Second();
 
     if (this != xpf::AddressOf(Other))
     {
         this->Reset();
 
         allocator = otherAllocator;
-        rawPointer = otherRawPointer;
+        memoryBlock.ReferenceCounter = otherMemoryBlock.ReferenceCounter;
+        memoryBlock.ObjectBase = otherMemoryBlock.ObjectBase;
 
         this->Reference();
     }
@@ -206,7 +207,7 @@ operator*(
     void
 ) noexcept(true)
 {
-    auto rawPointer = this->RawPointer();
+    auto& rawPointer = this->m_CompressedPair.Second().ObjectBase;
 
     if (nullptr == rawPointer)
     {
@@ -226,7 +227,7 @@ operator*(
     void
 ) const noexcept(true)
 {
-    const auto rawPointer = this->RawPointer();
+    const auto& rawPointer = this->m_CompressedPair.Second().ObjectBase;
 
     if (nullptr == rawPointer)
     {
@@ -263,7 +264,7 @@ MakeShared(
 template<class CastedType, class InitialType, class AllocatorTypeU>
 friend SharedPointer<CastedType, AllocatorTypeU>
 DynamicSharedPointerCast(
-    _In_ _Const_ const SharedPointer<InitialType, AllocatorTypeU>& Pointer
+    _In_ SharedPointer<InitialType, AllocatorTypeU> Pointer
 ) noexcept(true);
 
  private:
@@ -271,7 +272,7 @@ DynamicSharedPointerCast(
  * @brief Removes one reference from the current object.
  *        When reference counter reach 0, the object is destroyed.
  */
-inline void
+void
 Dereference(
     void
 ) noexcept(true)
@@ -284,7 +285,7 @@ Dereference(
     // Otherwise we need to destruct the underlying object.
     //
     auto& allocator = this->m_CompressedPair.First();
-    auto& referenceCounter = this->m_CompressedPair.Second();
+    auto& memoryBlock = this->m_CompressedPair.Second();
 
     while (true)
     {
@@ -299,7 +300,7 @@ Dereference(
         //
         // Grab the current refcounter.
         //
-        const int32_t currentCounter = (*referenceCounter);
+        const int32_t currentCounter = (*memoryBlock.ReferenceCounter);
 
         //
         // Decrement the refcounter - We can't go on negative references.
@@ -314,7 +315,7 @@ Dereference(
         //
         // Someone changed the refcounter. Try again.
         //
-        if (currentCounter != xpf::ApiAtomicCompareExchange(referenceCounter,
+        if (currentCounter != xpf::ApiAtomicCompareExchange(memoryBlock.ReferenceCounter,
                                                             newRefCounter,
                                                             currentCounter))
         {
@@ -326,12 +327,10 @@ Dereference(
         //
         if (0 == newRefCounter)
         {
-            auto rawPointer = this->RawPointer();
+            xpf::MemoryAllocator::Destruct(memoryBlock.ReferenceCounter);
+            xpf::MemoryAllocator::Destruct(memoryBlock.ObjectBase);
 
-            xpf::MemoryAllocator::Destruct(rawPointer);
-            xpf::MemoryAllocator::Destruct(referenceCounter);
-
-            allocator.FreeMemory(reinterpret_cast<void**>(&referenceCounter));
+            allocator.FreeMemory(reinterpret_cast<void**>(&memoryBlock.ReferenceCounter));
         }
         break;
     }
@@ -339,13 +338,14 @@ Dereference(
     //
     // Prevent further access.
     //
-    referenceCounter = nullptr;
+    memoryBlock.ReferenceCounter = nullptr;
+    memoryBlock.ObjectBase = nullptr;
 }
 
 /**
  * @brief Increments one reference from the current object.
  */
-inline void
+void
 Reference(
     void
 ) noexcept(true)
@@ -354,7 +354,7 @@ Reference(
     // Grab a reference from compressed pair. It makes the code more easier to read.
     // On release it will be optimized away - as these will be inline calls.
     //
-    auto& referenceCounter = this->m_CompressedPair.Second();
+    auto& memoryBlock = this->m_CompressedPair.Second();
 
     while (true)
     {
@@ -369,7 +369,7 @@ Reference(
         //
         // If we are full - spin and try again.
         //
-        const int32_t currentCounter = (*referenceCounter);
+        const int32_t currentCounter = (*memoryBlock.ReferenceCounter);
         if (currentCounter == xpf::NumericLimits<int32_t>::MaxValue())
         {
             xpf::ApiYieldProcesor();
@@ -389,7 +389,7 @@ Reference(
         //
         // Someone changed the refcounter. Spin and try again.
         //
-        if (currentCounter != xpf::ApiAtomicCompareExchange(referenceCounter,
+        if (currentCounter != xpf::ApiAtomicCompareExchange(memoryBlock.ReferenceCounter,
                                                             newRefCounter,
                                                             currentCounter))
         {
@@ -403,72 +403,59 @@ Reference(
     }
 }
 
-/**
- * @brief Method to retrieve the underlying raw pointer.
- * 
- * @return the underlying raw pointer.
- */
-inline Type*
-RawPointer(
-    void
-) noexcept(true)
-{
-    static constexpr const size_t rfcSize = xpf::AlgoAlignValueUp(size_t{ sizeof(int32_t) },
-                                                                  size_t{XPF_DEFAULT_ALIGNMENT});
-    //
-    // No object stored. We return null pointer.
-    //
-    if (this->IsEmpty())
+ private:
+    /**
+     * @brief This is required as when dealing with multiple inheritance,
+     *        or virtual inheritance, the object base might be different than
+     *        the allocation base. We need to point to the right object,
+     *        while also keeping track of the allocation so we know where to free it.
+     */
+    struct MemoryBlock
     {
-        return nullptr;
-    }
+        /**
+         * @brief This represents the reference counter object.
+         *        This is also the allocation base.
+         */
+        int32_t* ReferenceCounter = nullptr;
+        /**
+         * @brief This represents the actual raw pointer.
+         *        This can change when dynamic-casting between types.
+         *        As we'll need to point to the actual object that is required by caller.
+         *        Luckily, static_cast<> will handle this kind of relationship correctly.
+         */
+         Type* ObjectBase = nullptr;
+    };  // MemoryBlock
 
-    auto& referenceCounter = this->m_CompressedPair.Second();
-    uint8_t* rawPointerLocation = reinterpret_cast<uint8_t*>(referenceCounter) + \
-                                  rfcSize;
-    return reinterpret_cast<Type*>(rawPointerLocation);
-}
-
-/**
- * @brief Method to retrieve a const reference to the underlying raw pointer.
- * 
- * @return const underlying raw pointer.
- */
-inline const Type*
-RawPointer(
-    void
-) const noexcept(true)
-{
-    static constexpr const size_t rfcSize = xpf::AlgoAlignValueUp(size_t{ sizeof(int32_t) },
-                                                                  size_t{XPF_DEFAULT_ALIGNMENT});
-    //
-    // No object stored. We return null pointer.
-    //
-    if (this->IsEmpty())
-    {
-        return nullptr;
-    }
-
-    const auto& referenceCounter = this->m_CompressedPair.Second();
-    const uint8_t* rawPointerLocation = reinterpret_cast<const uint8_t*>(referenceCounter) + \
-                                        rfcSize;
-    return reinterpret_cast<const Type*>(rawPointerLocation);
-}
+    /**
+     * @brief Using a compressed pair here will guarantee that we benefit
+     *        from empty base class optimization as most allocators are stateless.
+     *        So the sizeof(shared_ptr) will not contain the size of allocator.
+     * 
+     *        This comes with the cost of making the code a bit more harder to read,
+     *        but using some references when needed I think it's reasonable.
+     *
+     * @note  For now this is 2 * sizeof(void*) as the MemoryBlock stores three pointers.
+     *        We can do better in future to reduce this to the size of a single pointer.
+     *        For now this is acceptable.
+     */
+    xpf::CompressedPair<AllocatorType, MemoryBlock> m_CompressedPair;
 
  private:
-/**
- * @brief Using a compressed pair here will guarantee that we benefit
- *        from empty base class optimization as most allocators are stateless.
- *        So the sizeof(shared_ptr) will actually be equal to sizeof(void*).
- * 
- *        Because we only support make_shared at the moment, we can simply
- *        place the object after the reference counter:
- *          [reference_counter][Object]
- * 
- *        This comes with the cost of making the code a bit more harder to read,
- *        but using some allocator& and rawPointer& when needed I think it's reasonable.
- */
-xpf::CompressedPair<AllocatorType, int32_t*> m_CompressedPair;
+    /**
+     * @brief  We'll store the reference counter size here, as it can be computed during compile time.
+     *         We need it to be aligned as we'll do a single allocation for the object.
+     */
+    static constexpr const size_t REFERENCE_COUNTER_SIZE = xpf::AlgoAlignValueUp(sizeof(int32_t),
+                                                                                 XPF_DEFAULT_ALIGNMENT);
+    static_assert(xpf::AlgoIsNumberAligned(REFERENCE_COUNTER_SIZE, size_t{ XPF_DEFAULT_ALIGNMENT }),
+                  "Invalid alignment!");
+
+    /**
+     * @brief  We'll also store the full size of the allocation.
+     */
+    static constexpr const size_t FULL_OBJECT_SIZE = REFERENCE_COUNTER_SIZE + sizeof(Type);
+    static_assert(FULL_OBJECT_SIZE > sizeof(Type),
+                  "Overflow during addition!");
 };  // class SharedPointer
 
 
@@ -488,50 +475,35 @@ MakeShared(
                   "Invalid object properties!");
 
     //
-    // The object of TypeU will be aligned to default alignment.
-    // We'll place it after the reference counter.
-    //
-    static constexpr const size_t rfcSize = xpf::AlgoAlignValueUp(size_t{ sizeof(int32_t) },
-                                                                  size_t{ XPF_DEFAULT_ALIGNMENT });
-    static_assert(xpf::AlgoIsNumberAligned(rfcSize, size_t{ XPF_DEFAULT_ALIGNMENT }),
-                  "Invalid alignment!");
-
-    //
-    // The object size is sizeof(referencecounter) + sizeof(TypeU)
-    //
-    static constexpr const size_t fullSize = rfcSize + sizeof(TypeU);
-    static_assert(fullSize > sizeof(TypeU),
-                  "Overflow during addition!");
-
-    //
     // Grab a reference from compressed pair. It makes the code more easier to read.
     // On release it will be optimized away - as these will be inline calls.
     //
     SharedPointer<TypeU, AllocatorTypeU> sharedPtr;
     auto& allocator = sharedPtr.m_CompressedPair.First();
-    auto& refCounter = sharedPtr.m_CompressedPair.Second();
+    auto& memoryBlock = sharedPtr.m_CompressedPair.Second();
 
     //
     // Try to allocate memory and construct an object of type U.
     //
-    refCounter = reinterpret_cast<int32_t*>(allocator.AllocateMemory(fullSize));
-    if (nullptr != refCounter)
+    memoryBlock.ReferenceCounter = static_cast<int32_t*>(allocator.AllocateMemory(sharedPtr.FULL_OBJECT_SIZE));
+    if (nullptr != memoryBlock.ReferenceCounter)
     {
         //
         // Ensure there is no garbage left.
         //
-        xpf::ApiZeroMemory(refCounter, fullSize);
+        xpf::ApiZeroMemory(memoryBlock.ReferenceCounter, sharedPtr.FULL_OBJECT_SIZE);
 
         //
         // First construct the reference counter - we have the first reference.
         //
-        xpf::MemoryAllocator::Construct(refCounter,
+        xpf::MemoryAllocator::Construct(memoryBlock.ReferenceCounter,
                                         int32_t{1});
         //
         // Now construct the raw pointer.
         //
-        auto rawPointer = sharedPtr.RawPointer();
-        xpf::MemoryAllocator::Construct(rawPointer,
+        memoryBlock.ObjectBase = reinterpret_cast<TypeU*>(reinterpret_cast<uint8_t*>(memoryBlock.ReferenceCounter) +
+                                                          sharedPtr.REFERENCE_COUNTER_SIZE);
+        xpf::MemoryAllocator::Construct(memoryBlock.ObjectBase,
                                         xpf::Forward<Arguments>(ConstructorArguments)...);
     }
     return sharedPtr;
@@ -542,7 +514,7 @@ template<class CastedType,
          class AllocatorTypeU>
 inline SharedPointer<CastedType, AllocatorTypeU>
 DynamicSharedPointerCast(
-    _In_ _Const_ const SharedPointer<InitialType, AllocatorTypeU>& Pointer
+    _In_ SharedPointer<InitialType, AllocatorTypeU> Pointer
 ) noexcept(true)
 {
     static_assert(xpf::IsSameType<CastedType, InitialType> ||
@@ -557,25 +529,13 @@ DynamicSharedPointerCast(
     // On release it will be optimized away - as these will be inline calls.
     //
     auto& allocator = newPointer.m_CompressedPair.First();
-    auto& refCounter = newPointer.m_CompressedPair.Second();
+    auto& memoryBlock = newPointer.m_CompressedPair.Second();
 
-    const auto& otherAllocator = Pointer.m_CompressedPair.First();
-    const auto& otherRefCounter = Pointer.m_CompressedPair.Second();
+    auto& otherAllocator = Pointer.m_CompressedPair.First();
+    auto& otherMemoryBlock = Pointer.m_CompressedPair.Second();
 
-    //
-    // The initial pointer and the casted pointer should have the same address.
-    // If they do not, the conversion can't happen. Return an empty pointer.
-    // We can do something smarter in future, but for now, we don't encourage undefined behavior.
-    // So treat this as an unsafe cast.
-    //
-    const InitialType* initialPointer = Pointer.RawPointer();
-    const CastedType* castedPointer = static_cast<const CastedType*>(initialPointer);
-    if (xpf::AlgoPointerToValue(initialPointer) != xpf::AlgoPointerToValue(castedPointer))
-    {
-        return newPointer;
-    }
-
-    refCounter = otherRefCounter;
+    memoryBlock.ReferenceCounter = otherMemoryBlock.ReferenceCounter;
+    memoryBlock.ObjectBase = static_cast<CastedType*>(otherMemoryBlock.ObjectBase);
     allocator = otherAllocator;
 
     newPointer.Reference();

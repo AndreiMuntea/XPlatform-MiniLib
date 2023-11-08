@@ -23,7 +23,7 @@ XPF_TEST_SCENARIO(TestUniquePointer, DefaultConstructorDestructor)
     xpf::UniquePointer<int> ptr;
     XPF_TEST_EXPECT_TRUE(ptr.IsEmpty());
 
-    auto ptrSize = sizeof(void*);           // compressed_pair(allocator, buffer)
+    auto ptrSize = 2 * sizeof(void*);           // compressed_pair(allocator, buffer)
     XPF_TEST_EXPECT_TRUE(sizeof(ptr) == ptrSize);
 }
 
@@ -144,6 +144,6 @@ XPF_TEST_SCENARIO(TestUniquePointer, DynamicUniquePointerCastVirtualInheritance)
     XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
 
     auto ptr2 = xpf::DynamicUniquePointerCast<xpf::mocks::Base>(ptr1);
-    XPF_TEST_EXPECT_TRUE(ptr2.IsEmpty());
-    XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(ptr1.IsEmpty());
 }

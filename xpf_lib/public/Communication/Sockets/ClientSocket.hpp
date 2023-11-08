@@ -35,7 +35,7 @@ namespace xpf
  * @brief   This class provides the client functionality using sockets.
  *          It contains platform-specific implementation.
  */
-class ClientSocket final : public xpf::IClient
+class ClientSocket final : public virtual xpf::IClient
 {
  public:
 /**

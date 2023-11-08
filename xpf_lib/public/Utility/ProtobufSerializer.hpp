@@ -28,7 +28,7 @@ namespace xpf
  *            - Signed values are zig zag encoded and then serialized as varint 128.
  *            - The binary blob data is serialized byte by byte.
  */
-class Protobuf final : public ISerializer
+class Protobuf final : public virtual ISerializer
 {
  public:
 /**

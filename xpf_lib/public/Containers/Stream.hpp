@@ -143,7 +143,7 @@ WriteBytes(
  *          Espeacially useful for deserializing data.
  */
 template <class AllocatorType = xpf::MemoryAllocator>
-class StreamReader final : public xpf::IStreamReader
+class StreamReader final : public virtual xpf::IStreamReader
 {
  public:
 /**
@@ -281,7 +281,7 @@ ReadBytes(
  *          Espeacially useful for serializing data.
  */
 template <class AllocatorType = xpf::MemoryAllocator>
-class StreamWriter final : public xpf::IStreamWriter
+class StreamWriter final : public virtual xpf::IStreamWriter
 {
  public:
 /**

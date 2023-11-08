@@ -97,7 +97,7 @@ EventId(
  *        It registers to a single event, specified in the constructor.
  *        Counts the number of skipped events and also increments the value for MockEvents.
  */
-class MockEventListener final : public xpf::IEventListener
+class MockEventListener final : public virtual xpf::IEventListener
 {
  public:
 /**
