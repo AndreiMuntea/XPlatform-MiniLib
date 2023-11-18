@@ -847,4 +847,46 @@ ExtendWithBuffer(
  private:
     xpf::Buffer<AllocatorType> m_Buffer;
 };  // class String
+
+//
+// ************************************************************************************************
+// This is the section containing string conversions API.
+// ************************************************************************************************
+//
+namespace StringConversion
+{
+/**
+ * @brief Converts the given input into an UTF-8 output.
+ * 
+ * @param[in] Input - The string to be converted. This is a wide string.
+ * 
+ * @param[out] Output - The result of the conversion. This will be an UTF-8 string.
+ *
+ * @return a proper NTSTATUS error code.
+ */
+_Must_inspect_result_
+NTSTATUS
+XPF_API
+WideToUTF8(
+    _In_ _Const_ const xpf::StringView<wchar_t>& Input,
+    _Out_ xpf::String<char>& Output
+) noexcept(true);
+
+/**
+ * @brief Converts the given input into a wide-string output.
+ *
+ * @param[in] Input - The string to be converted. This is an UTF-8 string.
+ *
+ * @param[out] Output - The result of the conversion. This will be a wide string.
+ *
+ * @return a proper NTSTATUS error code.
+ */
+_Must_inspect_result_
+NTSTATUS
+XPF_API
+UTF8ToWide(
+    _In_ _Const_ const xpf::StringView<char>& Input,
+    _Out_ xpf::String<wchar_t>& Output
+) noexcept(true);
+};  // namespace StringConversion
 };  // namespace xpf

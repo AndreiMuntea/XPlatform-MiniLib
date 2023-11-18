@@ -9,27 +9,22 @@ include_directories( "${CMAKE_CURRENT_LIST_DIR}/.." )
 
 
 # Add sources to build process.
-ADD_LIBRARY( xpf_lib STATIC "xpf.hpp"
-                            "private/core/PlatformApi.cpp"
-
-                            "private/Memory/LookasideListAllocator.cpp"
-
-                            "private/Locks/BusyLock.cpp"
-                            "private/Locks/ReadWriteLock.cpp"
-
-                            "private/Containers/TwoLockQueue.cpp"
-
-                            "private/Multithreading/Thread.cpp"
-                            "private/Multithreading/Signal.cpp"
-                            "private/Multithreading/RundownProtection.cpp"
-                            "private/Multithreading/ThreadPool.cpp"
-
-                            "private/Utility/EventFramework.cpp"
-                            "private/Utility/ProtobufSerializer.cpp"
-
-                            "private/Communication/Sockets/ServerSocket.cpp"
-                            "private/Communication/Sockets/ClientSocket.cpp"
-                            "private/Communication/Sockets/BerkeleySocket.cpp")
+ADD_LIBRARY( "xpf_lib" STATIC "xpf.hpp"
+                              "private/core/PlatformApi.cpp"
+                              "private/Memory/LookasideListAllocator.cpp"
+                              "private/Locks/BusyLock.cpp"
+                              "private/Locks/ReadWriteLock.cpp"
+                              "private/Containers/String.cpp"
+                              "private/Containers/TwoLockQueue.cpp"
+                              "private/Multithreading/Thread.cpp"
+                              "private/Multithreading/Signal.cpp"
+                              "private/Multithreading/RundownProtection.cpp"
+                              "private/Multithreading/ThreadPool.cpp"
+                              "private/Utility/EventFramework.cpp"
+                              "private/Utility/ProtobufSerializer.cpp"
+                              "private/Communication/Sockets/ServerSocket.cpp"
+                              "private/Communication/Sockets/ClientSocket.cpp"
+                              "private/Communication/Sockets/BerkeleySocket.cpp")
 
 
 # Run the linter on lib - can be enabled when needed.
