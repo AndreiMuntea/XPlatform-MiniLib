@@ -43,22 +43,6 @@ Or it can be ran from command line using cmake from top level directory:
 
 > (for gcc): CXX=g++ CC=gcc cmake -S . -B out && cd out && make && ctest -T memcheck --verbose
 
-To link with this library, you need to provide an implementation for placement new and placement delete.
-I decided to not include this in the library as it can conflict with the default one.
-In user mode you can simply ensure that the header "new" is included.
-This header is not available in Windows KM, thus an implementation is required, but that is trivial:
-```
-    void* operator new(size_t Size, void* Location) noexcept
-    {
-        (void)Size;
-        return Location;
-    }
-
-    void operator delete(void*, void*) noexcept
-    {
-        return;
-    }
-```
 
 ### To build for Windows KM
 In order to build for windows kernel mode, please see the xpf_lib/win_km_build directory.

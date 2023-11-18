@@ -19,6 +19,40 @@
  */
 XPF_SECTION_DEFAULT;
 
+void*
+XPF_PLATFORM_CONVENTION
+operator new(
+    size_t BlockSize,
+    void* Location
+) noexcept(true)
+{
+    XPF_DEATH_ON_FAILURE(0 != BlockSize);
+    XPF_DEATH_ON_FAILURE(nullptr != Location);
+    return Location;
+}
+
+void
+XPF_PLATFORM_CONVENTION
+operator delete(
+    void* Pointer,
+    void* Location
+) noexcept(true)
+{
+    XPF_DEATH_ON_FAILURE(nullptr != Pointer);
+    XPF_DEATH_ON_FAILURE(nullptr != Location);
+}
+
+void
+XPF_PLATFORM_CONVENTION
+operator delete(
+    void* Pointer,
+    size_t Size
+) noexcept(true)
+{
+    XPF_DEATH_ON_FAILURE(nullptr != Pointer);
+    XPF_DEATH_ON_FAILURE(0 != Size);
+}
+
 void
 XPF_API
 xpf::ApiPanic(
@@ -270,7 +304,7 @@ xpf::ApiSleep(
         if (APC_LEVEL >= ::KeGetCurrentIrql())
         {
             const NTSTATUS status = ::KeDelayExecutionThread(KernelMode, FALSE, &interval);
-            UNREFERENCED_PARAMETER(status);
+            XPF_UNREFERENCED_PARAMETER(status);
         }
 
     #elif defined XPF_PLATFORM_WIN_UM

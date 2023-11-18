@@ -92,11 +92,20 @@ XPF_TEST_SCENARIO(TestOptional, CopyAssingment)
     XPF_TEST_EXPECT_TRUE(uint64_t{ 200 } == *optional2);
 
     //
-    // Self Assign case.
+    // CLANG will warn about self assignment.
+    // But this is intentional here. So we manually disable the warning
     //
-    optional2 = optional2;
-    XPF_TEST_EXPECT_TRUE(optional2.HasValue());
-    XPF_TEST_EXPECT_TRUE(uint64_t{ 200 } == *optional2);
+    #if defined XPF_COMPILER_CLANG
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wself-assign-overloaded"
+    #endif  // XPF_COMPILER_CLANG
+
+        XPF_TEST_EXPECT_TRUE(optional2.HasValue());
+        XPF_TEST_EXPECT_TRUE(uint64_t{ 200 } == *optional2);
+
+    #if defined XPF_COMPILER_CLANG
+        #pragma clang diagnostic pop
+    #endif  // XPF_COMPILER_CLANG
 
     //
     // Assign optional 1 to 2 - should be overwritten.

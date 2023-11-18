@@ -468,7 +468,7 @@
  *       for this API. If "new" header is available, it can be included,
  *       otherwise, a simple implementation can be provided.
  */
-extern void*
+void*
 XPF_PLATFORM_CONVENTION
 operator new(
     size_t BlockSize,
@@ -489,7 +489,7 @@ operator new(
  *       for this API. If "new" header is available, it can be included,
  *       otherwise, a simple implementation can be provided.
  */
-extern void
+void
 XPF_PLATFORM_CONVENTION
 operator delete(
     void* Pointer,
@@ -510,7 +510,7 @@ operator delete(
  *       for this API. If "new" header is available, it can be included,
  *       otherwise, a simple implementation can be provided.
  */
-extern void
+void
 XPF_PLATFORM_CONVENTION
 operator delete(
     void* Pointer,

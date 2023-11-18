@@ -22,6 +22,8 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     endif()
     # Set the compile options
     add_compile_options("/WX"           # Treat warning as errors
+                        "/GS"           # Buffer security checks
+                        "/Gy"           # Function level linking
                         "/Os")          # Favor size
     # Set the link options
     add_link_options("/INCREMENTAL:YES"     # Opt in of incremental linking.
@@ -30,17 +32,41 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
                      "/OPT:REF"             # Remove unreferenced functions and data.
                      "/OPT:ICF=5")          # Identical COMDAT folding with 5 passes.
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    # Warning level
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-long-long -pedantic -Waddress -Waddress-of-packed-member -Wno-unused-value -Wno-self-assign-overloaded -Wno-unused-command-line-argument")
-    # Link with pthread
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -luuid")
-
+    # Compile options
+    add_compile_options("-Wall"                             # Enable standard set of warnings
+                        "-Wextra"                           # Enable additional compiler warnings
+                        "-Werror"                           # Treat all warnings as errors
+                        "-pedantic"                         # Enforce strict compliance with the C++ standard
+                        "-Waddress"                         # Warn about suspicious uses of the address-of operator
+                        "-Waddress-of-packed-member"        # Warn about suspicious uses of the address-of operator with packed members
+                        "-fcf-protection=full"              # Control Flow Integrity
+                        "-ffunction-sections"               # Remove unreferenced functions
+                        "-fdata-sections"                   # Remove unreferenced data
+                        "-fmerge-all-constants"             # Identical COMDAT Folding
+                        "-fno-omit-frame-pointer"           # Do not omit frame pointers
+                        "-Os")                              # Optimize for size
+    # Linker options
+    add_link_options("-fstack-protector-strong"             # Enable stack protection
+                     "$<$<PLATFORM_ID:Linux>:-pthread>"     # Link with pthread on linux
+                     "$<$<PLATFORM_ID:Linux>:-luuid>")      # Link with uuid library on linux
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    # Warning level
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-long-long -pedantic -Waddress -Waddress-of-packed-member -Wno-unused-value -Wno-self-assign-overloaded -Wno-unused-command-line-argument")
-    # Link with pthread
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -luuid")
-
+    # Compile options
+    add_compile_options("-Wall"                             # Enable standard set of warnings
+                        "-Wextra"                           # Enable additional compiler warnings
+                        "-Werror"                           # Treat all warnings as errors
+                        "-pedantic"                         # Enforce strict compliance with the C++ standard
+                        "-Waddress"                         # Warn about suspicious uses of the address-of operator
+                        "-Waddress-of-packed-member"        # Warn about suspicious uses of the address-of operator with packed members
+                        "-fcf-protection=full"              # Control Flow Integrity
+                        "-ffunction-sections"               # Remove unreferenced functions
+                        "-fdata-sections"                   # Remove unreferenced data
+                        "-fmerge-all-constants"             # Identical COMDAT Folding
+                        "-fno-omit-frame-pointer"           # Do not omit frame pointers
+                        "-Os")                              # Optimize for size
+    # Linker options
+    add_link_options("-fstack-protector-strong"             # Enable stack protection
+                     "$<$<PLATFORM_ID:Linux>:-pthread>"     # Link with pthread on linux
+                     "$<$<PLATFORM_ID:Linux>:-luuid>")      # Link with uuid library on linux
 endif()
 
 # Set the output directory to a known location

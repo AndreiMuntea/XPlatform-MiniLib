@@ -236,13 +236,22 @@ XPF_TEST_SCENARIO(TestStringView, CopyAssignment)
     XPF_TEST_EXPECT_TRUE(size_t{ 2 } == u8StringView2.BufferSize());
 
     //
-    // Self-Copy scenario.
+    // CLANG will warn about self assignment.
+    // But this is intentional here. So we manually disable the warning
     //
-    u8StringView1 = u8StringView1;
-    XPF_TEST_EXPECT_TRUE(!u8StringView1.IsEmpty());
-    XPF_TEST_EXPECT_TRUE(nullptr != u8StringView1.Buffer());
-    XPF_TEST_EXPECT_TRUE(size_t{ 4 } == u8StringView1.BufferSize());
+    #if defined XPF_COMPILER_CLANG
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wself-assign-overloaded"
+    #endif  // XPF_COMPILER_CLANG
 
+        u8StringView1 = u8StringView1;
+        XPF_TEST_EXPECT_TRUE(!u8StringView1.IsEmpty());
+        XPF_TEST_EXPECT_TRUE(nullptr != u8StringView1.Buffer());
+        XPF_TEST_EXPECT_TRUE(size_t{ 4 } == u8StringView1.BufferSize());
+
+    #if defined XPF_COMPILER_CLANG
+        #pragma clang diagnostic pop
+    #endif  // XPF_COMPILER_CLANG
     //
     // Legit copy scenario.
     //

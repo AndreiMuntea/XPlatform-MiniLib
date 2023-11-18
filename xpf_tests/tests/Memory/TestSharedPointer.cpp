@@ -135,9 +135,22 @@ XPF_TEST_SCENARIO(TestSharedPointer, CopyAssignment)
     XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
     XPF_TEST_EXPECT_TRUE(50 == (*ptr2));
 
-    ptr1 = ptr1;
-    XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
-    XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
+    //
+    // CLANG will warn about self assignment.
+    // But this is intentional here. So we manually disable the warning
+    //
+    #if defined XPF_COMPILER_CLANG
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Wself-assign-overloaded"
+    #endif  // XPF_COMPILER_CLANG
+
+        ptr1 = ptr1;
+        XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
+        XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
+
+    #if defined XPF_COMPILER_CLANG
+        #pragma clang diagnostic pop
+    #endif  // XPF_COMPILER_CLANG
 
     ptr1 = ptr2;
     XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
