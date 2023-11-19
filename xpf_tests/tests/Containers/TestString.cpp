@@ -1,11 +1,11 @@
-﻿/**
+/**
  * @file        xpf_tests/tests/Containers/TestString.cpp
  *
  * @brief       This contains tests for string view and for string.
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright � Andrei-Marius MUNTEA 2020-2023.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
