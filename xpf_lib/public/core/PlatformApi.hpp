@@ -911,5 +911,19 @@ ApiAreUuidsEqual(
     _In_ const uuid_t First,
     _In_ const uuid_t Second
 ) noexcept(true);
+
+/**
+ * @brief Checks if a character is an hex digit.
+ *
+ * @param[in] Character - The character to be checked.
+ *
+ * @return true if Character is an hex digit,
+ *         false otherwise.
+ */
+bool
+XPF_API
+ApiIsHexDigit(
+    _In_ char Character
+) noexcept(true);
 };  // namespace xpf
 

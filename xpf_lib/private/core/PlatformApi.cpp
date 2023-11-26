@@ -531,9 +531,7 @@ xpf::ApiRandomUuid(
                     break;
                 }
 
-                if ((newByte >= '0' && newByte <= '9') ||
-                    (newByte >= 'A' && newByte <= 'F') ||
-                    (newByte >= 'a' && newByte <= 'f'))
+                if (xpf::ApiIsHexDigit(newByte))
                 {
                     uint8_t* destination = reinterpret_cast<uint8_t*>(&newUuid);
                     xpf::ApiCopyMemory(&destination[i], &newByte, sizeof(newByte));
@@ -570,10 +568,7 @@ xpf::ApiRandomUuid(
             const uint64_t currentTime = xpf::ApiCurrentTime();
             const uint8_t lastByte = currentTime % 0xFF;
 
-            const bool isHexDigit = ((lastByte >= '0' && lastByte <= '9') ||
-                                     (lastByte >= 'A' && lastByte <= 'F') ||
-                                     (lastByte >= 'a' && lastByte <= 'f'));
-            if (isHexDigit)
+            if (xpf::ApiIsHexDigit(lastByte))
             {
                 uint8_t* destination = reinterpret_cast<uint8_t*>(&newUuid);
                 xpf::ApiCopyMemory(&destination[i], &lastByte, sizeof(lastByte));
@@ -601,4 +596,16 @@ xpf::ApiAreUuidsEqual(
     #else
         #error Unknown Platform
     #endif
+}
+
+bool
+XPF_API
+xpf::ApiIsHexDigit(
+    _In_ char Character
+) noexcept(true)
+{
+    const bool isHexDigit = ((Character >= '0' && Character <= '9') ||
+                             (Character >= 'A' && Character <= 'F') ||
+                             (Character >= 'a' && Character <= 'f'));
+    return isHexDigit;
 }
