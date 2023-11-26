@@ -54,13 +54,10 @@ virtual ~Base(
     void
 ) noexcept(true)
 {
-    xpf::ApiFreeMemory(&m_Buffer);
-    m_BufferSize = 0;
+    xpf::ApiFreeMemory(m_Buffer);
+    m_Buffer = nullptr;
 
-    if (nullptr != m_Buffer)
-    {
-        xpf::ApiPanic(STATUS_INVALID_BUFFER_SIZE);
-    }
+    m_BufferSize = 0;
 }
 
 /**

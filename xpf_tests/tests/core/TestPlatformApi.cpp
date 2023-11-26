@@ -27,8 +27,8 @@ XPF_TEST_SCENARIO(TestPlatformApi, AllocAndFree)
     void* ptr = xpf::ApiAllocateMemory(100);
     XPF_TEST_EXPECT_TRUE(nullptr != ptr);
 
-    xpf::ApiFreeMemory(&ptr);
-    XPF_TEST_EXPECT_TRUE(nullptr == ptr);
+    xpf::ApiFreeMemory(ptr);
+    ptr = nullptr;
 
     //
     // Zero size alloc.
@@ -36,8 +36,8 @@ XPF_TEST_SCENARIO(TestPlatformApi, AllocAndFree)
     ptr = xpf::ApiAllocateMemory(0);
     XPF_TEST_EXPECT_TRUE(nullptr != ptr);
 
-    xpf::ApiFreeMemory(&ptr);
-    XPF_TEST_EXPECT_TRUE(nullptr == ptr);
+    xpf::ApiFreeMemory(ptr);
+    ptr = nullptr;
 }
 
 

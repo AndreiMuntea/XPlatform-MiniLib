@@ -38,10 +38,11 @@ xpf::LookasideListAllocator::Destroy(
     XPF_SINGLE_LIST_ENTRY* crtEntry = xpf::TlqFlush(this->m_TwoLockQueue);
     while (nullptr != crtEntry)
     {
-        void* blockToBeDestroyed = reinterpret_cast<void*>(crtEntry);
+        void* blockToBeDestroyed = static_cast<void*>(crtEntry);
         crtEntry = crtEntry->Next;
 
-        this->DeleteMemoryBlock(&blockToBeDestroyed);
+        this->DeleteMemoryBlock(blockToBeDestroyed);
+        blockToBeDestroyed = nullptr;
     }
 
     //
@@ -68,7 +69,7 @@ xpf::LookasideListAllocator::NewMemoryBlock(
 void
 XPF_API
 xpf::LookasideListAllocator::DeleteMemoryBlock(
-    _Inout_ void** MemoryBlock
+    _Inout_ void* MemoryBlock
 ) noexcept(true)
 {
     XPF_MAX_DISPATCH_LEVEL();
@@ -108,7 +109,7 @@ xpf::LookasideListAllocator::AllocateMemory(
     //
     if (nullptr == memoryBlock)
     {
-        memoryBlock = reinterpret_cast<XPF_SINGLE_LIST_ENTRY*>(this->NewMemoryBlock());
+        memoryBlock = static_cast<XPF_SINGLE_LIST_ENTRY*>(this->NewMemoryBlock());
     }
     else
     {
@@ -130,7 +131,7 @@ xpf::LookasideListAllocator::AllocateMemory(
 void
 XPF_API
 xpf::LookasideListAllocator::FreeMemory(
-    _Inout_ void** MemoryBlock
+    _Inout_ void* MemoryBlock
 ) noexcept(true)
 {
     XPF_MAX_DISPATCH_LEVEL();
@@ -138,7 +139,7 @@ xpf::LookasideListAllocator::FreeMemory(
     //
     // Can't free null block...
     //
-    if ((nullptr == MemoryBlock) || (nullptr == (*MemoryBlock)))
+    if (nullptr == MemoryBlock)
     {
         return;
     }
@@ -146,14 +147,8 @@ xpf::LookasideListAllocator::FreeMemory(
     //
     // Save the memory block as a list entry.
     //
-    XPF_SINGLE_LIST_ENTRY* newEntry = reinterpret_cast<XPF_SINGLE_LIST_ENTRY*>(*MemoryBlock);
+    XPF_SINGLE_LIST_ENTRY* newEntry = static_cast<XPF_SINGLE_LIST_ENTRY*>(MemoryBlock);
     newEntry->Next = nullptr;
-
-    //
-    // Invalidate the memory block.
-    // The caller won't have further access to it.
-    //
-    *MemoryBlock = nullptr;
 
     //
     // We might not want to store it into the list if we have too many elements.
@@ -163,7 +158,8 @@ xpf::LookasideListAllocator::FreeMemory(
     //
     if (xpf::ApiAtomicCompareExchange(&this->m_CurrentElements, uint32_t{0}, uint32_t{0}) >= this->m_MaxElements)
     {
-        this->DeleteMemoryBlock(reinterpret_cast<void**>(&newEntry));
+        this->DeleteMemoryBlock(newEntry);
+        newEntry = nullptr;
     }
     else
     {

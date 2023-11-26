@@ -37,7 +37,7 @@ MockThreadCallback(
     _In_opt_ xpf::thread::CallbackArgument Context
 ) noexcept(true)
 {
-    auto mockContext = reinterpret_cast<MockTestThreadContext*>(Context);
+    auto mockContext = static_cast<MockTestThreadContext*>(Context);
     if (nullptr != mockContext)
     {
         xpf::ApiAtomicIncrement(&mockContext->Increment);

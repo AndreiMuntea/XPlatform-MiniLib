@@ -145,4 +145,26 @@ AlgoPointerToValue(
                       "Unsupported Pointer type!");
     }
 }
+
+/**
+ * @brief Adds an offset to a pointer
+ *
+ * @param[in] Pointer - Pointer to be addred to.
+ *
+ * @param[in] Offset - Offset to be added to pointer
+ * 
+ * @return Pointer after it was added to.
+ *
+ */
+inline void*
+AlgoAddToPointer(
+    _In_opt_ void* Pointer,
+    _In_ size_t Offset
+) noexcept(true)
+{
+    uint8_t* pointer = static_cast<uint8_t*>(Pointer);
+    pointer += Offset;
+
+    return pointer;
+}
 };  // namespace xpf

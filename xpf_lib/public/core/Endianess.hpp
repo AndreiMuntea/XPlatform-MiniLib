@@ -71,7 +71,13 @@ EndianessOnLocalMachine(
     /* This occupies 4 bytes in memory. Depending on the first byte, we can deduce endianess. */
     const uint32_t endianess = 0xAB;
 
-    if ((*reinterpret_cast<const uint8_t*>(&endianess)) == 0xAB)
+    /* We'll grab the address of endianess. */
+    const void* endianessAddress = xpf::AddressOf(endianess);
+
+    /* And now the first byte from its address. */
+    const uint8_t firstByte = *(static_cast<const uint8_t*>(endianessAddress));
+
+    if (firstByte == 0xAB)
     {
         return xpf::Endianess::Little;
     }

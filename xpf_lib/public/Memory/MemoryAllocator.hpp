@@ -82,7 +82,7 @@ AllocateMemory(
  */
 static inline void
 FreeMemory(
-    _Inout_ void** MemoryBlock
+    _Inout_ void* MemoryBlock
 ) noexcept(true)
 {
     xpf::ApiFreeMemory(MemoryBlock);
@@ -195,7 +195,7 @@ AllocateMemory(
  */
 static inline void
 FreeMemory(
-    _Inout_ void** MemoryBlock
+    _Inout_ void* MemoryBlock
 ) noexcept(true)
 {
     xpf::ApiFreeMemory(MemoryBlock);

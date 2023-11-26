@@ -66,10 +66,15 @@ XPF_TEST_SCENARIO(TestEndianess, ToAndFromHost)
     uint64_t convertedValue = 0;
 
     convertedValue = xpf::EndianessHostToBig(value);
-    XPF_TEST_EXPECT_TRUE((*reinterpret_cast<uint8_t*>(&convertedValue)) == 0x11);
+    void* convertedValueAddress = xpf::AddressOf(convertedValue);
+
+    uint8_t firstByteBig = *(static_cast<uint8_t*>(convertedValueAddress));
+    XPF_TEST_EXPECT_TRUE(firstByteBig == 0x11);
     XPF_TEST_EXPECT_TRUE(value == xpf::EndianessBigToHost(convertedValue));
 
     convertedValue = xpf::EndianessHostToLittle(value);
-    XPF_TEST_EXPECT_TRUE((*reinterpret_cast<uint8_t*>(&convertedValue)) == 0x88);
+
+    uint8_t firstByteLittle = *(static_cast<uint8_t*>(convertedValueAddress));
+    XPF_TEST_EXPECT_TRUE(firstByteLittle == 0x88);
     XPF_TEST_EXPECT_TRUE(value == xpf::EndianessLittleToHost(convertedValue));
 }

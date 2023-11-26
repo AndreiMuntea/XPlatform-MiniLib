@@ -617,7 +617,7 @@ operator[](
     _In_ size_t Index
 ) const noexcept(true)
 {
-    const CharType* buffer = reinterpret_cast<const CharType*>(this->m_Buffer.GetBuffer());
+    const CharType* buffer = static_cast<const CharType*>(this->m_Buffer.GetBuffer());
 
     XPF_DEATH_ON_FAILURE(Index < this->BufferSize());
     return buffer[Index];
@@ -637,7 +637,7 @@ operator[](
     _In_ size_t Index
 ) noexcept(true)
 {
-    CharType* buffer = reinterpret_cast<CharType*>(this->m_Buffer.GetBuffer());
+    CharType* buffer = static_cast<CharType*>(this->m_Buffer.GetBuffer());
 
     XPF_DEATH_ON_FAILURE(Index < this->BufferSize());
     return buffer[Index];
@@ -685,7 +685,7 @@ View(
     void
 ) const noexcept(true)
 {
-    const CharType* buffer = reinterpret_cast<const CharType*>(this->m_Buffer.GetBuffer());
+    const CharType* buffer = static_cast<const CharType*>(this->m_Buffer.GetBuffer());
     return StringView(buffer, this->BufferSize());
 }
 
@@ -728,7 +728,7 @@ ToLower(
     void
 ) noexcept(true)
 {
-    CharType* buffer = reinterpret_cast<CharType*>(this->m_Buffer.GetBuffer());
+    CharType* buffer = static_cast<CharType*>(this->m_Buffer.GetBuffer());
     const size_t size = this->BufferSize();
 
     for (size_t i = 0; i < size; ++i)
@@ -746,7 +746,7 @@ ToUpper(
     void
 ) noexcept(true)
 {
-    CharType* buffer = reinterpret_cast<CharType*>(this->m_Buffer.GetBuffer());
+    CharType* buffer = static_cast<CharType*>(this->m_Buffer.GetBuffer());
     const size_t size = this->BufferSize();
 
     for (size_t i = 0; i < size; ++i)
@@ -822,8 +822,8 @@ ExtendWithBuffer(
     //
     // Copy the original buffer - if any.
     //
-    CharType* oldBuffer = reinterpret_cast<CharType*>(this->m_Buffer.GetBuffer());
-    CharType* newBuffer = reinterpret_cast<CharType*>(tempBuffer.GetBuffer());
+    CharType* oldBuffer = static_cast<CharType*>(this->m_Buffer.GetBuffer());
+    CharType* newBuffer = static_cast<CharType*>(tempBuffer.GetBuffer());
     if (nullptr != oldBuffer)
     {
         xpf::ApiCopyMemory(newBuffer,

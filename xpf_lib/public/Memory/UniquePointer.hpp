@@ -148,7 +148,7 @@ Reset(
     if (!this->IsEmpty())
     {
         xpf::MemoryAllocator::Destruct(memoryBlock.ObjectBase);
-        allocator.FreeMemory(reinterpret_cast<void**>(&memoryBlock.AllocationBase));
+        allocator.FreeMemory(memoryBlock.AllocationBase);
 
         memoryBlock.AllocationBase = nullptr;
         memoryBlock.ObjectBase = nullptr;

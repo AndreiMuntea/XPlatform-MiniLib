@@ -92,8 +92,7 @@ xpf::ReadWriteLock::Create(
     // Plus it makes the code easier as ERESOURCE requires resident storage.
     // So we need to allocate from nonpagedpool.
     //
-    XPF_RW_LOCK* lock = reinterpret_cast<XPF_RW_LOCK*>(
-                                xpf::CriticalMemoryAllocator::AllocateMemory(sizeof(XPF_RW_LOCK)));
+    XPF_RW_LOCK* lock = static_cast<XPF_RW_LOCK*>(xpf::CriticalMemoryAllocator::AllocateMemory(sizeof(XPF_RW_LOCK)));
     if (nullptr == lock)
     {
         status = STATUS_INSUFFICIENT_RESOURCES;
@@ -139,7 +138,7 @@ xpf::ReadWriteLock::Create(
     // Now assign it to the lock, and set the lock on nullptr.
     // It will be freed once the LockToCreate is freed.
     //
-    (*(*LockToCreate)).m_Lock = reinterpret_cast<XPF_RW_LOCK*>(lock);
+    (*(*LockToCreate)).m_Lock = static_cast<XPF_RW_LOCK*>(lock);
     lock = nullptr;
 
     //
@@ -150,7 +149,8 @@ xpf::ReadWriteLock::Create(
 Exit:
     if (nullptr != lock)
     {
-        xpf::CriticalMemoryAllocator::FreeMemory(reinterpret_cast<void**>(&lock));
+        xpf::CriticalMemoryAllocator::FreeMemory(lock);
+        lock = nullptr;
     }
 
     if (!NT_SUCCESS(status))
@@ -185,7 +185,7 @@ xpf::ReadWriteLock::Destroy(
     // We need access to RW_LOCK structure. R-CAST here to ease the access.
     // On release this will be optimized away anyway.
     //
-    XPF_RW_LOCK* lock = reinterpret_cast<XPF_RW_LOCK*>(this->m_Lock);
+    XPF_RW_LOCK* lock = static_cast<XPF_RW_LOCK*>(this->m_Lock);
 
     //
     // Platform specific cleanup.
@@ -216,7 +216,7 @@ xpf::ReadWriteLock::Destroy(
     //
     // And now clean the allocated memory.
     //
-    xpf::CriticalMemoryAllocator::FreeMemory(&this->m_Lock);
+    xpf::CriticalMemoryAllocator::FreeMemory(this->m_Lock);
     this->m_Lock = nullptr;
 }
 
@@ -240,7 +240,7 @@ xpf::ReadWriteLock::LockExclusive(
     // We need access to RW_LOCK structure. R-CAST here to ease the access.
     // On release this will be optimized away anyway.
     //
-    XPF_RW_LOCK* lock = reinterpret_cast<XPF_RW_LOCK*>(this->m_Lock);
+    XPF_RW_LOCK* lock = static_cast<XPF_RW_LOCK*>(this->m_Lock);
 
     #if defined XPF_PLATFORM_WIN_UM
         ::AcquireSRWLockExclusive(&lock->RwLock);
@@ -305,7 +305,7 @@ xpf::ReadWriteLock::UnLockExclusive(
     // We need access to RW_LOCK structure. R-CAST here to ease the access.
     // On release this will be optimized away anyway.
     //
-    XPF_RW_LOCK* lock = reinterpret_cast<XPF_RW_LOCK*>(this->m_Lock);
+    XPF_RW_LOCK* lock = static_cast<XPF_RW_LOCK*>(this->m_Lock);
 
     #if defined XPF_PLATFORM_WIN_UM
         _Analysis_assume_lock_held_(lock->RwLock);
@@ -346,7 +346,7 @@ xpf::ReadWriteLock::LockShared(
     // We need access to RW_LOCK structure. R-CAST here to ease the access.
     // On release this will be optimized away anyway.
     //
-    XPF_RW_LOCK* lock = reinterpret_cast<XPF_RW_LOCK*>(this->m_Lock);
+    XPF_RW_LOCK* lock = static_cast<XPF_RW_LOCK*>(this->m_Lock);
 
     #if defined XPF_PLATFORM_WIN_UM
         ::AcquireSRWLockShared(&lock->RwLock);
@@ -410,7 +410,7 @@ xpf::ReadWriteLock::UnLockShared(
     // We need access to RW_LOCK structure. R-CAST here to ease the access.
     // On release this will be optimized away anyway.
     //
-    XPF_RW_LOCK* lock = reinterpret_cast<XPF_RW_LOCK*>(this->m_Lock);
+    XPF_RW_LOCK* lock = static_cast<XPF_RW_LOCK*>(this->m_Lock);
 
     #if defined XPF_PLATFORM_WIN_UM
         ::ReleaseSRWLockShared(&lock->RwLock);

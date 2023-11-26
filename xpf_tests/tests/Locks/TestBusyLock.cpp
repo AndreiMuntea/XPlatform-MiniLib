@@ -49,7 +49,7 @@ MockThreadBusyLockCallback(
     _In_opt_ xpf::thread::CallbackArgument Context
 ) noexcept(true)
 {
-    auto mockContext = reinterpret_cast<MockTestBusyLockContext*>(Context);
+    auto mockContext = static_cast<MockTestBusyLockContext*>(Context);
 
     if (nullptr != mockContext)
     {

@@ -25,16 +25,15 @@ XPF_TEST_SCENARIO(TestMemoryAllocator, TriviallyDestructibleCharacter)
 {
     XPF_TEST_EXPECT_TRUE(xpf::IsTriviallyDestructible<char>());
 
-    char* character = reinterpret_cast<char*>(xpf::MemoryAllocator::AllocateMemory(sizeof(char)));
+    char* character = static_cast<char*>(xpf::MemoryAllocator::AllocateMemory(sizeof(char)));
     XPF_TEST_EXPECT_TRUE(nullptr != character);
 
     xpf::MemoryAllocator::Construct(character, 'X');
     XPF_TEST_EXPECT_TRUE(*character == 'X');
 
     xpf::MemoryAllocator::Destruct(character);
-
-    xpf::MemoryAllocator::FreeMemory(reinterpret_cast<void**>(&character));
-    XPF_TEST_EXPECT_TRUE(nullptr == character);
+    xpf::MemoryAllocator::FreeMemory(character);
+    character = nullptr;
 }
 
 /**
@@ -48,10 +47,10 @@ XPF_TEST_SCENARIO(TestMemoryAllocator, NonTriviallyDestructibleObject)
     auto object = xpf::MemoryAllocator::AllocateMemory(sizeof(xpf::mocks::Base));
     XPF_TEST_EXPECT_TRUE(nullptr != object);
 
-    auto baseObject = reinterpret_cast<xpf::mocks::Base*>(object);
+    auto baseObject = static_cast<xpf::mocks::Base*>(object);
     xpf::MemoryAllocator::Construct(baseObject, 100);
-    xpf::MemoryAllocator::Destruct(baseObject);
 
-    xpf::MemoryAllocator::FreeMemory(reinterpret_cast<void**>(&baseObject));
-    XPF_TEST_EXPECT_TRUE(nullptr == baseObject);
+    xpf::MemoryAllocator::Destruct(baseObject);
+    xpf::MemoryAllocator::FreeMemory(baseObject);
+    baseObject = nullptr;
 }

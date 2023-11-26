@@ -48,7 +48,7 @@ MockThreadReadWriteLockCallback(
     _In_opt_ xpf::thread::CallbackArgument Context
 ) noexcept(true)
 {
-    auto mockContext = reinterpret_cast<MockTestReadWriteLockContext*>(Context);
+    auto mockContext = static_cast<MockTestReadWriteLockContext*>(Context);
 
     if (nullptr != mockContext)
     {

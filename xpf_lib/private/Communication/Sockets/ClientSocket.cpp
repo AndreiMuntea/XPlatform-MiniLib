@@ -48,7 +48,7 @@ xpf::ClientSocket::CreateClientSocketData(
     //
     // First we allocate and construct the ClientSocketData.
     //
-    data = reinterpret_cast<xpf::ClientSocketData*>(xpf::MemoryAllocator::AllocateMemory(sizeof(xpf::ClientSocketData)));
+    data = static_cast<xpf::ClientSocketData*>(xpf::MemoryAllocator::AllocateMemory(sizeof(xpf::ClientSocketData)));
     if (nullptr == data)
     {
         return nullptr;
@@ -75,7 +75,7 @@ xpf::ClientSocket::CreateClientSocketData(
 CleanUp:
     if (!NT_SUCCESS(status))
     {
-        this->DestroyClientSocketData(reinterpret_cast<void**>(&data));
+        this->DestroyClientSocketData(data);
         data = nullptr;
     }
     return data;
@@ -84,7 +84,7 @@ CleanUp:
 void
 XPF_API
 xpf::ClientSocket::DestroyClientSocketData(
-    _Inout_ void** ClientSocketData
+    _Inout_ void* ClientSocketData
 ) noexcept(true)
 {
     XPF_MAX_PASSIVE_LEVEL();
@@ -92,11 +92,11 @@ xpf::ClientSocket::DestroyClientSocketData(
     //
     // Can't free null pointer.
     //
-    if ((nullptr == ClientSocketData) || (nullptr == (*ClientSocketData)))
+    if (nullptr == ClientSocketData)
     {
         return;
     }
-    xpf::ClientSocketData* data = reinterpret_cast<xpf::ClientSocketData*>(*ClientSocketData);
+    xpf::ClientSocketData* data = static_cast<xpf::ClientSocketData*>(ClientSocketData);
 
     //
     // Shutdown the server socket, if any.
@@ -142,8 +142,9 @@ xpf::ClientSocket::DestroyClientSocketData(
     // And now destroy the object.
     //
     xpf::MemoryAllocator::Destruct(data);
-    xpf::MemoryAllocator::FreeMemory(ClientSocketData);
-    *ClientSocketData = nullptr;
+    xpf::MemoryAllocator::FreeMemory(data);
+
+    data = nullptr;
 }
 
 _Must_inspect_result_
@@ -168,7 +169,7 @@ xpf::ClientSocket::Connect(
     //
     // If the client is already connected, we bail.
     //
-    xpf::ClientSocketData* data = reinterpret_cast<xpf::ClientSocketData*>(this->m_ClientSocketData);
+    xpf::ClientSocketData* data = static_cast<xpf::ClientSocketData*>(this->m_ClientSocketData);
     if ((nullptr == data) || (data->IsConnected))
     {
         return STATUS_INVALID_STATE_TRANSITION;
@@ -267,7 +268,7 @@ xpf::ClientSocket::Disconnect(
     //
     // If the client is already disconnected, we bail.
     //
-    xpf::ClientSocketData* data = reinterpret_cast<xpf::ClientSocketData*>(this->m_ClientSocketData);
+    xpf::ClientSocketData* data = static_cast<xpf::ClientSocketData*>(this->m_ClientSocketData);
     if ((nullptr == data) || (!data->IsConnected))
     {
         return STATUS_INVALID_STATE_TRANSITION;
@@ -308,7 +309,7 @@ xpf::ClientSocket::SendData(
         //
         // We get to the underlying data.
         //
-        xpf::ClientSocketData* data = reinterpret_cast<xpf::ClientSocketData*>(this->m_ClientSocketData);
+        xpf::ClientSocketData* data = static_cast<xpf::ClientSocketData*>(this->m_ClientSocketData);
         if ((nullptr == data) || (!data->IsConnected))
         {
             return STATUS_INVALID_STATE_TRANSITION;
@@ -366,7 +367,7 @@ xpf::ClientSocket::ReceiveData(
         //
         // We get to the underlying data.
         //
-        xpf::ClientSocketData* data = reinterpret_cast<xpf::ClientSocketData*>(this->m_ClientSocketData);
+        xpf::ClientSocketData* data = static_cast<xpf::ClientSocketData*>(this->m_ClientSocketData);
         if ((nullptr == data) || (!data->IsConnected))
         {
             return STATUS_INVALID_STATE_TRANSITION;

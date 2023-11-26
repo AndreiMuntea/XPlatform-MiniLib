@@ -200,8 +200,13 @@ ReadNumber(
                   xpf::IsSameType<Type, uint64_t> || xpf::IsSameType<Type, int64_t>,
                   "Unsupported Type!");
 
+    //
+    // Grab the address of number. We'll use that to reinterpret as a byte array.
+    //
+    void* numberAddress = xpf::AddressOf(Number);
+
     return this->ReadBytes(sizeof(Type),
-                           reinterpret_cast<uint8_t*>(&Number),
+                           static_cast<uint8_t*>(numberAddress),
                            Peek);
 }
 
@@ -252,7 +257,7 @@ ReadBytes(
     //
     // Copy the buffer into destination.
     //
-    const auto& buffer = this->m_Buffer.GetBuffer();
+    const uint8_t* buffer = static_cast<const uint8_t*>(this->m_Buffer.GetBuffer());
     xpf::ApiCopyMemory(Bytes,
                        &buffer[this->m_Cursor],
                        NumberOfBytes);
@@ -336,8 +341,13 @@ WriteNumber(
                   xpf::IsSameType<Type, uint64_t> || xpf::IsSameType<Type, int64_t>,
                   "Unsupported Type!");
 
+    //
+    // Grab the address of number. We'll use that to reinterpret as a byte array.
+    //
+    const void* numberAddress = xpf::AddressOf(Number);
+
     return this->WriteBytes(sizeof(Type),
-                            reinterpret_cast<const uint8_t*>(&Number));
+                            static_cast<const uint8_t*>(numberAddress));
 }
 
 /**
@@ -382,7 +392,7 @@ WriteBytes(
     //
     // Copy the buffer into destination.
     //
-    auto& buffer = this->m_Buffer.GetBuffer();
+    auto buffer = static_cast<uint8_t*>(this->m_Buffer.GetBuffer());
     xpf::ApiCopyMemory(&buffer[this->m_Cursor],
                        Bytes,
                        NumberOfBytes);

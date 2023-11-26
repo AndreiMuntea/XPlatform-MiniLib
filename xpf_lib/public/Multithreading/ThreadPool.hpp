@@ -253,7 +253,7 @@ CreateWorkItem(
 void
 XPF_API
 DestroyWorkItem(
-    _Inout_ void** WorkItem
+    _Inout_ void* WorkItem
 ) noexcept(true);
 
 

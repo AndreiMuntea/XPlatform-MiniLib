@@ -73,7 +73,9 @@ virtual ~ClientSocket(
 ) noexcept(true)
 {
     (void) this->Disconnect();
-    this->DestroyClientSocketData(&this->m_ClientSocketData);
+
+    this->DestroyClientSocketData(this->m_ClientSocketData);
+    this->m_ClientSocketData = nullptr;
 }
 
 /**
@@ -167,7 +169,7 @@ CreateClientSocketData(
 void
 XPF_API
 DestroyClientSocketData(
-    _Inout_ void** ClientSocketData
+    _Inout_ void* ClientSocketData
 ) noexcept(true);
 
  private:

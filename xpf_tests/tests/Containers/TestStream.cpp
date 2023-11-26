@@ -54,7 +54,7 @@ XPF_TEST_SCENARIO(TestReadWriteStream, Numbers)
  */
 XPF_TEST_SCENARIO(TestReadWriteStream, Strings)
 {
-    static constexpr const char gDummy[] = "Some Dummy Value";
+    static char gDummy[] = "Some Dummy Value";
 
     xpf::Buffer dataBuffer;
 
@@ -66,7 +66,8 @@ XPF_TEST_SCENARIO(TestReadWriteStream, Strings)
     // Write byte by byte.
     for (size_t i = 0; i < sizeof(gDummy) - sizeof('\0'); ++i)
     {
-        XPF_TEST_EXPECT_TRUE(writer.WriteBytes(1, reinterpret_cast<const uint8_t*>(&gDummy[i])));
+        void* gDummyByteAddress = xpf::AlgoAddToPointer(xpf::AddressOf(gDummy), i);
+        XPF_TEST_EXPECT_TRUE(writer.WriteBytes(1, static_cast<const uint8_t*>(gDummyByteAddress)));
     }
 
     xpf::StreamReader reader(dataBuffer);
@@ -75,7 +76,9 @@ XPF_TEST_SCENARIO(TestReadWriteStream, Strings)
     for (size_t i = 0; i < sizeof(gDummy) - sizeof('\0'); ++i)
     {
         char readByte = '\0';
-        XPF_TEST_EXPECT_TRUE(reader.ReadBytes(1, reinterpret_cast<uint8_t*>(&readByte)));
+        void* readByteAddress = xpf::AddressOf(readByte);
+
+        XPF_TEST_EXPECT_TRUE(reader.ReadBytes(1, static_cast<uint8_t*>(readByteAddress)));
         XPF_TEST_EXPECT_TRUE(readByte == gDummy[i]);
     }
 }

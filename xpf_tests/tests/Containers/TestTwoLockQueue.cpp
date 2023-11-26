@@ -43,7 +43,7 @@ MockTlqStressCallback(
     _In_opt_ xpf::thread::CallbackArgument Context
 ) noexcept(true)
 {
-    auto mockContext = reinterpret_cast<xpf::TwoLockQueue*>(Context);
+    auto mockContext = static_cast<xpf::TwoLockQueue*>(Context);
     if (nullptr != mockContext)
     {
         for (size_t i = 0; i < 10000; ++i)
@@ -52,7 +52,7 @@ MockTlqStressCallback(
             _Analysis_assume_(nullptr != memory);
             XPF_DEATH_ON_FAILURE(nullptr != memory);
 
-            MockTestTlqElement* element = reinterpret_cast<MockTestTlqElement*>(memory);
+            MockTestTlqElement* element = static_cast<MockTestTlqElement*>(memory);
             xpf::MemoryAllocator::Construct(element);
 
             xpf::TlqPush(*mockContext, &element->ListEntry);
@@ -64,7 +64,8 @@ MockTlqStressCallback(
             auto crtElement = XPF_CONTAINING_RECORD(popElement, MockTestTlqElement, ListEntry);
 
             xpf::MemoryAllocator::Destruct(crtElement);
-            xpf::MemoryAllocator::FreeMemory(reinterpret_cast<void**>(&crtElement));
+            xpf::MemoryAllocator::FreeMemory(crtElement);
+            crtElement = nullptr;
         }
     }
 }

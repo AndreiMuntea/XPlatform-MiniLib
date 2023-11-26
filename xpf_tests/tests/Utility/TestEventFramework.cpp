@@ -62,7 +62,7 @@ XpfTesEventDispatchTpMethod(
     _In_opt_ xpf::thread::CallbackArgument Context
 ) noexcept(true)
 {
-    auto eventBus = reinterpret_cast<xpf::Optional<xpf::EventBus>*>(Context);
+    auto eventBus = static_cast<xpf::Optional<xpf::EventBus>*>(Context);
     if (nullptr != eventBus)
     {
         for (uint32_t eventId = 0; eventId < 100; ++eventId)

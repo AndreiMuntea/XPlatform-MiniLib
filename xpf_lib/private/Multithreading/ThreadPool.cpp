@@ -47,7 +47,7 @@ xpf::ThreadPool::CreateWorkItem(
     //
     // Work items will be stored in non-paged memory. They are critical allocations.
     //
-    workItem = reinterpret_cast<ThreadPoolWorkItem*>(this->m_WorkItemAllocator.AllocateMemory(sizeof(*workItem)));
+    workItem = static_cast<ThreadPoolWorkItem*>(this->m_WorkItemAllocator.AllocateMemory(sizeof(*workItem)));
     if (nullptr == workItem)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -76,7 +76,7 @@ xpf::ThreadPool::CreateWorkItem(
 void
 XPF_API
 xpf::ThreadPool::DestroyWorkItem(
-    _Inout_ void** WorkItem
+    _Inout_ void* WorkItem
 ) noexcept(true)
 {
     XPF_MAX_DISPATCH_LEVEL();
@@ -84,7 +84,7 @@ xpf::ThreadPool::DestroyWorkItem(
     //
     // Sanity check that we have a valid object.
     //
-    if ((nullptr == WorkItem) || (nullptr == (*WorkItem)))
+    if (nullptr == WorkItem)
     {
         return;
     }
@@ -92,18 +92,15 @@ xpf::ThreadPool::DestroyWorkItem(
     //
     // Let's get a more familiar form.
     //
-    ThreadPoolWorkItem* workItem = reinterpret_cast<ThreadPoolWorkItem*>(*WorkItem);
+    ThreadPoolWorkItem* workItem = static_cast<ThreadPoolWorkItem*>(WorkItem);
 
     //
     // Destroy the work item.
     //
     xpf::MemoryAllocator::Destruct(workItem);
-    this->m_WorkItemAllocator.FreeMemory(reinterpret_cast<void**>(&workItem));
 
-    //
-    // Don't leave invalid memory...
-    //
-    *WorkItem = nullptr;
+    this->m_WorkItemAllocator.FreeMemory(workItem);
+    workItem = nullptr;
 }
 
 _Must_inspect_result_
@@ -443,7 +440,7 @@ xpf::ThreadPool::ThreadPoolMainCallback(
 {
     XPF_MAX_PASSIVE_LEVEL();
 
-    ThreadPoolThreadContext* threadContext = reinterpret_cast<ThreadPoolThreadContext*>(Context);
+    ThreadPoolThreadContext* threadContext = static_cast<ThreadPoolThreadContext*>(Context);
 
     //
     // We always need a valid thread context - this is an internal callback.
@@ -504,7 +501,7 @@ xpf::ThreadPool::ThreadPoolProcessWorkItems(
 
     size_t workItemsProcessed = 0;
     XPF_SINGLE_LIST_ENTRY* crtEntry = nullptr;
-    ThreadPoolThreadContext* threadContext = reinterpret_cast<ThreadPoolThreadContext*>(ThreadPoolContext);
+    ThreadPoolThreadContext* threadContext = static_cast<ThreadPoolThreadContext*>(ThreadPoolContext);
 
     //
     // We always need a valid thread context - this is an internal callback.
@@ -551,7 +548,8 @@ xpf::ThreadPool::ThreadPoolProcessWorkItems(
             //
             // Now let's clean the allocated resources for the work item.
             //
-            threadContext->OwnerThreadPool->DestroyWorkItem(reinterpret_cast<void**>(&workItem));
+            threadContext->OwnerThreadPool->DestroyWorkItem(workItem);
+            workItem = nullptr;
         }
     }
 

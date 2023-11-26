@@ -42,7 +42,7 @@ MockServerCallback(
     _In_opt_ xpf::thread::CallbackArgument Context
 ) noexcept(true)
 {
-    auto mockContext = reinterpret_cast<MockServerThreadContext*>(Context);
+    auto mockContext = static_cast<MockServerThreadContext*>(Context);
     if (nullptr == mockContext)
     {
         XPF_ASSERT(false);
@@ -72,8 +72,10 @@ MockServerCallback(
 
     /* Send a dummy buffer. */
     xpf::StringView<char> hello = "Hello there!";
+    const void* helloBuffer = hello.Buffer();
+
     mockContext->ReturnStatus = (*mockContext->Server).SendData(hello.BufferSize(),
-                                                                reinterpret_cast<const uint8_t*>(hello.Buffer()),
+                                                                static_cast<const uint8_t*>(helloBuffer),
                                                                 newClient);
     if (!NT_SUCCESS(mockContext->ReturnStatus))
     {
@@ -86,8 +88,10 @@ MockServerCallback(
     xpf::ApiZeroMemory(response, sizeof(response));
 
     size_t recvDataSize = sizeof(response);
+    void* responseBuffer = response;
+
     mockContext->ReturnStatus = (*mockContext->Server).ReceiveData(&recvDataSize,
-                                                                   reinterpret_cast<uint8_t*>(response),
+                                                                   static_cast<uint8_t*>(responseBuffer),
                                                                    newClient);
     if (!NT_SUCCESS(mockContext->ReturnStatus))
     {
@@ -119,7 +123,7 @@ MockClientCallback(
     _In_opt_ xpf::thread::CallbackArgument Context
 ) noexcept(true)
 {
-    auto mockContext = reinterpret_cast<MockClientThreadContext*>(Context);
+    auto mockContext = static_cast<MockClientThreadContext*>(Context);
     if (nullptr == mockContext)
     {
         XPF_ASSERT(false);
@@ -141,9 +145,10 @@ MockClientCallback(
     char hello[256];
     xpf::ApiZeroMemory(hello, sizeof(hello));
 
+    void* helloBuffer = hello;
     size_t recvDataSize = sizeof(hello);
     mockContext->ReturnStatus = (*mockContext->Client).ReceiveData(&recvDataSize,
-                                                                   reinterpret_cast<uint8_t*>(hello));
+                                                                   static_cast<uint8_t*>(helloBuffer));
     if (!NT_SUCCESS(mockContext->ReturnStatus))
     {
         XPF_ASSERT(false);
@@ -162,8 +167,10 @@ MockClientCallback(
 
     /* Send a dummy buffer. */
     xpf::StringView<char> response = "General Kenobi!";
+    const void* resposneBuffer = response.Buffer();
+
     mockContext->ReturnStatus = (*mockContext->Client).SendData(response.BufferSize(),
-                                                                reinterpret_cast<const uint8_t*>(response.Buffer()));
+                                                                static_cast<const uint8_t*>(resposneBuffer));
     if (!NT_SUCCESS(mockContext->ReturnStatus))
     {
         XPF_ASSERT(false);
@@ -244,11 +251,13 @@ XPF_TEST_SCENARIO(TestSocketClientServeir, HttpBinRequest)
                                            "Host: httpbin.org\r\n"
                                            "Connection: close\r\n"
                                            "\r\n";
+    const void* httpGetRequestBuffer = httpGetRequest.Buffer();
+
     NTSTATUS status = client.Connect();
     XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     status = client.SendData(httpGetRequest.BufferSize(),
-                             reinterpret_cast<const uint8_t*>(httpGetRequest.Buffer()));
+                             static_cast<const uint8_t*>(httpGetRequestBuffer));
     XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     xpf::Buffer response;
@@ -273,10 +282,10 @@ XPF_TEST_SCENARIO(TestSocketClientServeir, HttpBinRequest)
     // {\n  \"uuid\": \"54496741-7c79-4d38-...
     //
     status = client.ReceiveData(&responseSize,
-                                response.GetBuffer());
+                                static_cast<uint8_t*>(response.GetBuffer()));
     XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
-    xpf::StringView<char> actualResponse(reinterpret_cast<const char*>(response.GetBuffer()),
+    xpf::StringView<char> actualResponse(static_cast<const char*>(response.GetBuffer()),
                                          responseSize);
     XPF_TEST_EXPECT_TRUE(actualResponse.Substring("HTTP/1.1 200 OK", true, nullptr));
 

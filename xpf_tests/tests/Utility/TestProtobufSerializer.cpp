@@ -251,7 +251,8 @@ XPF_TEST_SCENARIO(TestProtobufSerializer, BinaryBlobs)
     XPF_TEST_EXPECT_TRUE(protobuf.SerializeBinaryBlob(someData, streamWriter));
     XPF_TEST_EXPECT_TRUE(protobuf.DeserializeBinaryBlob(binaryData, streamReader));
 
-    xpf::StringView<char> resultedData(reinterpret_cast<char*>(&binaryData[0]),
+    void* binaryDataBuffer = xpf::AddressOf(binaryData[0]);
+    xpf::StringView<char> resultedData(static_cast<char*>(binaryDataBuffer),
                                        binaryData.Size());
     XPF_TEST_EXPECT_TRUE(someData.Equals(resultedData, true));
 }

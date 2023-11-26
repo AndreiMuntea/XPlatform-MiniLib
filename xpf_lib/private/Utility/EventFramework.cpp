@@ -182,7 +182,7 @@ xpf::EventBus::EnqueueAsync(
     //
     // Now construct the object.
     //
-    xpf::EventData* eventData = reinterpret_cast<xpf::EventData*>(memoryBlock);
+    xpf::EventData* eventData = static_cast<xpf::EventData*>(memoryBlock);
     xpf::MemoryAllocator::Construct(eventData);
 
     eventData->Event = Event;
@@ -202,7 +202,8 @@ CleanUp:
     if (!NT_SUCCESS(status))
     {
         xpf::MemoryAllocator::Destruct(eventData);
-        this->m_Allocator.FreeMemory(reinterpret_cast<void**>(&eventData));
+        this->m_Allocator.FreeMemory(eventData);
+        eventData = nullptr;
     }
     return status;
 }
@@ -487,7 +488,7 @@ xpf::EventBus::AsyncCallback(
 {
     XPF_MAX_PASSIVE_LEVEL();
 
-    xpf::EventData* eventData = reinterpret_cast<xpf::EventData*>(EventData);
+    xpf::EventData* eventData = static_cast<xpf::EventData*>(EventData);
     if (nullptr == eventData)
     {
         XPF_DEATH_ON_FAILURE(false);
@@ -519,7 +520,8 @@ xpf::EventBus::AsyncCallback(
     // And then free the memory.
     //
     xpf::MemoryAllocator::Destruct(eventData);
-    allocator.FreeMemory(reinterpret_cast<void**>(&eventData));
+    allocator.FreeMemory(eventData);
+    eventData = nullptr;
 }
 
 xpf::SharedPointer<xpf::EventBus::ListenersList, xpf::CriticalMemoryAllocator>

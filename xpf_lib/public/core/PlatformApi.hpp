@@ -130,7 +130,7 @@ ApiZeroMemory(
 void
 XPF_API
 ApiFreeMemory(
-    _Inout_ void** MemoryBlock
+    _Inout_opt_ void* MemoryBlock
 ) noexcept(true);
 
 /**
@@ -251,26 +251,31 @@ ApiAtomicIncrement(
     xpf::ApiCompilerBarrier();
 
     #if defined XPF_COMPILER_MSVC
+        //
+        // We'll cast the number to the proper type below.
+        // First we'll cast to generic volatile void*. We want to avoid reinterpret cast.
+        //
+        volatile void* number = static_cast<volatile void*>(Number);
 
         if constexpr (xpf::IsSameType<Type, uint8_t> || xpf::IsSameType<Type, int8_t>)
         {
             static_assert(sizeof(uint8_t) == sizeof(char) && sizeof(int8_t) == sizeof(char), "Invalid size!");                      // NOLINT(*)
-            return static_cast<Type>(InterlockedExchangeAdd8(reinterpret_cast<volatile char*>(Number), char{1})) + Type{ 1 };       // NOLINT(*)
+            return static_cast<Type>(InterlockedExchangeAdd8(static_cast<volatile char*>(number), char{1})) + Type{ 1 };            // NOLINT(*)
         }
         else if constexpr (xpf::IsSameType<Type, uint16_t> || xpf::IsSameType<Type, int16_t>)
         {
             static_assert(sizeof(uint16_t) == sizeof(short) && sizeof(int16_t) == sizeof(short), "Invalid size!");                  // NOLINT(*)
-            return static_cast<Type>(InterlockedIncrement16(reinterpret_cast<volatile short*>(Number)));                            // NOLINT(*)
+            return static_cast<Type>(InterlockedIncrement16(static_cast<volatile short*>(number)));                                 // NOLINT(*)
         }
         else if constexpr (xpf::IsSameType<Type, uint32_t> || xpf::IsSameType<Type, int32_t>)
         {
             static_assert(sizeof(uint32_t) == sizeof(LONG) && sizeof(int32_t) == sizeof(LONG), "Invalid size!");                    // NOLINT(*)
-            return static_cast<Type>(InterlockedIncrement(reinterpret_cast<volatile LONG*>(Number)));                               // NOLINT(*)
+            return static_cast<Type>(InterlockedIncrement(static_cast<volatile LONG*>(number)));                                    // NOLINT(*)
         }
         else if constexpr (xpf::IsSameType<Type, uint64_t> || xpf::IsSameType<Type, int64_t>)
         {
             static_assert(sizeof(uint64_t) == sizeof(LONG64) && sizeof(int64_t) == sizeof(LONG64), "Invalid size!");                // NOLINT(*)
-            return static_cast<Type>(InterlockedIncrement64(reinterpret_cast<volatile LONG64*>(Number)));                           // NOLINT(*)
+            return static_cast<Type>(InterlockedIncrement64(static_cast<volatile LONG64*>(number)));                                // NOLINT(*)
         }
 
     #elif defined XPF_COMPILER_GCC || defined XPF_COMPILER_CLANG
@@ -319,26 +324,31 @@ ApiAtomicDecrement(
     xpf::ApiCompilerBarrier();
 
     #if defined XPF_COMPILER_MSVC
+        //
+        // We'll cast the number to the proper type below.
+        // First we'll cast to generic volatile void*. We want to avoid reinterpret cast.
+        //
+        volatile void* number = static_cast<volatile void*>(Number);
 
         if constexpr (xpf::IsSameType<Type, uint8_t> || xpf::IsSameType<Type, int8_t>)
         {
             static_assert(sizeof(uint8_t) == sizeof(char) && sizeof(int8_t) == sizeof(char), "Invalid size!");                      // NOLINT(*)
-            return static_cast<Type>(InterlockedExchangeAdd8(reinterpret_cast<volatile char*>(Number), char{-1})) - Type{ 1 };      // NOLINT(*)
+            return static_cast<Type>(InterlockedExchangeAdd8(static_cast<volatile char*>(number), char{-1})) - Type{ 1 };           // NOLINT(*)
         }
         else if constexpr (xpf::IsSameType<Type, uint16_t> || xpf::IsSameType<Type, int16_t>)
         {
             static_assert(sizeof(uint16_t) == sizeof(short) && sizeof(int16_t) == sizeof(short), "Invalid size!");                  // NOLINT(*)
-            return static_cast<Type>(InterlockedDecrement16(reinterpret_cast<volatile short*>(Number)));                            // NOLINT(*)
+            return static_cast<Type>(InterlockedDecrement16(static_cast<volatile short*>(number)));                                 // NOLINT(*)
         }
         else if constexpr (xpf::IsSameType<Type, uint32_t> || xpf::IsSameType<Type, int32_t>)
         {
             static_assert(sizeof(uint32_t) == sizeof(LONG) && sizeof(int32_t) == sizeof(LONG), "Invalid size!");                    // NOLINT(*)
-            return static_cast<Type>(InterlockedDecrement(reinterpret_cast<volatile LONG*>(Number)));                               // NOLINT(*)
+            return static_cast<Type>(InterlockedDecrement(static_cast<volatile LONG*>(number)));                                    // NOLINT(*)
         }
         else if constexpr (xpf::IsSameType<Type, uint64_t> || xpf::IsSameType<Type, int64_t>)
         {
             static_assert(sizeof(uint64_t) == sizeof(LONG64) && sizeof(int64_t) == sizeof(LONG64), "Invalid size!");                // NOLINT(*)
-            return static_cast<Type>(InterlockedDecrement64(reinterpret_cast<volatile LONG64*>(Number)));                           // NOLINT(*)
+            return static_cast<Type>(InterlockedDecrement64(static_cast<volatile LONG64*>(number)));                                // NOLINT(*)
         }
 
     #elif defined XPF_COMPILER_GCC || defined XPF_COMPILER_CLANG
@@ -395,32 +405,37 @@ ApiAtomicCompareExchange(
     xpf::ApiCompilerBarrier();
 
     #if defined XPF_COMPILER_MSVC
+        //
+        // We'll cast the destination to the proper type below.
+        // First we'll cast to generic volatile void*. We want to avoid reinterpret cast.
+        //
+        volatile void* destination = static_cast<volatile void*>(Destination);
 
         if constexpr (xpf::IsSameType<Type, uint8_t> || xpf::IsSameType<Type, int8_t>)
         {
             static_assert(sizeof(uint8_t) == sizeof(char) && sizeof(int8_t) == sizeof(char), "Invalid size!");                      // NOLINT(*)
-            return static_cast<Type>(_InterlockedCompareExchange8(reinterpret_cast<volatile char*>(Destination),                    // NOLINT(*)
+            return static_cast<Type>(_InterlockedCompareExchange8(static_cast<volatile char*>(destination),                         // NOLINT(*)
                                                                   static_cast<char>(Exchange),                                      // NOLINT(*)
                                                                   static_cast<char>(Comperand)));                                   // NOLINT(*)
         }
         else if constexpr (xpf::IsSameType<Type, uint16_t> || xpf::IsSameType<Type, int16_t>)
         {
             static_assert(sizeof(uint16_t) == sizeof(short) && sizeof(int16_t) == sizeof(short), "Invalid size!");                  // NOLINT(*)
-            return static_cast<Type>(InterlockedCompareExchange16(reinterpret_cast<volatile short*>(Destination),                   // NOLINT(*)
+            return static_cast<Type>(InterlockedCompareExchange16(static_cast<volatile short*>(destination),                        // NOLINT(*)
                                                                   static_cast<short>(Exchange),                                     // NOLINT(*)
                                                                   static_cast<short>(Comperand)));                                  // NOLINT(*)
         }
         else if constexpr (xpf::IsSameType<Type, uint32_t> || xpf::IsSameType<Type, int32_t>)
         {
             static_assert(sizeof(uint32_t) == sizeof(LONG) && sizeof(int32_t) == sizeof(LONG), "Invalid size!");                    // NOLINT(*)
-            return static_cast<Type>(InterlockedCompareExchange(reinterpret_cast<volatile LONG*>(Destination),                      // NOLINT(*)
+            return static_cast<Type>(InterlockedCompareExchange(static_cast<volatile LONG*>(destination),                           // NOLINT(*)
                                                                 static_cast<LONG>(Exchange),                                        // NOLINT(*)
                                                                 static_cast<LONG>(Comperand)));                                     // NOLINT(*)
         }
         else if constexpr (xpf::IsSameType<Type, uint64_t> || xpf::IsSameType<Type, int64_t>)
         {
             static_assert(sizeof(uint64_t) == sizeof(LONG64) && sizeof(int64_t) == sizeof(LONG64), "Invalid size!");                // NOLINT(*)
-            return static_cast<Type>(InterlockedCompareExchange64(reinterpret_cast<volatile LONG64*>(Destination),                  // NOLINT(*)
+            return static_cast<Type>(InterlockedCompareExchange64(static_cast<volatile LONG64*>(destination),                       // NOLINT(*)
                                                                   static_cast<LONG64>(Exchange),                                    // NOLINT(*)
                                                                   static_cast<LONG64>(Comperand)));                                 // NOLINT(*)
         }

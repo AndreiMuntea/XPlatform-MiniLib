@@ -42,7 +42,7 @@ MockSignalCallback(
     _In_opt_ xpf::thread::CallbackArgument Context
 ) noexcept(true)
 {
-    auto mockContext = reinterpret_cast<MockTestSignalContext*>(Context);
+    auto mockContext = static_cast<MockTestSignalContext*>(Context);
 
     if (nullptr != mockContext)
     {

@@ -168,7 +168,7 @@ atexit(
     //
     // On fail we'll simply not call the destructor so we'll have a leak.
     //
-    destructorEntry = reinterpret_cast<XPF_CPP_DESTRUCTOR*>(
+    destructorEntry = static_cast<XPF_CPP_DESTRUCTOR*>(
                                     xpf::CriticalMemoryAllocator::AllocateMemory(sizeof(XPF_CPP_DESTRUCTOR)));
 
     //
@@ -324,7 +324,8 @@ XpfDeinitializeCppSupport(
         //
         // And finally clean up allocated resources.
         //
-        xpf::CriticalMemoryAllocator::FreeMemory(reinterpret_cast<void**>(&destructorEntry));
+        xpf::CriticalMemoryAllocator::FreeMemory(destructorEntry);
+        destructorEntry = nullptr;
     }
 
     //

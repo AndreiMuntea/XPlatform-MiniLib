@@ -123,7 +123,7 @@ xpf::ServerSocket::CreateServerSocketData(
     //
     // First we allocate and construct the ServerSocketData.
     //
-    data = reinterpret_cast<xpf::ServerSocketData*>(xpf::MemoryAllocator::AllocateMemory(sizeof(xpf::ServerSocketData)));
+    data = static_cast<xpf::ServerSocketData*>(xpf::MemoryAllocator::AllocateMemory(sizeof(xpf::ServerSocketData)));
     if (nullptr == data)
     {
         return nullptr;
@@ -232,7 +232,7 @@ xpf::ServerSocket::CreateServerSocketData(
 CleanUp:
     if (!NT_SUCCESS(status))
     {
-        this->DestroyServerSocketData(reinterpret_cast<void**>(&data));
+        this->DestroyServerSocketData(data);
         data = nullptr;
     }
     return data;
@@ -241,7 +241,7 @@ CleanUp:
 void
 XPF_API
 xpf::ServerSocket::DestroyServerSocketData(
-    _Inout_ void** ServerSocketData
+    _Inout_ void* ServerSocketData
 ) noexcept(true)
 {
     XPF_MAX_PASSIVE_LEVEL();
@@ -249,11 +249,11 @@ xpf::ServerSocket::DestroyServerSocketData(
     //
     // Can't free null pointer.
     //
-    if ((nullptr == ServerSocketData) || (nullptr == (*ServerSocketData)))
+    if (nullptr == ServerSocketData)
     {
         return;
     }
-    xpf::ServerSocketData* data = reinterpret_cast<xpf::ServerSocketData*>(*ServerSocketData);
+    xpf::ServerSocketData* data = static_cast<xpf::ServerSocketData*>(ServerSocketData);
 
     //
     // Shutdown the server socket, if any.
@@ -294,8 +294,9 @@ xpf::ServerSocket::DestroyServerSocketData(
     // And now destroy the object.
     //
     xpf::MemoryAllocator::Destruct(data);
-    xpf::MemoryAllocator::FreeMemory(ServerSocketData);
-    *ServerSocketData = nullptr;
+    xpf::MemoryAllocator::FreeMemory(data);
+
+    data = nullptr;
 }
 
 _Must_inspect_result_
@@ -310,7 +311,7 @@ xpf::ServerSocket::EstablishClientConnection(
     //
     // We need the socket to listen to.
     //
-    xpf::ServerSocketData* serverSocketData = reinterpret_cast<xpf::ServerSocketData*>(this->m_ServerSocketData);
+    xpf::ServerSocketData* serverSocketData = static_cast<xpf::ServerSocketData*>(this->m_ServerSocketData);
 
     //
     // First we get to the underlying data.
@@ -351,7 +352,7 @@ xpf::ServerSocket::CloseClientConnection(
     }
     ServerSocketClientData& clientData = (*clientCookie);
 
-    xpf::ServerSocketData* serverSocketData = reinterpret_cast<xpf::ServerSocketData*>(this->m_ServerSocketData);
+    xpf::ServerSocketData* serverSocketData = static_cast<xpf::ServerSocketData*>(this->m_ServerSocketData);
 
     if (nullptr != clientData.ClientSocket)
     {
@@ -511,7 +512,7 @@ xpf::ServerSocket::SendData(
     {
         return STATUS_INVALID_PARAMETER;
     }
-    xpf::ServerSocketData* serverSocketData = reinterpret_cast<xpf::ServerSocketData*>(this->m_ServerSocketData);
+    xpf::ServerSocketData* serverSocketData = static_cast<xpf::ServerSocketData*>(this->m_ServerSocketData);
 
     for (size_t retries = 0; retries < 5; ++retries)
     {
@@ -570,7 +571,7 @@ xpf::ServerSocket::ReceiveData(
     {
         return STATUS_INVALID_PARAMETER;
     }
-    xpf::ServerSocketData* serverSocketData = reinterpret_cast<xpf::ServerSocketData*>(this->m_ServerSocketData);
+    xpf::ServerSocketData* serverSocketData = static_cast<xpf::ServerSocketData*>(this->m_ServerSocketData);
 
     for (size_t retries = 0; retries < 5; ++retries)
     {

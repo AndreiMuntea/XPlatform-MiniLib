@@ -340,7 +340,9 @@ xpf::BerkeleySocket::InitializeSocketApiProvider(
         if (0 != gleResult)
         {
             xpf::MemoryAllocator::Destruct(apiProvider);
-            xpf::MemoryAllocator::FreeMemory(reinterpret_cast<void**>(&apiProvider));
+            xpf::MemoryAllocator::FreeMemory(apiProvider);
+
+            apiProvider = nullptr;
             return STATUS_CONNECTION_INVALID;
         }
     #elif defined XPF_PLATFORM_LINUX_UM
@@ -359,7 +361,9 @@ xpf::BerkeleySocket::InitializeSocketApiProvider(
         if (!NT_SUCCESS(status))
         {
             xpf::MemoryAllocator::Destruct(apiProvider);
-            xpf::MemoryAllocator::FreeMemory(reinterpret_cast<void**>(&apiProvider));
+            xpf::MemoryAllocator::FreeMemory(apiProvider);
+
+            apiProvider = nullptr;
             return status;
         }
 
@@ -372,7 +376,9 @@ xpf::BerkeleySocket::InitializeSocketApiProvider(
             ::WskDeregister(&apiProvider->WskRegistration);
 
             xpf::MemoryAllocator::Destruct(apiProvider);
-            xpf::MemoryAllocator::FreeMemory(reinterpret_cast<void**>(&apiProvider));
+            xpf::MemoryAllocator::FreeMemory(apiProvider);
+
+            apiProvider = nullptr;
             return status;
         }
     #else
@@ -404,7 +410,7 @@ xpf::BerkeleySocket::DeInitializeSocketApiProvider(
     {
         return;
     }
-    auto apiProvider = reinterpret_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(*SocketApiProvider);
+    auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(*SocketApiProvider);
 
     //
     // Deinitialize the support provider.
@@ -431,7 +437,9 @@ xpf::BerkeleySocket::DeInitializeSocketApiProvider(
     // And now destroy the object.
     //
     xpf::MemoryAllocator::Destruct(apiProvider);
-    xpf::MemoryAllocator::FreeMemory(SocketApiProvider);
+    xpf::MemoryAllocator::FreeMemory(apiProvider);
+
+    apiProvider = nullptr;
     *SocketApiProvider = nullptr;
 }
 
@@ -463,7 +471,7 @@ xpf::BerkeleySocket::GetAddressInformation(
     {
         return STATUS_INVALID_PARAMETER;
     }
-    auto apiProvider = reinterpret_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
+    auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
 
     //
     // Platform specific query.
@@ -505,11 +513,11 @@ xpf::BerkeleySocket::GetAddressInformation(
                                                  &nodeNameUnicode,
                                                  &serviceNameUnicode,
                                                  ULONG{0},
-                                                 reinterpret_cast<GUID*>(NULL),
-                                                 reinterpret_cast<PADDRINFOEXW>(NULL),
+                                                 static_cast<GUID*>(NULL),
+                                                 static_cast<PADDRINFOEXW>(NULL),
                                                  AddrInfo,
-                                                 reinterpret_cast<PEPROCESS>(NULL),
-                                                 reinterpret_cast<PETHREAD>(NULL));
+                                                 static_cast<PEPROCESS>(NULL),
+                                                 static_cast<PETHREAD>(NULL));
 
         /* And before going further, we cleanup the resources. */
         xpf::BerkeleySocket::WskFreeUnicodeString(&nodeNameUnicode);
@@ -555,7 +563,7 @@ xpf::BerkeleySocket::FreeAddressInformation(
     {
         return STATUS_INVALID_PARAMETER;
     }
-    auto apiProvider = reinterpret_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
+    auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
 
     //
     // Platform specific cleanup.
@@ -604,13 +612,12 @@ xpf::BerkeleySocket::CreateSocket(
     {
         return STATUS_INVALID_PARAMETER;
     }
-    auto apiProvider = reinterpret_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
+    auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
 
     //
     // Create the new socket.
     //
-    newSocket = reinterpret_cast<xpf::BerkeleySocket::SocketInternal*>(
-                        xpf::MemoryAllocator::AllocateMemory(sizeof(*newSocket)));
+    newSocket = static_cast<xpf::BerkeleySocket::SocketInternal*>(xpf::MemoryAllocator::AllocateMemory(sizeof(*newSocket)));
     if (nullptr == newSocket)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -642,7 +649,9 @@ xpf::BerkeleySocket::CreateSocket(
         if (INVALID_SOCKET == newSocket->Socket)
         {
             xpf::MemoryAllocator::Destruct(newSocket);
-            xpf::MemoryAllocator::FreeMemory(reinterpret_cast<void**>(&newSocket));
+            xpf::MemoryAllocator::FreeMemory(newSocket);
+
+            newSocket = nullptr;
             return STATUS_CONNECTION_INVALID;
         }
     #elif defined XPF_PLATFORM_LINUX_UM
@@ -650,7 +659,9 @@ xpf::BerkeleySocket::CreateSocket(
         if (-1 == newSocket->Socket)
         {
             xpf::MemoryAllocator::Destruct(newSocket);
-            xpf::MemoryAllocator::FreeMemory(reinterpret_cast<void**>(&newSocket));
+            xpf::MemoryAllocator::FreeMemory(newSocket);
+
+            newSocket = nullptr;
             return STATUS_CONNECTION_INVALID;
         }
     #elif defined XPF_PLATFORM_WIN_KM
@@ -673,7 +684,9 @@ xpf::BerkeleySocket::CreateSocket(
         if (!NT_SUCCESS(status))
         {
             xpf::MemoryAllocator::Destruct(newSocket);
-            xpf::MemoryAllocator::FreeMemory(reinterpret_cast<void**>(&newSocket));
+            xpf::MemoryAllocator::FreeMemory(newSocket);
+
+            newSocket = nullptr;
             return STATUS_CONNECTION_INVALID;
         }
     #else
@@ -707,7 +720,7 @@ xpf::BerkeleySocket::ShutdownSocket(
     {
         return STATUS_INVALID_PARAMETER;
     }
-    auto socket = reinterpret_cast<xpf::BerkeleySocket::SocketInternal*>(*TargetSocket);
+    auto socket = static_cast<xpf::BerkeleySocket::SocketInternal*>(*TargetSocket);
 
     //
     // Proper socket shutdown.
@@ -764,7 +777,9 @@ xpf::BerkeleySocket::ShutdownSocket(
     // And now destroy the object.
     //
     xpf::MemoryAllocator::Destruct(socket);
-    xpf::MemoryAllocator::FreeMemory(TargetSocket);
+    xpf::MemoryAllocator::FreeMemory(socket);
+
+    socket = nullptr;
     *TargetSocket = nullptr;
     return STATUS_SUCCESS;
 }
@@ -1067,7 +1082,9 @@ xpf::BerkeleySocket::Accept(
         if (INVALID_SOCKET == newSocket->Socket)
         {
             xpf::MemoryAllocator::Destruct(newSocket);
-            xpf::MemoryAllocator::FreeMemory(reinterpret_cast<void**>(&newSocket));
+            xpf::MemoryAllocator::FreeMemory(newSocket);
+
+            newSocket = nullptr;
             return STATUS_CONNECTION_REFUSED;
         }
     #elif defined XPF_PLATFORM_LINUX_UM
@@ -1075,7 +1092,9 @@ xpf::BerkeleySocket::Accept(
         if (-1 == newSocket->Socket)
         {
             xpf::MemoryAllocator::Destruct(newSocket);
-            xpf::MemoryAllocator::FreeMemory(reinterpret_cast<void**>(&newSocket));
+            xpf::MemoryAllocator::FreeMemory(newSocket);
+
+            newSocket = nullptr;
             return STATUS_CONNECTION_REFUSED;
         }
     #elif defined XPF_PLATFORM_WIN_KM
@@ -1096,7 +1115,9 @@ xpf::BerkeleySocket::Accept(
         if (!NT_SUCCESS(status))
         {
             xpf::MemoryAllocator::Destruct(newSocket);
-            xpf::MemoryAllocator::FreeMemory(reinterpret_cast<void**>(&newSocket));
+            xpf::MemoryAllocator::FreeMemory(newSocket);
+
+            newSocket = nullptr;
             return status;
         }
     #else

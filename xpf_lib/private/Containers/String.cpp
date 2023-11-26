@@ -25,9 +25,9 @@ static NTSTATUS XPF_API
 XpfPerformIConv(
     _In_ _Const_ const char* FromCodec,
     _In_ _Const_ const char* ToCodec,
-    _Inout_ char* InputBuffer,
+    _Inout_ void* InputBuffer,
     _In_ size_t InputBufferSize,
-    _Inout_ char* OutputBuffer,
+    _Inout_ void* OutputBuffer,
     _In_ size_t OutputBufferSize
 ) noexcept(true)
 {
@@ -59,12 +59,19 @@ XpfPerformIConv(
     }
 
     //
+    // Get the input and output as character buffer.
+    // We'll need to pass a char** as input and output.
+    //
+    char* inputBuffer = static_cast<char*>(InputBuffer);
+    char* outputBuffer = static_cast<char*>(OutputBuffer);
+
+    //
     // Do the actual conversion.
     //
     size_t result = iconv(iconvHandle,
-                          &InputBuffer,
+                          &inputBuffer,
                           &InputBufferSize,
-                          &OutputBuffer,
+                          &outputBuffer,
                           &OutputBufferSize);
 
     //
@@ -177,7 +184,7 @@ xpf::StringConversion::WideToUTF8(
                                                          WC_ERR_INVALID_CHARS,
                                                          Input.Buffer(),
                                                          static_cast<int>(inSizeInBytes / sizeof(wchar_t)),
-                                                         reinterpret_cast<LPSTR>(outBuffer.GetBuffer()),
+                                                         static_cast<LPSTR>(outBuffer.GetBuffer()),
                                                          static_cast<int>(outBuffer.GetSize()),
                                                          NULL,
                                                          NULL);
@@ -192,7 +199,7 @@ xpf::StringConversion::WideToUTF8(
             // This API returns the required size in number of bytes.
             //
             ULONG ccbOutSize = 0;
-            status = ::RtlUnicodeToUTF8N(reinterpret_cast<PCHAR>(outBuffer.GetBuffer()),
+            status = ::RtlUnicodeToUTF8N(static_cast<PCHAR>(outBuffer.GetBuffer()),
                                          static_cast<ULONG>(outBuffer.GetSize()),
                                          &ccbOutSize,
                                          Input.Buffer(),
@@ -221,9 +228,9 @@ xpf::StringConversion::WideToUTF8(
             //
             status = XpfPerformIConv("WCHAR_T",
                                      "UTF-8",
-                                     reinterpret_cast<char*>(&duplicatedInput[0]),
+                                     static_cast<void*>(&duplicatedInput[0]),
                                      inSizeInBytes,
-                                     reinterpret_cast<char*>(outBuffer.GetBuffer()),
+                                     outBuffer.GetBuffer(),
                                      outSizeInBytes);
             if (!NT_SUCCESS(status))
             {
@@ -238,7 +245,7 @@ xpf::StringConversion::WideToUTF8(
     // And now we just construct the output.
     // We'll go until we get the null terminated character.
     //
-    xpf::StringView<char> outView{ reinterpret_cast<char*>(outBuffer.GetBuffer()) };
+    xpf::StringView<char> outView{ static_cast<char*>(outBuffer.GetBuffer()) };
     Output.Reset();
     return Output.Append(outView);
 }
@@ -332,7 +339,7 @@ xpf::StringConversion::UTF8ToWide(
                                                          MB_ERR_INVALID_CHARS,
                                                          Input.Buffer(),
                                                          static_cast<int>(inSizeInBytes / sizeof(char)),
-                                                         reinterpret_cast<LPWSTR>(outBuffer.GetBuffer()),
+                                                         static_cast<LPWSTR>(outBuffer.GetBuffer()),
                                                          static_cast<int>(outBuffer.GetSize() / sizeof(wchar_t)));
             if (0 >= cchOutSize)
             {
@@ -345,7 +352,7 @@ xpf::StringConversion::UTF8ToWide(
             // This API returns the required size in number of bytes.
             //
             ULONG ccbOutSize = 0;
-            status = ::RtlUTF8ToUnicodeN(reinterpret_cast<PWCHAR>(outBuffer.GetBuffer()),
+            status = ::RtlUTF8ToUnicodeN(static_cast<PWCHAR>(outBuffer.GetBuffer()),
                                          static_cast<ULONG>(outBuffer.GetSize()),
                                          &ccbOutSize,
                                          Input.Buffer(),
@@ -373,9 +380,9 @@ xpf::StringConversion::UTF8ToWide(
             //
             status = XpfPerformIConv("UTF-8",
                                      "WCHAR_T",
-                                     reinterpret_cast<char*>(&duplicatedInput[0]),
+                                     static_cast<void*>(&duplicatedInput[0]),
                                      inSizeInBytes,
-                                     reinterpret_cast<char*>(outBuffer.GetBuffer()),
+                                     outBuffer.GetBuffer(),
                                      outSizeInBytes);
             if (!NT_SUCCESS(status))
             {
@@ -389,7 +396,7 @@ xpf::StringConversion::UTF8ToWide(
     //
     // And now we just construct the output.
     //
-    xpf::StringView<wchar_t> outView{ reinterpret_cast<const wchar_t*>(outBuffer.GetBuffer()) };
+    xpf::StringView<wchar_t> outView{ static_cast<const wchar_t*>(outBuffer.GetBuffer()) };
     Output.Reset();
     return Output.Append(outView);
 }

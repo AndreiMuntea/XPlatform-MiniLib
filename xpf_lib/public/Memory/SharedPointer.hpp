@@ -330,7 +330,7 @@ Dereference(
             xpf::MemoryAllocator::Destruct(memoryBlock.ReferenceCounter);
             xpf::MemoryAllocator::Destruct(memoryBlock.ObjectBase);
 
-            allocator.FreeMemory(reinterpret_cast<void**>(&memoryBlock.ReferenceCounter));
+            allocator.FreeMemory(memoryBlock.ReferenceCounter);
         }
         break;
     }
@@ -499,10 +499,10 @@ MakeShared(
         xpf::MemoryAllocator::Construct(memoryBlock.ReferenceCounter,
                                         int32_t{1});
         //
-        // Now construct the raw pointer.
+        // Now construct the raw pointer. We need to move the pointer.
         //
-        memoryBlock.ObjectBase = reinterpret_cast<TypeU*>(reinterpret_cast<uint8_t*>(memoryBlock.ReferenceCounter) +
-                                                          sharedPtr.REFERENCE_COUNTER_SIZE);
+        memoryBlock.ObjectBase = static_cast<TypeU*>(xpf::AlgoAddToPointer(memoryBlock.ReferenceCounter,
+                                                                           sharedPtr.REFERENCE_COUNTER_SIZE));
         xpf::MemoryAllocator::Construct(memoryBlock.ObjectBase,
                                         xpf::Forward<Arguments>(ConstructorArguments)...);
     }

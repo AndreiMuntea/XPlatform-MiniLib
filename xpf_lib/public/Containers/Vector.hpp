@@ -173,7 +173,7 @@ Clear(
 
     if (nullptr != buffer)
     {
-        allocator.FreeMemory(reinterpret_cast<void**>(&buffer));
+        allocator.FreeMemory(buffer);
         buffer = nullptr;
     }
 
@@ -286,7 +286,7 @@ Resize(
     // The size is not zero, so we need a large-enough buffer to accomodate the elements.
     // We'll copy the rest of the elements in the newBuffer.
     //
-    uint8_t* newBuffer = reinterpret_cast<uint8_t*>(this->GetAllocator().AllocateMemory(Size));
+    void* newBuffer = this->GetAllocator().AllocateMemory(Size);
     if (nullptr != newBuffer)
     {
         xpf::ApiZeroMemory(newBuffer, Size);
@@ -348,7 +348,7 @@ Resize(
     *        This comes with the cost of making the code a bit more harder to read,
     *        but using some allocator& and buffer& when needed I think it's reasonable.
     */
-    xpf::CompressedPair<AllocatorType, uint8_t*> m_CompressedPair;
+    xpf::CompressedPair<AllocatorType, void*> m_CompressedPair;
     size_t m_Size = 0;
 };  // class Buffer
 //
@@ -459,7 +459,7 @@ operator[](
     _In_ size_t Index
 ) const noexcept(true)
 {
-    const Type* buffer = reinterpret_cast<const Type*>(this->m_Buffer.GetBuffer());
+    const Type* buffer = static_cast<const Type*>(this->m_Buffer.GetBuffer());
 
     XPF_DEATH_ON_FAILURE(Index < this->m_Size);
     return buffer[Index];
@@ -479,7 +479,7 @@ operator[](
     _In_ size_t Index
 ) noexcept(true)
 {
-    Type* buffer = reinterpret_cast<Type*>(this->m_Buffer.GetBuffer());
+    Type* buffer = static_cast<Type*>(this->m_Buffer.GetBuffer());
 
     XPF_DEATH_ON_FAILURE(Index < this->m_Size);
     return buffer[Index];
@@ -520,7 +520,7 @@ Clear(
     void
 ) noexcept(true)
 {
-    Type* buffer = reinterpret_cast<Type*>(this->m_Buffer.GetBuffer());
+    Type* buffer = static_cast<Type*>(this->m_Buffer.GetBuffer());
 
     for (size_t i = 0; i < this->m_Size; ++i)
     {
@@ -586,8 +586,8 @@ Resize(
     //
     // Move-construct all elements to the new location.
     //
-    Type* oldBuffer = reinterpret_cast<Type*>(this->m_Buffer.GetBuffer());
-    Type* newBuffer = reinterpret_cast<Type*>(tempBuffer.GetBuffer());
+    Type* oldBuffer = static_cast<Type*>(this->m_Buffer.GetBuffer());
+    Type* newBuffer = static_cast<Type*>(tempBuffer.GetBuffer());
 
     const size_t currentSize = this->m_Size;
 
@@ -656,7 +656,7 @@ Emplace(
     //
     // We have enough space. In-Place construct the element at the back.
     //
-    Type* buffer = reinterpret_cast<Type*>(this->m_Buffer.GetBuffer());
+    Type* buffer = static_cast<Type*>(this->m_Buffer.GetBuffer());
     xpf::MemoryAllocator::Construct(&buffer[this->m_Size],
                                     xpf::Forward<Arguments>(ConstructorArguments)...);
     this->m_Size++;
@@ -681,7 +681,7 @@ Erase(
     _In_ size_t Position
 ) noexcept(true)
 {
-    Type* buffer = reinterpret_cast<Type*>(this->m_Buffer.GetBuffer());
+    Type* buffer = static_cast<Type*>(this->m_Buffer.GetBuffer());
     const size_t capacity = this->m_Buffer.GetSize() / sizeof(Type);
 
     //

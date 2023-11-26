@@ -74,7 +74,9 @@ virtual ~ServerSocket(
 ) noexcept(true)
 {
     this->Stop();
-    this->DestroyServerSocketData(&this->m_ServerSocketData);
+
+    this->DestroyServerSocketData(this->m_ServerSocketData);
+    this->m_ServerSocketData = nullptr;
 }
 
 /**
@@ -207,7 +209,7 @@ CreateServerSocketData(
 void
 XPF_API
 DestroyServerSocketData(
-    _Inout_ void** ServerSocketData
+    _Inout_ void* ServerSocketData
 ) noexcept(true);
 
 /**

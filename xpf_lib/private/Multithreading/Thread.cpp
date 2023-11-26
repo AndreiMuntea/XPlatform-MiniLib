@@ -42,7 +42,7 @@ XpfInternalThreadRunCallback(
 {
     XPF_MAX_PASSIVE_LEVEL();
 
-    auto context = reinterpret_cast<xpf::thread::InternalContext*>(Parameter);
+    auto context = static_cast<xpf::thread::InternalContext*>(Parameter);
     if (nullptr != context)
     {
         if (context->UserCallback)
@@ -68,7 +68,7 @@ XpfInternalThreadRunCallback(
 {
     XPF_MAX_PASSIVE_LEVEL();
 
-    auto context = reinterpret_cast<xpf::thread::InternalContext*>(Parameter);
+    auto context = static_cast<xpf::thread::InternalContext*>(Parameter);
     if (nullptr == context)
     {
         return;
@@ -110,7 +110,7 @@ XpfInternalThreadRunCallback(
     _In_ void* Parameter
 ) noexcept(true)
 {
-    auto context = reinterpret_cast<xpf::thread::InternalContext*>(Parameter);
+    auto context = static_cast<xpf::thread::InternalContext*>(Parameter);
     if (nullptr != context)
     {
         if (context->UserCallback)
@@ -165,8 +165,8 @@ xpf::thread::Thread::Run(
     #if defined XPF_PLATFORM_WIN_UM
         this->m_Context.ThreadHandle = ::CreateThread(NULL,
                                                       0,
-                                                      reinterpret_cast<LPTHREAD_START_ROUTINE>(&XpfInternalThreadRunCallback),
-                                                      reinterpret_cast<LPVOID>(&this->m_Context),
+                                                      static_cast<LPTHREAD_START_ROUTINE>(&XpfInternalThreadRunCallback),
+                                                      static_cast<LPVOID>(&this->m_Context),
                                                       0,
                                                       NULL);
         if ((NULL == this->m_Context.ThreadHandle) || (INVALID_HANDLE_VALUE == this->m_Context.ThreadHandle))
@@ -198,8 +198,8 @@ xpf::thread::Thread::Run(
                                                  &attributes,
                                                  NULL,
                                                  NULL,
-                                                 reinterpret_cast<PKSTART_ROUTINE>(&XpfInternalThreadRunCallback),
-                                                 reinterpret_cast<PVOID>(&this->m_Context));
+                                                 static_cast<PKSTART_ROUTINE>(&XpfInternalThreadRunCallback),
+                                                 static_cast<PVOID>(&this->m_Context));
         if (!NT_SUCCESS(status))
         {
             this->m_Context.ThreadHandle = nullptr;
@@ -236,14 +236,15 @@ xpf::thread::Thread::Run(
         //
         // And now create the thread.
         //
-        const int error = pthread_create(reinterpret_cast<pthread_t*>(this->m_Context.ThreadHandle),
+        const int error = pthread_create(static_cast<pthread_t*>(this->m_Context.ThreadHandle),
                                          NULL,
                                          XpfInternalThreadRunCallback,
                                          &this->m_Context);
         if (0 != error)
         {
-            xpf::CriticalMemoryAllocator::FreeMemory(&this->m_Context.ThreadHandle);
+            xpf::CriticalMemoryAllocator::FreeMemory(this->m_Context.ThreadHandle);
             this->m_Context.ThreadHandle = nullptr;
+
             return NTSTATUS_FROM_PLATFORM_ERROR(error);
         }
 
@@ -305,11 +306,12 @@ xpf::thread::Thread::Join(
         ObDereferenceObject(this->m_Context.ThreadHandle);
 
     #elif defined XPF_PLATFORM_LINUX_UM
-        const int error = pthread_join(*(reinterpret_cast<pthread_t*>(this->m_Context.ThreadHandle)),
+        const int error = pthread_join(*(static_cast<pthread_t*>(this->m_Context.ThreadHandle)),
                                        NULL);
         XPF_DEATH_ON_FAILURE(0 == error);
 
-        xpf::CriticalMemoryAllocator::FreeMemory(&this->m_Context.ThreadHandle);
+        xpf::CriticalMemoryAllocator::FreeMemory(this->m_Context.ThreadHandle);
+        this->m_Context.ThreadHandle = nullptr;
     #else
         #error Unrecognized Platform
     #endif

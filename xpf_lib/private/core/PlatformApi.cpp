@@ -126,7 +126,7 @@ xpf::ApiZeroMemory(
 void
 XPF_API
 xpf::ApiFreeMemory(
-    _Inout_ void** MemoryBlock
+    _Inout_opt_ void* MemoryBlock
 ) noexcept(true)
 {
     XPF_MAX_DISPATCH_LEVEL();
@@ -134,34 +134,30 @@ xpf::ApiFreeMemory(
     //
     // Sanity checks.
     //
-    if ((nullptr == MemoryBlock) || (nullptr == (*MemoryBlock)))
+    if (nullptr == MemoryBlock)
     {
         return;
     }
 
     //
-    // Invalidate the block of memory.
-    //
-    void* block = *MemoryBlock;
-    *MemoryBlock = nullptr;
-
-    //
     // And now dispose it.
     //
     #if defined XPF_PLATFORM_WIN_KM
-        ::ExFreePoolWithTag(block,
+        ::ExFreePoolWithTag(MemoryBlock,
                             'nmS+');
     #elif defined XPF_PLATFORM_WIN_UM
         BOOL result = ::HeapFree(::GetProcessHeap(),
                                  0,
-                                 block);
+                                 MemoryBlock);
         /* We allocated from the process heap. This shouldn't fail. */
         XPF_DEATH_ON_FAILURE(FALSE != result);
     #elif defined XPF_PLATFORM_LINUX_UM
-        ::free(block);
+        ::free(MemoryBlock);
     #else
         #error Unknown Platform!
     #endif
+
+    MemoryBlock = nullptr;
 }
 
 _Check_return_
@@ -247,7 +243,7 @@ xpf::ApiAllocateMemory(
         //
         if (!xpf::AlgoIsNumberAligned(xpf::AlgoPointerToValue(block), XPF_DEFAULT_ALIGNMENT))
         {
-            xpf::ApiFreeMemory(&block);
+            xpf::ApiFreeMemory(block);
             block = nullptr;
         }
 
@@ -533,8 +529,16 @@ xpf::ApiRandomUuid(
 
                 if (xpf::ApiIsHexDigit(newByte))
                 {
-                    uint8_t* destination = reinterpret_cast<uint8_t*>(&newUuid);
-                    xpf::ApiCopyMemory(&destination[i], &newByte, sizeof(newByte));
+                    /* Grab the address of newUuid. */
+                    void* newUuidAddress = xpf::AddressOf(newUuid);
+
+                    /* And now interpret it as uint8_t byte array. */
+                    uint8_t* destination = static_cast<uint8_t*>(newUuidAddress);
+
+                    /* We can now just copy the memory. */
+                    xpf::ApiCopyMemory(&destination[i], xpf::AddressOf(newByte), sizeof(newByte));
+
+                    /* And move to the next byte. */
                     ++i;
                 }
             }
@@ -570,9 +574,17 @@ xpf::ApiRandomUuid(
 
             if (xpf::ApiIsHexDigit(lastByte))
             {
-                uint8_t* destination = reinterpret_cast<uint8_t*>(&newUuid);
-                xpf::ApiCopyMemory(&destination[i], &lastByte, sizeof(lastByte));
-                i++;
+                /* Grab the address of newUuid. */
+                void* newUuidAddress = xpf::AddressOf(newUuid);
+
+                /* And now interpret it as uint8_t byte array. */
+                uint8_t* destination = static_cast<uint8_t*>(newUuidAddress);
+
+                /* We can now just copy the memory. */
+                xpf::ApiCopyMemory(&destination[i], xpf::AddressOf(lastByte), sizeof(lastByte));
+
+                /* And move to the next byte. */
+                ++i;
             }
         }
     }

@@ -107,11 +107,11 @@ xpf::Signal::Create(
             goto Exit;
         }
 
-        ::KeInitializeEvent(reinterpret_cast<PRKEVENT>(eventObject),
+        ::KeInitializeEvent(static_cast<PRKEVENT>(eventObject),
                             (ManualReset) ? NotificationEvent : SynchronizationEvent,
                             FALSE);
 
-        newSignal.m_SignalHandle.Handle = reinterpret_cast<KEVENT*>(eventObject);
+        newSignal.m_SignalHandle.Handle = static_cast<KEVENT*>(eventObject);
         status = STATUS_SUCCESS;
 
     #elif defined XPF_PLATFORM_LINUX_UM
@@ -199,8 +199,7 @@ xpf::Signal::Destroy(
         //
         if (nullptr != this->m_SignalHandle.Handle)
         {
-            xpf::CriticalMemoryAllocator::FreeMemory(
-                reinterpret_cast<void**>(&this->m_SignalHandle.Handle));
+            xpf::CriticalMemoryAllocator::FreeMemory(this->m_SignalHandle.Handle);
             this->m_SignalHandle.Handle = nullptr;
         }
 

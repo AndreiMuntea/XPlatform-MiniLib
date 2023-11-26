@@ -163,7 +163,7 @@ AllocateMemory(
 void
 XPF_API
 FreeMemory(
-    _Inout_ void** MemoryBlock
+    _Inout_ void* MemoryBlock
 ) noexcept(true);
 
  private:
@@ -201,7 +201,7 @@ NewMemoryBlock(
 void
 XPF_API
 DeleteMemoryBlock(
-    _Inout_ void** MemoryBlock
+    _Inout_ void* MemoryBlock
 ) noexcept(true);
 
  private:

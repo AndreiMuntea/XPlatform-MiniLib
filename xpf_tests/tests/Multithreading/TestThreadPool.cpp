@@ -49,7 +49,7 @@ MockThreadPoolIncrementCallback(
     _In_opt_ xpf::thread::CallbackArgument Context
 ) noexcept(true)
 {
-    auto mockContext = reinterpret_cast<MockTestThreadPoolContext*>(Context);
+    auto mockContext = static_cast<MockTestThreadPoolContext*>(Context);
     if (nullptr != mockContext)
     {
         for (size_t i = 0; i < mockContext->Iterations; ++i)
@@ -70,7 +70,7 @@ MockThreadPoolEnqueueCallback(
     _In_opt_ xpf::thread::CallbackArgument Context
 ) noexcept(true)
 {
-    auto mockContext = reinterpret_cast<MockTestThreadPoolContext*>(Context);
+    auto mockContext = static_cast<MockTestThreadPoolContext*>(Context);
     if (nullptr != mockContext)
     {
         for (size_t i = 0; i < 1000; ++i)
