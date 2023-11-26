@@ -475,6 +475,337 @@ ApiAtomicCompareExchangePointer(
     #endif
 }
 
+
+/**
+ * @brief This is one of a set of inline functions designed to provide arithmetic operations
+ *        and perform validity checks with minimal impact on performance. Adds one value of type Type to another.
+ *
+ * @param[in] Augend - The first value in the equation.
+ *
+ * @param[in] Addend - The value to add to Augend.
+ *
+ * @param[out] Result - A pointer to the sum. If the operation results in a value that overflows or underflows
+ *             the capacity of the type, the function returns false and this parameter is not valid.
+ *
+ * @return true if the operation is successful, false otherwise.
+ */
+template <class Type>
+inline bool
+ApiNumbersSafeAdd(
+    _In_ _Const_ const Type& Augend,
+    _In_ _Const_ const Type& Addend,
+    _Inout_ Type* Result
+) noexcept(true)
+{
+    //
+    // Restrict this operation to integers only.
+    //
+    static_assert(xpf::IsSameType<Type, uint8_t>  || xpf::IsSameType<Type, int8_t>    ||
+                  xpf::IsSameType<Type, uint16_t> || xpf::IsSameType<Type, int16_t>   ||
+                  xpf::IsSameType<Type, uint32_t> || xpf::IsSameType<Type, int32_t>   ||
+                  xpf::IsSameType<Type, uint64_t> || xpf::IsSameType<Type, int64_t>,
+                  "Unsupported Type!");
+
+    #if defined XPF_COMPILER_MSVC
+        //
+        // MSVC does not have intrinsics for this. So we'll use platform-specific APIs.
+        //
+        #if defined XPF_PLATFORM_WIN_UM
+            if constexpr (xpf::IsSameType<Type, uint8_t>)
+            {
+                return SUCCEEDED(UInt8Add(Augend, Addend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, uint16_t>)
+            {
+                return SUCCEEDED(UInt16Add(Augend, Addend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, uint32_t>)
+            {
+                return SUCCEEDED(UInt32Add(Augend, Addend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, uint64_t>)
+            {
+                return SUCCEEDED(UInt64Add(Augend, Addend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, int8_t>)
+            {
+                return SUCCEEDED(Int8Add(Augend, Addend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, int16_t>)
+            {
+                return SUCCEEDED(Int16Add(Augend, Addend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, int32_t>)
+            {
+                return SUCCEEDED(Int32Add(Augend, Addend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, int64_t>)
+            {
+                return SUCCEEDED(Int64Add(Augend, Addend, Result));
+            }
+        #elif defined XPF_PLATFORM_WIN_KM
+            if constexpr (xpf::IsSameType<Type, uint8_t>)
+            {
+                return NT_SUCCESS(RtlUInt8Add(Augend, Addend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, uint16_t>)
+            {
+                return NT_SUCCESS(RtlUInt16Add(Augend, Addend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, uint32_t>)
+            {
+                return NT_SUCCESS(RtlUInt32Add(Augend, Addend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, uint64_t>)
+            {
+                return NT_SUCCESS(RtlUInt64Add(Augend, Addend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, int8_t>)
+            {
+                return NT_SUCCESS(RtlInt8Add(Augend, Addend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, int16_t>)
+            {
+                return NT_SUCCESS(RtlInt16Add(Augend, Addend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, int32_t>)
+            {
+                return NT_SUCCESS(RtlInt32Add(Augend, Addend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, int64_t>)
+            {
+                return NT_SUCCESS(RtlInt64Add(Augend, Addend, Result));
+            }
+        #else
+            #error Unsupported Platform
+        #endif
+    #elif defined XPF_COMPILER_GCC || defined XPF_COMPILER_CLANG
+            return (false == __builtin_add_overflow(Augend, Addend, Result));
+    #else
+        #error Unsupported Compiler
+    #endif
+}
+
+/**
+ * @brief This is one of a set of inline functions designed to provide arithmetic operations
+ *        and perform validity checks with minimal impact on performance. Subtracts one value of type Type from another.
+ *
+ * @param[in] Minuend - The value from which Subtrahend is subtracted.
+ *
+ * @param[in] Subtrahend - The value to subtract from Minuend.
+ *
+ * @param[out] Result - A pointer to the result. If the operation results in a value that overflows or underflows the capacity of the type,
+ *                      the function returns false and this parameter is not valid.
+ *
+ * @return true if the operation is successful, false otherwise.
+ */
+template <class Type>
+inline bool
+ApiNumbersSafeSub(
+    _In_ _Const_ const Type& Minuend,
+    _In_ _Const_ const Type& Subtrahend,
+    _Inout_ Type* Result
+) noexcept(true)
+{
+    //
+    // Restrict this operation to integers only.
+    //
+    static_assert(xpf::IsSameType<Type, uint8_t>  || xpf::IsSameType<Type, int8_t>    ||
+                  xpf::IsSameType<Type, uint16_t> || xpf::IsSameType<Type, int16_t>   ||
+                  xpf::IsSameType<Type, uint32_t> || xpf::IsSameType<Type, int32_t>   ||
+                  xpf::IsSameType<Type, uint64_t> || xpf::IsSameType<Type, int64_t>,
+                  "Unsupported Type!");
+
+    #if defined XPF_COMPILER_MSVC
+        //
+        // MSVC does not have intrinsics for this. So we'll use platform-specific APIs.
+        //
+        #if defined XPF_PLATFORM_WIN_UM
+            if constexpr (xpf::IsSameType<Type, uint8_t>)
+            {
+                return SUCCEEDED(UInt8Sub(Minuend, Subtrahend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, uint16_t>)
+            {
+                return SUCCEEDED(UInt16Sub(Minuend, Subtrahend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, uint32_t>)
+            {
+                return SUCCEEDED(UInt32Sub(Minuend, Subtrahend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, uint64_t>)
+            {
+                return SUCCEEDED(UInt64Sub(Minuend, Subtrahend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, int8_t>)
+            {
+                return SUCCEEDED(Int8Sub(Minuend, Subtrahend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, int16_t>)
+            {
+                return SUCCEEDED(Int16Sub(Minuend, Subtrahend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, int32_t>)
+            {
+                return SUCCEEDED(Int32Sub(Minuend, Subtrahend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, int64_t>)
+            {
+                return SUCCEEDED(Int64Sub(Minuend, Subtrahend, Result));
+            }
+        #elif defined XPF_PLATFORM_WIN_KM
+            if constexpr (xpf::IsSameType<Type, uint8_t>)
+            {
+                return NT_SUCCESS(RtlUInt8Sub(Minuend, Subtrahend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, uint16_t>)
+            {
+                return NT_SUCCESS(RtlUInt16Sub(Minuend, Subtrahend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, uint32_t>)
+            {
+                return NT_SUCCESS(RtlUInt32Sub(Minuend, Subtrahend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, uint64_t>)
+            {
+                return NT_SUCCESS(RtlUInt64Sub(Minuend, Subtrahend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, int8_t>)
+            {
+                return NT_SUCCESS(RtlInt8Sub(Minuend, Subtrahend, Result));;
+            }
+            else if constexpr (xpf::IsSameType<Type, int16_t>)
+            {
+                return NT_SUCCESS(RtlInt16Sub(Minuend, Subtrahend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, int32_t>)
+            {
+                return NT_SUCCESS(RtlInt32Sub(Minuend, Subtrahend, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, int64_t>)
+            {
+                return NT_SUCCESS(RtlInt64Sub(Minuend, Subtrahend, Result));
+            }
+        #else
+            #error Unsupported Platform
+        #endif
+    #elif defined XPF_COMPILER_GCC || defined XPF_COMPILER_CLANG
+            return (false == __builtin_sub_overflow(Minuend, Subtrahend, Result));
+    #else
+        #error Unsupported Compiler
+    #endif
+}
+
+/**
+ * @brief This is one of a set of inline functions designed to provide arithmetic operations
+ *        and perform validity checks with minimal impact on performance. Multiplies one value of type Type to another.
+ *
+ * @param[in] Multiplicand - The value to be multiplied by Multiplier.
+ *
+ * @param[in] Multiplier - The value by which to multiply Multiplicand.
+ *
+ * @param[out] Result - A pointer to the result. If the operation results in a value that overflows or underflows the capacity of the type,
+ *                      the function returns false and this parameter is not valid.
+ *
+ * @return true if the operation is successful, false otherwise.
+ */
+template <class Type>
+inline bool
+ApiNumbersSafeMul(
+    _In_ _Const_ const Type& Multiplicand,
+    _In_ _Const_ const Type& Multiplier,
+    _Inout_ Type* Result
+) noexcept(true)
+{
+    //
+    // Restrict this operation to integers only.
+    //
+    static_assert(xpf::IsSameType<Type, uint8_t>  || xpf::IsSameType<Type, int8_t>    ||
+                  xpf::IsSameType<Type, uint16_t> || xpf::IsSameType<Type, int16_t>   ||
+                  xpf::IsSameType<Type, uint32_t> || xpf::IsSameType<Type, int32_t>   ||
+                  xpf::IsSameType<Type, uint64_t> || xpf::IsSameType<Type, int64_t>,
+                  "Unsupported Type!");
+
+    #if defined XPF_COMPILER_MSVC
+        //
+        // MSVC does not have intrinsics for this. So we'll use platform-specific APIs.
+        //
+        #if defined XPF_PLATFORM_WIN_UM
+            if constexpr (xpf::IsSameType<Type, uint8_t>)
+            {
+                return SUCCEEDED(UInt8Mult(Multiplicand, Multiplier, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, uint16_t>)
+            {
+                return SUCCEEDED(UInt16Mult(Multiplicand, Multiplier, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, uint32_t>)
+            {
+                return SUCCEEDED(UInt32Mult(Multiplicand, Multiplier, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, uint64_t>)
+            {
+                return SUCCEEDED(UInt64Mult(Multiplicand, Multiplier, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, int8_t>)
+            {
+                return SUCCEEDED(Int8Mult(Multiplicand, Multiplier, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, int16_t>)
+            {
+                return SUCCEEDED(Int16Mult(Multiplicand, Multiplier, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, int32_t>)
+            {
+                return SUCCEEDED(Int32Mult(Multiplicand, Multiplier, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, int64_t>)
+            {
+                return SUCCEEDED(Int64Mult(Multiplicand, Multiplier, Result));
+            }
+        #elif defined XPF_PLATFORM_WIN_KM
+            if constexpr (xpf::IsSameType<Type, uint8_t>)
+            {
+                return NT_SUCCESS(RtlUInt8Mult(Multiplicand, Multiplier, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, uint16_t>)
+            {
+                return NT_SUCCESS(RtlUInt16Mult(Multiplicand, Multiplier, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, uint32_t>)
+            {
+                return NT_SUCCESS(RtlUInt32Mult(Multiplicand, Multiplier, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, uint64_t>)
+            {
+                return NT_SUCCESS(RtlUInt64Mult(Multiplicand, Multiplier, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, int8_t>)
+            {
+                return NT_SUCCESS(RtlInt8Mult(Multiplicand, Multiplier, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, int16_t>)
+            {
+                return NT_SUCCESS(RtlInt16Mult(Multiplicand, Multiplier, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, int32_t>)
+            {
+                return NT_SUCCESS(RtlInt32Mult(Multiplicand, Multiplier, Result));
+            }
+            else if constexpr (xpf::IsSameType<Type, int64_t>)
+            {
+                return NT_SUCCESS(RtlInt64Mult(Multiplicand, Multiplier, Result));
+            }
+        #else
+            #error Unsupported Platform
+        #endif
+    #elif defined XPF_COMPILER_GCC || defined XPF_COMPILER_CLANG
+            return (false == __builtin_mul_overflow(Multiplicand, Multiplier, Result));
+    #else
+        #error Unsupported Compiler
+    #endif
+}
+
 /**
  * @brief Determine the length, in characters, of a supplied string
  * 

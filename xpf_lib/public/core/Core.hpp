@@ -188,8 +188,10 @@
 #if defined XPF_PLATFORM_WIN_KM
 
     #include <fltKernel.h>
-    #include <ntstrsafe.h>
-    #include <ntintsafe.h>
+    #define ENABLE_INTSAFE_SIGNED_FUNCTIONS
+        #include <ntstrsafe.h>
+        #include <ntintsafe.h>
+    #undef ENABLE_INTSAFE_SIGNED_FUNCTIONS
     #include <Wsk.h>
 
 #elif defined XPF_PLATFORM_WIN_UM
@@ -216,8 +218,10 @@
         #include <WinSock2.h>
         #include <wincrypt.h>
         #include <winternl.h>
-        #include <strsafe.h>
-        #include <intsafe.h>
+        #define ENABLE_INTSAFE_SIGNED_FUNCTIONS
+            #include <strsafe.h>
+            #include <intsafe.h>
+        #undef ENABLE_INTSAFE_SIGNED_FUNCTIONS
     #undef WIN32_NO_STATUS
         #include <ntstatus.h>
     #undef WIN32_LEAN_AND_MEAN

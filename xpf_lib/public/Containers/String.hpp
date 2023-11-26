@@ -785,28 +785,28 @@ ExtendWithBuffer(
     //
     // Now we need to compute the final size. On overflow, we stop.
     //
-    const size_t newSize = View.BufferSize() + this->BufferSize();
-    if (newSize < View.BufferSize())
+    size_t newSize = 0;
+    if (!xpf::ApiNumbersSafeAdd(View.BufferSize(), this->BufferSize(), &newSize))
     {
-        return STATUS_BUFFER_OVERFLOW;
+        return STATUS_INTEGER_OVERFLOW;
     }
 
     //
     // One extra character to ensure buffer is null terminated.
     //
-    const size_t finalSize = newSize + 1;
-    if (finalSize < newSize)
+    size_t finalSize = 0;
+    if (!xpf::ApiNumbersSafeAdd(newSize, size_t{ 1 }, &finalSize))
     {
-        return STATUS_BUFFER_OVERFLOW;
+        return STATUS_INTEGER_OVERFLOW;
     }
 
     //
     // So far so good - now we need the number of bytes.
     //
-    const size_t sizeInBytes = finalSize * sizeof(CharType);
-    if ((sizeInBytes / sizeof(CharType)) != finalSize)
+    size_t sizeInBytes = 0;
+    if (!xpf::ApiNumbersSafeMul(finalSize, sizeof(CharType), &sizeInBytes))
     {
-        return STATUS_BUFFER_OVERFLOW;
+        return STATUS_INTEGER_OVERFLOW;
     }
 
     //

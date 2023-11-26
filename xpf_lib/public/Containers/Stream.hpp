@@ -239,8 +239,12 @@ ReadBytes(
     // Validate that we have enough bytes left in buffer.
     // On overflow we stop.
     //
-    const size_t cursorFinalPosition = this->m_Cursor + NumberOfBytes;
-    if ((cursorFinalPosition < this->m_Cursor) || (cursorFinalPosition > this->m_Buffer.GetSize()))
+    size_t cursorFinalPosition = 0;
+    if (!xpf::ApiNumbersSafeAdd(this->m_Cursor, NumberOfBytes, &cursorFinalPosition))
+    {
+        return false;
+    }
+    if (cursorFinalPosition > this->m_Buffer.GetSize())
     {
         return false;
     }
@@ -365,8 +369,12 @@ WriteBytes(
     // Validate that we have enough bytes left in buffer.
     // On overflow we stop.
     //
-    const size_t cursorFinalPosition = this->m_Cursor + NumberOfBytes;
-    if ((cursorFinalPosition < this->m_Cursor) || (cursorFinalPosition > this->m_Buffer.GetSize()))
+    size_t cursorFinalPosition = 0;
+    if (!xpf::ApiNumbersSafeAdd(this->m_Cursor, NumberOfBytes, &cursorFinalPosition))
+    {
+        return false;
+    }
+    if (cursorFinalPosition > this->m_Buffer.GetSize())
     {
         return false;
     }

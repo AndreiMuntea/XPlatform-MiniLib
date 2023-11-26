@@ -567,8 +567,8 @@ Resize(
     //
     // Ensure the new capacity won't overflow.
     //
-    const size_t sizeInBytes = Capacity * sizeof(Type);
-    if (sizeInBytes / sizeof(Type) != Capacity)
+    size_t sizeInBytes = 0;
+    if (!xpf::ApiNumbersSafeMul(Capacity, sizeof(Type), &sizeInBytes))
     {
         return STATUS_INTEGER_OVERFLOW;
     }
@@ -636,11 +636,14 @@ Emplace(
     //
     if (this->m_Size == capacity)
     {
-        const size_t newCapacity = (0 == capacity) ? 1
-                                                   : (capacity * this->GROWTH_FACTOR);
-        if (newCapacity / this->GROWTH_FACTOR != capacity)
+        size_t newCapacity = 0;
+        if (!xpf::ApiNumbersSafeMul(capacity, this->GROWTH_FACTOR, &newCapacity))
         {
             return STATUS_INTEGER_OVERFLOW;
+        }
+        if (0 == newCapacity)
+        {
+            newCapacity = 1;
         }
 
         const NTSTATUS status = this->Resize(newCapacity);
