@@ -20,6 +20,8 @@
 #include "xpf_lib/public/core/TypeTraits.hpp"
 #include "xpf_lib/public/Containers/String.hpp"
 
+#include "xpf_lib/public/Communication/Sockets/win_km/WskApi.hpp"
+
 
 namespace xpf
 {
@@ -78,21 +80,6 @@ DeInitializeSocketApiProvider(
 // ************************************************************************************************
 //
 
-
-/**
- * @brief Address info structure is different on each platform.
- *        Provide a more easier way to access.
- */
-#if defined XPF_PLATFORM_WIN_UM
-    using AddressInfo = ADDRINFOA;
-#elif defined XPF_PLATFORM_LINUX_UM
-    using AddressInfo = addrinfo;
-#elif defined XPF_PLATFORM_WIN_KM
-    using AddressInfo = ADDRINFOEXW;
-#else
-    #error Unknown Platform
-#endif
-
 /**
  * @brief The GetAddressInformation function provides protocol-independent translation from an ANSI host name to an address.
  *
@@ -121,7 +108,7 @@ GetAddressInformation(
     _In_ xpf::BerkeleySocket::SocketApiProvider SocketApiProvider,
     _In_ _Const_ const xpf::StringView<char>& NodeName,
     _In_ _Const_ const xpf::StringView<char>& ServiceName,
-    _Out_ xpf::BerkeleySocket::AddressInfo** AddrInfo
+    _Out_ addrinfo** AddrInfo
 ) noexcept(true);
 
 /**
@@ -140,7 +127,7 @@ NTSTATUS
 XPF_API
 FreeAddressInformation(
     _In_ xpf::BerkeleySocket::SocketApiProvider SocketApiProvider,
-    _Inout_ xpf::BerkeleySocket::AddressInfo** AddrInfo
+    _Inout_ addrinfo** AddrInfo
 ) noexcept(true);
 
 //

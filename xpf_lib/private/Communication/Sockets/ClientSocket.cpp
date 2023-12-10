@@ -26,7 +26,7 @@ struct ClientSocketData
 {
     bool IsConnected = false;
 
-    xpf::BerkeleySocket::AddressInfo* AddressInfo = nullptr;
+    addrinfo* AddressInfo = nullptr;
     xpf::BerkeleySocket::Socket ServerSocket = nullptr;
     xpf::BerkeleySocket::SocketApiProvider ApiProvider = nullptr;
 };  // struct ClientSocketData
@@ -175,7 +175,7 @@ xpf::ClientSocket::Connect(
         return STATUS_INVALID_STATE_TRANSITION;
     }
 
-    for (xpf::BerkeleySocket::AddressInfo* crt = data->AddressInfo; nullptr != crt; crt = crt->ai_next)
+    for (addrinfo* crt = data->AddressInfo; nullptr != crt; crt = crt->ai_next)
     {
         //
         // Ensure we have valid protocol and type.
