@@ -197,6 +197,62 @@ Assign(
 }
 
 /**
+ * @brief Retrieves a non-const pointer to underlying object.
+ *        Use with caution! As it might trigger a nullptr dereference!
+ *
+ * @return A non-const reference to the stored object.
+ */
+inline Type*
+Get(
+    void
+) noexcept(true)
+{
+    return this->m_CompressedPair.Second().ObjectBase;
+}
+
+/**
+ * @brief Retrieves a non-const pointer to underlying object.
+ *        Use with caution! As it might trigger a nullptr dereference!
+ *
+ * @return A non-const reference to the stored object.
+ */
+inline const Type*
+Get(
+    void
+) const noexcept(true)
+{
+    return this->m_CompressedPair.Second().ObjectBase;
+}
+
+/**
+ * @brief Retrieves a non-const reference to underlying object.
+ *        Use with caution! As it might trigger a nullptr dereference!
+ * 
+ * @return A non-const reference to the stored object.
+ */
+inline Type&
+operator->(
+    void
+) noexcept(true)
+{
+    return this->operator*();
+}
+
+/**
+ * @brief Retrieves a const reference to underlying object.
+ *        Use with caution! As it might trigger a nullptr dereference!
+ * 
+ * @return A const reference to the stored object.
+ */
+inline const Type&
+operator->(
+    void
+) const noexcept(true)
+{
+    return this->operator*();
+}
+
+/**
  * @brief Retrieves a non-const reference to underlying object.
  *        Use with caution! As it might trigger a nullptr dereference!
  * 
@@ -207,8 +263,7 @@ operator*(
     void
 ) noexcept(true)
 {
-    auto& rawPointer = this->m_CompressedPair.Second().ObjectBase;
-
+    Type* rawPointer = this->Get();
     if (nullptr == rawPointer)
     {
         XPF_DEATH_ON_FAILURE(nullptr != rawPointer);
@@ -227,8 +282,7 @@ operator*(
     void
 ) const noexcept(true)
 {
-    const auto& rawPointer = this->m_CompressedPair.Second().ObjectBase;
-
+    const Type* rawPointer = this->Get();
     if (nullptr == rawPointer)
     {
         XPF_DEATH_ON_FAILURE(nullptr != rawPointer);

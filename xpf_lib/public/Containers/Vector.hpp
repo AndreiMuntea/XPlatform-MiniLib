@@ -668,6 +668,43 @@ Emplace(
 }
 
 /**
+ * @brief Reserves n slots in vector, note they are initialized
+ *        with the provided value. The other elements are erased.
+ *
+ * @param[in] N     - The number of elements to reserve
+ * @param[in] Value - The value to initialzie the elements with.
+ *
+ * @return STATUS_SUCCESS if everything went well,
+ *         a proper NTSTATUS error code if not.
+ *
+ * @note If the operation fails, the vector remains intact.
+ *       If the operations succeeds, the current elements are destroyed.
+ */
+template <typename... Arguments>
+_Must_inspect_result_
+inline NTSTATUS
+Reserve(
+    _In_ size_t N,
+    _In_ _Const_ const Type& Value
+) noexcept(true)
+{
+    xpf::Vector<Type, AllocatorType> clone;
+    NTSTATUS status = STATUS_UNSUCCESSFUL;
+
+    for (size_t i = 0; i < N; ++i)
+    {
+        status = clone.Emplace(Value);
+        if (!NT_SUCCESS(status))
+        {
+            return status;
+        }
+    }
+
+    *this = xpf::Move(clone);
+    return STATUS_SUCCESS;
+}
+
+/**
  * @brief Erases the element at the given position
  *
  * @param[in] Position - the position where the element to be erased is.
