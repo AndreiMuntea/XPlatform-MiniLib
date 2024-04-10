@@ -26,34 +26,27 @@
  * 
  * @param[in] EventBus - the bus to throw the event to.
  * 
- * @param[in] DispatchType - The way to throw the event on bus.
- * 
  * @return a proper NTSTATUS error code.
  */
 static NTSTATUS
 XpfTesEventDispatchHelper(
     _In_ _Const_ const xpf::EVENT_ID& EventId,
     _In_ uint32_t EventValue,
-    _Inout_ xpf::Optional<xpf::EventBus>* EventBus,
-    _In_ xpf::EventDispatchType DispatchType
+    _Inout_ xpf::EventBus* EventBus
 ) noexcept(true)
 {
-    xpf::EventBus& eventBus = (*(*EventBus));
-
     auto mockEvent = xpf::MakeShared<xpf::mocks::MockEvent>(EventValue, EventId);
     if (mockEvent.IsEmpty())
     {
         return  STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    return eventBus.Dispatch(xpf::DynamicSharedPointerCast<xpf::IEvent>(mockEvent),
-                             DispatchType);
+    return EventBus->Dispatch(mockEvent.Get());
 }
 
 
 /**
  * @brief       This is a thread pool method which will dispatch a lot of events.
- *              in all possible ways (async, auto and sync).
  *
  * @param[in] Context - a pointer to the event bus where to dispatch the events.
  */
@@ -62,35 +55,17 @@ XpfTesEventDispatchTpMethod(
     _In_opt_ xpf::thread::CallbackArgument Context
 ) noexcept(true)
 {
-    auto eventBus = static_cast<xpf::Optional<xpf::EventBus>*>(Context);
+    auto eventBus = static_cast<xpf::EventBus*>(Context);
     if (nullptr != eventBus)
     {
         for (uint32_t eventId = 0; eventId < 100; ++eventId)
         {
             NTSTATUS status = STATUS_UNSUCCESSFUL;
 
-            status = XpfTesEventDispatchHelper(eventId, 5, eventBus, xpf::EventDispatchType::kAsync);
-            XPF_DEATH_ON_FAILURE(NT_SUCCESS(status));
-            status = XpfTesEventDispatchHelper(eventId, 5, eventBus, xpf::EventDispatchType::kAuto);
-            XPF_DEATH_ON_FAILURE(NT_SUCCESS(status));
-            status = XpfTesEventDispatchHelper(eventId, 5, eventBus, xpf::EventDispatchType::kSync);
+            status = XpfTesEventDispatchHelper(eventId, 5, eventBus);
             XPF_DEATH_ON_FAILURE(NT_SUCCESS(status));
         }
     }
-}
-
-/**
- * @brief       This tests the creation of the event bus.
- */
-XPF_TEST_SCENARIO(TestEventBus, Create)
-{
-    NTSTATUS status = STATUS_UNSUCCESSFUL;
-    xpf::Optional<xpf::EventBus> eventBus;
-
-    status = xpf::EventBus::Create(&eventBus);
-    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
-
-    XPF_TEST_EXPECT_TRUE(eventBus.HasValue());
 }
 
 /**
@@ -99,10 +74,7 @@ XPF_TEST_SCENARIO(TestEventBus, Create)
 XPF_TEST_SCENARIO(TestEventBus, RegisterListener)
 {
     NTSTATUS status = STATUS_UNSUCCESSFUL;
-    xpf::Optional<xpf::EventBus> eventBus;
-
-    status = xpf::EventBus::Create(&eventBus);
-    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
+    xpf::EventBus eventBus;
 
     xpf::EVENT_ID eventId = 1;
     xpf::EVENT_LISTENER_ID listenerId = { 0 };
@@ -111,17 +83,17 @@ XPF_TEST_SCENARIO(TestEventBus, RegisterListener)
     //
     // Register the listener.
     //
-    status = (*eventBus).RegisterListener(&listener,
-                                          &listenerId);
+    status = eventBus.RegisterListener(&listener,
+                                       &listenerId);
     XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     //
     // Create an event to dispatch it.
     //
-    status = XpfTesEventDispatchHelper(eventId, 5, &eventBus, xpf::EventDispatchType::kSync);
+    status = XpfTesEventDispatchHelper(eventId, 5, &eventBus);
     XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
-    (*eventBus).Rundown();
+    eventBus.Rundown();
     XPF_TEST_EXPECT_TRUE(listener.IncrementedValue() == 5);
     XPF_TEST_EXPECT_TRUE(listener.SkippedEvents() == 0);
 }
@@ -132,10 +104,7 @@ XPF_TEST_SCENARIO(TestEventBus, RegisterListener)
 XPF_TEST_SCENARIO(TestEventBus, UnregisterListener)
 {
     NTSTATUS status = STATUS_UNSUCCESSFUL;
-    xpf::Optional<xpf::EventBus> eventBus;
-
-    status = xpf::EventBus::Create(&eventBus);
-    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
+    xpf::EventBus eventBus;
 
     xpf::EVENT_ID eventId = 1;
     xpf::EVENT_LISTENER_ID listenerId = { 0 };
@@ -144,28 +113,27 @@ XPF_TEST_SCENARIO(TestEventBus, UnregisterListener)
     //
     // Create listener and dispatch an event.
     //
-    status = (*eventBus).RegisterListener(&listener,
-                                          &listenerId);
+    status = eventBus.RegisterListener(&listener,
+                                       &listenerId);
     XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
-    status = XpfTesEventDispatchHelper(eventId, 5, &eventBus, xpf::EventDispatchType::kSync);
+    status = XpfTesEventDispatchHelper(eventId, 5, &eventBus);
     XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     //
     // Unregister the listener.
     //
-    status = (*eventBus).UnregisterListener(listenerId);
+    status = eventBus.UnregisterListener(listenerId);
     XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     //
     // After the listener is unregistered it shouldn't receive any other events.
     // But the dispatch should succeed
     //
-    status = XpfTesEventDispatchHelper(eventId, 5, &eventBus, xpf::EventDispatchType::kSync);
+    status = XpfTesEventDispatchHelper(eventId, 5, &eventBus);
     XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
-    (*eventBus).Rundown();
-    eventBus.Reset();
+    eventBus.Rundown();
 
     XPF_TEST_EXPECT_TRUE(listener.IncrementedValue() == 5);
     XPF_TEST_EXPECT_TRUE(listener.SkippedEvents() == 0);
@@ -178,10 +146,7 @@ XPF_TEST_SCENARIO(TestEventBus, UnregisterListener)
 XPF_TEST_SCENARIO(TestEventBus, RegisterMultipleListener)
 {
     NTSTATUS status = STATUS_UNSUCCESSFUL;
-    xpf::Optional<xpf::EventBus> eventBus;
-
-    status = xpf::EventBus::Create(&eventBus);
-    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
+    xpf::EventBus eventBus;
 
     xpf::mocks::MockEventListener listeners[] =
     {
@@ -202,8 +167,8 @@ XPF_TEST_SCENARIO(TestEventBus, RegisterMultipleListener)
     //
     for (size_t i = 0; i < XPF_ARRAYSIZE(listeners); ++i)
     {
-        status = (*eventBus).RegisterListener(&listeners[i],
-                                              &listenersId[i]);
+        status = eventBus.RegisterListener(&listeners[i],
+                                           &listenersId[i]);
         XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
     }
 
@@ -211,7 +176,7 @@ XPF_TEST_SCENARIO(TestEventBus, RegisterMultipleListener)
     // Dispatch event with id 1.
     // First two listeners should get it.
     //
-    status = XpfTesEventDispatchHelper(xpf::EVENT_ID{ 1 }, 5, &eventBus, xpf::EventDispatchType::kSync);
+    status = XpfTesEventDispatchHelper(xpf::EVENT_ID{ 1 }, 5, &eventBus);
     XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     XPF_TEST_EXPECT_TRUE(listeners[0].IncrementedValue() == 5);
@@ -227,7 +192,7 @@ XPF_TEST_SCENARIO(TestEventBus, RegisterMultipleListener)
     // Dispatch event with id 3.
     // No listener should get it.
     //
-    status = XpfTesEventDispatchHelper(xpf::EVENT_ID{ 3 }, 5, &eventBus, xpf::EventDispatchType::kSync);
+    status = XpfTesEventDispatchHelper(xpf::EVENT_ID{ 3 }, 5, &eventBus);
     XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     XPF_TEST_EXPECT_TRUE(listeners[0].IncrementedValue() == 5);
@@ -242,14 +207,14 @@ XPF_TEST_SCENARIO(TestEventBus, RegisterMultipleListener)
     //
     // Unregister second listener.
     //
-    status = (*eventBus).UnregisterListener(listenersId[1]);
+    status = eventBus.UnregisterListener(listenersId[1]);
     XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     //
     // Dispatch event with id 1.
     // Only first listener should get it
     //
-    status = XpfTesEventDispatchHelper(xpf::EVENT_ID{ 1 }, 5, &eventBus, xpf::EventDispatchType::kSync);
+    status = XpfTesEventDispatchHelper(xpf::EVENT_ID{ 1 }, 5, &eventBus);
     XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
 
     XPF_TEST_EXPECT_TRUE(listeners[0].IncrementedValue() == 10);
@@ -261,8 +226,7 @@ XPF_TEST_SCENARIO(TestEventBus, RegisterMultipleListener)
     XPF_TEST_EXPECT_TRUE(listeners[2].IncrementedValue() == 0);
     XPF_TEST_EXPECT_TRUE(listeners[2].SkippedEvents() == 3);
 
-    (*eventBus).Rundown();
-    eventBus.Reset();
+    eventBus.Rundown();
 }
 
 
@@ -272,10 +236,7 @@ XPF_TEST_SCENARIO(TestEventBus, RegisterMultipleListener)
 XPF_TEST_SCENARIO(TestEventBus, Stress)
 {
     NTSTATUS status = STATUS_UNSUCCESSFUL;
-    xpf::Optional<xpf::EventBus> eventBus;
-
-    status = xpf::EventBus::Create(&eventBus);
-    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
+    xpf::EventBus eventBus;
 
     xpf::Vector<xpf::mocks::MockEventListener> listeners;
 
@@ -299,8 +260,8 @@ XPF_TEST_SCENARIO(TestEventBus, Stress)
         xpf::EVENT_LISTENER_ID id;
         xpf::ApiZeroMemory(&id, sizeof(id));
 
-        status = (*eventBus).RegisterListener(&listeners[i],
-                                              &id);
+        status = eventBus.RegisterListener(&listeners[i],
+                                           &id);
         XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
     }
 
@@ -320,27 +281,26 @@ XPF_TEST_SCENARIO(TestEventBus, Stress)
     }
 
     //
-    // 100 items, each dispatching the same event 3 times with a value of 5
-    //              => each listener should get 1500 incremented value.
+    // 100 items, each dispatching the same event with a value of 5
+    //              => each listener should get 500 incremented value.
     //
-    // 100 items, each dispatching 100 different events 3 times.
-    //              => 29700 skipped events
+    // 100 items, each dispatching 100 different events.
+    //              => 9900 skipped events
     //
     for (size_t i = 0; i < listeners.Size(); ++i)
     {
-        while (listeners[i].IncrementedValue() != 1500)
+        while (listeners[i].IncrementedValue() != 500)
         {
             xpf::ApiYieldProcesor();
         }
-        while (listeners[i].SkippedEvents() != 29700)
+        while (listeners[i].SkippedEvents() != 9900)
         {
             xpf::ApiYieldProcesor();
         }
     }
 
     (*pool).Rundown();
-    (*eventBus).Rundown();
+    eventBus.Rundown();
 
     pool.Reset();
-    eventBus.Reset();
 }

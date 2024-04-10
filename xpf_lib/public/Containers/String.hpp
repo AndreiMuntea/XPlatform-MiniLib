@@ -833,7 +833,7 @@ ExtendWithBuffer(
     //
     // Now copy the view buffer after.
     //
-    xpf::ApiCopyMemory(&newBuffer[this->BufferSize() * sizeof(CharType)],
+    xpf::ApiCopyMemory(&newBuffer[this->BufferSize()],
                        View.Buffer(),
                        View.BufferSize() * sizeof(CharType));
 

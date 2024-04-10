@@ -216,7 +216,6 @@
         #include <Windows.h>
         #include <WS2tcpip.h>
         #include <WinSock2.h>
-        #include <wincrypt.h>
         #include <winternl.h>
         #define ENABLE_INTSAFE_SIGNED_FUNCTIONS
             #include <strsafe.h>
@@ -260,7 +259,7 @@
  */
 #include "platform_specific/CrossPlatformSal.hpp"
 #include "platform_specific/CrossPlatformStatus.hpp"
-
+#include "platform_specific/CrossPlatformNtApi.hpp"
 
 /**
  * @brief Platform specific definitions.

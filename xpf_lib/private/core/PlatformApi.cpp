@@ -415,7 +415,9 @@ xpf::ApiCharToLower(
 {
     XPF_MAX_DISPATCH_LEVEL();
 
-    #if defined XPF_PLATFORM_WIN_UM || defined XPF_PLATFORM_LINUX_UM
+    #if defined XPF_PLATFORM_WIN_UM
+            return ::RtlDowncaseUnicodeChar(Character);
+    #elif defined XPF_PLATFORM_LINUX_UM
         return static_cast<wchar_t>(::towlower(static_cast<wint_t>(Character)));
     #elif defined XPF_PLATFORM_WIN_KM
         if (::KeGetCurrentIrql() == PASSIVE_LEVEL)
@@ -449,7 +451,9 @@ xpf::ApiCharToUpper(
 {
     XPF_MAX_DISPATCH_LEVEL();
 
-    #if defined XPF_PLATFORM_WIN_UM || defined XPF_PLATFORM_LINUX_UM
+    #if defined XPF_PLATFORM_WIN_UM
+        return ::RtlUpcaseUnicodeChar(Character);
+    #elif defined XPF_PLATFORM_LINUX_UM
         return static_cast<wchar_t>(::towupper(static_cast<wint_t>(Character)));
     #elif defined XPF_PLATFORM_WIN_KM
         if (::KeGetCurrentIrql() == PASSIVE_LEVEL)
@@ -512,40 +516,24 @@ xpf::ApiRandomUuid(
     xpf::ApiZeroMemory(&newUuid, sizeof(newUuid));
 
     #if defined XPF_PLATFORM_WIN_UM
-        HCRYPTPROV prov;
-        xpf::ApiZeroMemory(&prov, sizeof(prov));
+        uint64_t seed64 = xpf::ApiCurrentTime();
+        ULONG seed32 = LODWORD(seed64);
 
-        if (FALSE != ::CryptAcquireContextW(&prov, NULL, NULL, PROV_RSA_FULL, 0))
-        {
-            for (size_t i = 0; i < sizeof(newUuid); )
-            {
-                BYTE newByte = 0;
-                status = (FALSE != ::CryptGenRandom(prov, sizeof(newByte), &newByte)) ? STATUS_SUCCESS
-                                                                                      : STATUS_UNSUCCESSFUL;
-                if (!NT_SUCCESS(status))
-                {
-                    break;
-                }
+        newUuid.Data1 = ::RtlRandomEx(&seed32);
+        newUuid.Data2 = LOWORD(::RtlRandomEx(&seed32));
+        newUuid.Data3 = LOWORD(::RtlRandomEx(&seed32));
 
-                if (xpf::ApiIsHexDigit(newByte))
-                {
-                    /* Grab the address of newUuid. */
-                    void* newUuidAddress = xpf::AddressOf(newUuid);
+        newUuid.Data4[0] = LOBYTE(::RtlRandomEx(&seed32));
+        newUuid.Data4[1] = LOBYTE(::RtlRandomEx(&seed32));
+        newUuid.Data4[2] = LOBYTE(::RtlRandomEx(&seed32));
+        newUuid.Data4[3] = LOBYTE(::RtlRandomEx(&seed32));
 
-                    /* And now interpret it as uint8_t byte array. */
-                    uint8_t* destination = static_cast<uint8_t*>(newUuidAddress);
+        newUuid.Data4[4] = LOBYTE(::RtlRandomEx(&seed32));
+        newUuid.Data4[5] = LOBYTE(::RtlRandomEx(&seed32));
+        newUuid.Data4[6] = LOBYTE(::RtlRandomEx(&seed32));
+        newUuid.Data4[7] = LOBYTE(::RtlRandomEx(&seed32));
 
-                    /* We can now just copy the memory. */
-                    xpf::ApiCopyMemory(&destination[i], xpf::AddressOf(newByte), sizeof(newByte));
-
-                    /* And move to the next byte. */
-                    ++i;
-                }
-            }
-
-            const BOOL releaseStatus = ::CryptReleaseContext(prov, 0);
-            XPF_DEATH_ON_FAILURE(FALSE != releaseStatus);
-        }
+        status = STATUS_SUCCESS;
 
     #elif defined XPF_PLATFORM_WIN_KM
         //
@@ -586,6 +574,10 @@ xpf::ApiRandomUuid(
                 /* And move to the next byte. */
                 ++i;
             }
+
+            /* Allowo some time. */
+            xpf::ApiYieldProcesor();
+            xpf::ApiCompilerBarrier();
         }
     }
 

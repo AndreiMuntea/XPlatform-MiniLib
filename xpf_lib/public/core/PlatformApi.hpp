@@ -194,6 +194,7 @@ ApiCompilerBarrier(
 {
     #if defined XPF_COMPILER_MSVC
         _ReadWriteBarrier();
+        MemoryBarrier();
     #elif defined XPF_COMPILER_GCC || defined XPF_COMPILER_CLANG
         asm volatile("" ::: "memory");
     #else

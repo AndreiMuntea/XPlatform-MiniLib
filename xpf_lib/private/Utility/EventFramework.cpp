@@ -20,39 +20,14 @@
  */
 XPF_SECTION_DEFAULT;
 
-bool
-XPF_API
-xpf::EventBus::CanSendSyncEvent(
-    void
-) const noexcept(true)
-{
-    #if defined XPF_PLATFORM_WIN_KM
-        if (::KeGetCurrentIrql() >= DISPATCH_LEVEL)
-        {
-            return false;
-        }
-    #endif  // XPF_PLATFORM_WIN_KM
-
-    return true;
-}
-
 _Must_inspect_result_
 NTSTATUS
 XPF_API
 xpf::EventBus::Dispatch(
-    _In_ _Const_ const xpf::SharedPointer<IEvent>& Event,
-    _In_ xpf::EventDispatchType DispatchType
+    _Inout_ IEvent* Event
 ) noexcept(true)
 {
     XPF_MAX_DISPATCH_LEVEL();
-
-    //
-    // Can't throw empty event.
-    //
-    if (Event.IsEmpty())
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
 
     //
     // Prevent the event bus from being run down.
@@ -63,39 +38,14 @@ xpf::EventBus::Dispatch(
         return STATUS_TOO_LATE;
     }
 
-    //
-    // If auto was selected, we'll send the event async for now.
-    // In future we may want to add further optimizations (like when the stack is too low,
-    // or we have too many events in queue).
-    //
-    if (DispatchType == xpf::EventDispatchType::kAuto)
-    {
-        if ((this->m_EnqueuedAsyncItems >= this->ASYNC_THRESHOLD) && (this->CanSendSyncEvent()))
-        {
-            DispatchType = xpf::EventDispatchType::kSync;
-        }
-        else
-        {
-            DispatchType = xpf::EventDispatchType::kAsync;
-        }
-    }
-
-    if (DispatchType == xpf::EventDispatchType::kSync)
-    {
-        this->NotifyListeners(Event);
-        return STATUS_SUCCESS;
-    }
-    else
-    {
-        XPF_DEATH_ON_FAILURE(DispatchType == xpf::EventDispatchType::kAsync);
-        return this->EnqueueAsync(Event);
-    }
+    this->NotifyListeners(Event);
+    return STATUS_SUCCESS;
 }
 
 void
 XPF_API
 xpf::EventBus::NotifyListeners(
-    _In_ _Const_ const xpf::SharedPointer<IEvent>& Event
+    _Inout_ IEvent* Event
 ) noexcept(true)
 {
     XPF_MAX_DISPATCH_LEVEL();
@@ -151,134 +101,10 @@ xpf::EventBus::NotifyListeners(
     }
 }
 
-_Must_inspect_result_
-NTSTATUS
-XPF_API
-xpf::EventBus::EnqueueAsync(
-    _In_ _Const_ const xpf::SharedPointer<IEvent>& Event
-) noexcept(true)
-{
-    XPF_MAX_DISPATCH_LEVEL();
-
-    //
-    // Prevent the event bus from being run down.
-    //
-    xpf::RundownGuard busGuard{ this->m_EventBusRundown };
-    if (!busGuard.IsRundownAcquired())
-    {
-        return STATUS_TOO_LATE;
-    }
-
-    //
-    // Now we allocate the event data structure.
-    //
-    void* memoryBlock = this->m_Allocator.AllocateMemory(sizeof(xpf::EventData));
-    if (nullptr == memoryBlock)
-    {
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-    xpf::ApiZeroMemory(memoryBlock, sizeof(xpf::EventData));
-
-    //
-    // Now construct the object.
-    //
-    xpf::EventData* eventData = static_cast<xpf::EventData*>(memoryBlock);
-    xpf::MemoryAllocator::Construct(eventData);
-
-    eventData->Event = Event;
-    eventData->Bus = this;
-
-    xpf::ApiAtomicIncrement(&this->m_EnqueuedAsyncItems);
-    const NTSTATUS status = (*this->m_AsyncPool).Enqueue(this->AsyncCallback,
-                                                         this->AsyncCallback,
-                                                         eventData);
-    if (!NT_SUCCESS(status))
-    {
-        xpf::ApiAtomicDecrement(&this->m_EnqueuedAsyncItems);
-        goto CleanUp;
-    }
-
-CleanUp:
-    if (!NT_SUCCESS(status))
-    {
-        xpf::MemoryAllocator::Destruct(eventData);
-        this->m_Allocator.FreeMemory(eventData);
-        eventData = nullptr;
-    }
-    return status;
-}
-
 /**
- * @brief   Threadpool related callback code can be paged out.
- *          Our threads are running at passive anyway.
- *          Everything here can be paged.
+ * @brief   Everything here can be paged.
  */
 XPF_SECTION_PAGED;
-
-_Must_inspect_result_
-NTSTATUS
-XPF_API
-xpf::EventBus::Create(
-    _Inout_ xpf::Optional<xpf::EventBus>* EventBusToCreate
-) noexcept(true)
-{
-    XPF_MAX_PASSIVE_LEVEL();
-
-    NTSTATUS status = STATUS_UNSUCCESSFUL;
-
-    //
-    // We will not initialize over an already initialized event bus.
-    // Assert here and bail early.
-    //
-    if ((nullptr == EventBusToCreate) || (EventBusToCreate->HasValue()))
-    {
-        XPF_DEATH_ON_FAILURE(false);
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    //
-    // Start by creating a new event bus. This will be an empty one.
-    // It will be initialized below.
-    //
-    EventBusToCreate->Emplace();
-
-    //
-    // We failed to create an event. It shouldn't happen.
-    // Assert here and bail early.
-    //
-    if (!EventBusToCreate->HasValue())
-    {
-        XPF_DEATH_ON_FAILURE(false);
-        return STATUS_NO_DATA_DETECTED;
-    }
-
-    //
-    // Grab a reference to the newly created event bus. Makes the code easier to read.
-    // It will be optimized away on release anyway.
-    //
-    xpf::EventBus& newEventBus = (*(*EventBusToCreate));
-
-    //
-    // Create the threadpool.
-    //
-    status = xpf::ThreadPool::Create(&newEventBus.m_AsyncPool);
-    if (!NT_SUCCESS(status))
-    {
-        goto Exit;
-    }
-
-Exit:
-    if (!NT_SUCCESS(status))
-    {
-        EventBusToCreate->Reset();
-        XPF_DEATH_ON_FAILURE(!EventBusToCreate->HasValue());
-    }
-    else
-    {
-        XPF_DEATH_ON_FAILURE(EventBusToCreate->HasValue());
-    }
-    return status;
-}
 
 void
 XPF_API
@@ -294,7 +120,7 @@ xpf::EventBus::Rundown(
     this->m_EventBusRundown.WaitForRelease();
 
     //
-    // Frist we acquire the listeners lock - this will prevent other operations while we are working.
+    // First we acquire the listeners lock - this will prevent other operations while we are working.
     // We run down the listeners with the shared lock guard taken as we'll not modify the listeners list lock.
     //
     {
@@ -311,14 +137,6 @@ xpf::EventBus::Rundown(
                 }
             }
         }
-    }
-
-    //
-    // Clean the threadpool. This will also ensure all elements are flushed.
-    //
-    if (this->m_AsyncPool.HasValue())
-    {
-        (*this->m_AsyncPool).Rundown();
     }
 
     //
@@ -478,50 +296,6 @@ xpf::EventBus::UnregisterListener(
     }
 
     return STATUS_SUCCESS;
-}
-
-void
-XPF_API
-xpf::EventBus::AsyncCallback(
-    _In_opt_ xpf::thread::CallbackArgument EventData
-) noexcept(true)
-{
-    XPF_MAX_PASSIVE_LEVEL();
-
-    xpf::EventData* eventData = static_cast<xpf::EventData*>(EventData);
-    if (nullptr == eventData)
-    {
-        XPF_DEATH_ON_FAILURE(false);
-        return;
-    }
-
-    if (nullptr == eventData->Bus)
-    {
-        XPF_DEATH_ON_FAILURE(false);
-        return;
-    }
-
-    //
-    // Get a reference to the allocator from event bus.
-    // We'll be destroying the event data structure at the end.
-    //
-    auto& allocator = eventData->Bus->m_Allocator;
-
-    //
-    // Notify the listeners. This comes from a thread pool.
-    // We have a guarantee that the event bus is not ran down yet.
-    // The threadpool will wait for all outstanding items to be processed.
-    //
-    eventData->Bus->NotifyListeners(eventData->Event);
-    xpf::ApiAtomicDecrement(&eventData->Bus->m_EnqueuedAsyncItems);
-
-    //
-    // And now do the actual cleanup. First call the destructor.
-    // And then free the memory.
-    //
-    xpf::MemoryAllocator::Destruct(eventData);
-    allocator.FreeMemory(eventData);
-    eventData = nullptr;
 }
 
 xpf::SharedPointer<xpf::EventBus::ListenersList, xpf::CriticalMemoryAllocator>

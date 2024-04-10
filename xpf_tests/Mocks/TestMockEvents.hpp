@@ -133,7 +133,7 @@ virtual ~MockEventListener(
  *                        It will be automatically invoked for each listener
  *                        registered with the event bus.
  * 
- * @param[in] Event     - A const reference to the event.
+ * @param[in] Event     - A reference to the event.
  *                        Its internal data should not be modified by the event handler.
  *                        It is the caller responsibility to downcast this to the proper event class.
  * 
@@ -146,7 +146,7 @@ virtual ~MockEventListener(
 void
 XPF_API
 OnEvent(
-    _In_ _Const_ const xpf::SharedPointer<xpf::IEvent>& Event,
+    _Inout_ xpf::IEvent* Event,
     _Inout_ xpf::EventBus* Bus
 ) noexcept(true) override
 {
@@ -154,7 +154,7 @@ OnEvent(
 
     if ((*Event).EventId() == this->m_EventId)
     {
-        auto mockEvent = xpf::DynamicSharedPointerCast<xpf::mocks::MockEvent>(Event);
+        auto mockEvent = static_cast<xpf::mocks::MockEvent*>(Event);
         for (uint32_t i = 0; i < (*mockEvent).Value(); ++i)
         {
             xpf::ApiAtomicIncrement(&this->m_IncrementedValue);
