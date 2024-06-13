@@ -53,15 +53,18 @@ XPF_CLASS_COPY_MOVE_BEHAVIOR(ClientSocket, delete);
  *
  * @param[in] Port - The port of the socket.
  *
+ * @param[in] IsTlsSocket - true if the socket should use TLS,
+ *                          false otherwise.
  */
 ClientSocket(
     _In_ _Const_ const xpf::StringView<char>& Ip,
-    _In_ _Const_ const xpf::StringView<char>& Port
+    _In_ _Const_ const xpf::StringView<char>& Port,
+    _In_ bool IsTlsSocket = false
 ) noexcept(true) : xpf::IClient()
 {
     if (NT_SUCCESS(xpf::ReadWriteLock::Create(&this->m_ClientLock)))
     {
-        this->m_ClientSocketData = this->CreateClientSocketData(Ip, Port);
+        this->m_ClientSocketData = this->CreateClientSocketData(Ip, Port, IsTlsSocket);
     }
 }
 
@@ -150,13 +153,17 @@ ReceiveData(
  *
  * @param[in] Port - The port of the socket.
  *
+ * @param[in] IsTlsSocket - true if the socket should use TLS,
+ *                          false otherwise.
+ *
  * @return The client Socket Data, or nullptr on failure.
  */
 void*
 XPF_API
 CreateClientSocketData(
     _In_ _Const_ const xpf::StringView<char>& Ip,
-    _In_ _Const_ const xpf::StringView<char>& Port
+    _In_ _Const_ const xpf::StringView<char>& Port,
+    _In_ bool IsTlsSocket
 ) noexcept(true);
 
 /**

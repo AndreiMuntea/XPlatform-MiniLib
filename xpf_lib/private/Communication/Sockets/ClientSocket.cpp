@@ -25,6 +25,10 @@ namespace xpf
 struct ClientSocketData
 {
     bool IsConnected = false;
+    bool IsTlsSocket = false;
+
+    xpf::String<char> Ip;
+    xpf::String<char> Port;
 
     addrinfo* AddressInfo = nullptr;
     xpf::BerkeleySocket::Socket ServerSocket = nullptr;
@@ -37,7 +41,8 @@ void*
 XPF_API
 xpf::ClientSocket::CreateClientSocketData(
     _In_ _Const_ const xpf::StringView<char>& Ip,
-    _In_ _Const_ const xpf::StringView<char>& Port
+    _In_ _Const_ const xpf::StringView<char>& Port,
+    _In_ bool IsTlsSocket
 ) noexcept(true)
 {
     XPF_MAX_PASSIVE_LEVEL();
@@ -56,7 +61,25 @@ xpf::ClientSocket::CreateClientSocketData(
 
     xpf::MemoryAllocator::Construct(data);
     data->IsConnected = false;
+    data->IsTlsSocket = IsTlsSocket;
 
+    //
+    // Store data about the connection. 
+    //
+    status = data->Ip.Append(Ip);
+    if (!NT_SUCCESS(status))
+    {
+        goto CleanUp;
+    }
+    status = data->Port.Append(Port);
+    if (!NT_SUCCESS(status))
+    {
+        goto CleanUp;
+    }
+
+    //
+    // Initialize the provider.
+    //
     status = xpf::BerkeleySocket::InitializeSocketApiProvider(&data->ApiProvider);
     if (!NT_SUCCESS(status))
     {
@@ -66,7 +89,10 @@ xpf::ClientSocket::CreateClientSocketData(
     //
     // Resolve the server address and port.
     //
-    status = xpf::BerkeleySocket::GetAddressInformation(data->ApiProvider, Ip, Port, &data->AddressInfo);
+    status = xpf::BerkeleySocket::GetAddressInformation(data->ApiProvider,
+                                                        data->Ip.View(),
+                                                        data->Port.View(),
+                                                        &data->AddressInfo);
     if (!NT_SUCCESS(status))
     {
         goto CleanUp;
@@ -194,6 +220,7 @@ xpf::ClientSocket::Connect(
                                                             crt->ai_socktype,
                                                             crt->ai_protocol,
                                                             false,
+                                                            data->IsTlsSocket,
                                                             &data->ServerSocket);
         if (!NT_SUCCESS(status))
         {
@@ -206,6 +233,7 @@ xpf::ClientSocket::Connect(
         //
         status = xpf::BerkeleySocket::Connect(data->ApiProvider,
                                               data->ServerSocket,
+                                              data->Ip.View(),
                                               crt->ai_addr,
                                               static_cast<int>(crt->ai_addrlen));
         if (!NT_SUCCESS(status))

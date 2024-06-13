@@ -39,6 +39,7 @@ struct SocketApiProviderInternal
 struct SocketInternal
 {
     bool IsListeningSocket = false;
+    bool IsTlsSocket = false;
 
     #if defined XPF_PLATFORM_WIN_UM
         SOCKET Socket = INVALID_SOCKET;
@@ -46,6 +47,7 @@ struct SocketInternal
         int Socket = -1;
     #elif defined XPF_PLATFORM_WIN_KM
         xpf::WskSocket Socket;
+        xpf::WskSocketTlsContext* TlsSocketContext = nullptr;
     #else
         #error Unknown Platform
     #endif
@@ -289,6 +291,7 @@ xpf::BerkeleySocket::CreateSocket(
     _In_ int Type,
     _In_ int Protocol,
     _In_ bool IsListeningSocket,
+    _In_ bool IsTlsSocket,
     _Out_ xpf::BerkeleySocket::Socket* CreatedSocket
 ) noexcept(true)
 {
@@ -322,6 +325,7 @@ xpf::BerkeleySocket::CreateSocket(
     // Now preinitialize the data.
     //
     newSocket->IsListeningSocket = IsListeningSocket;
+    newSocket->IsTlsSocket = IsTlsSocket;
 
     //
     // And finally create the socket
@@ -330,10 +334,12 @@ xpf::BerkeleySocket::CreateSocket(
         newSocket->Socket = ::socket(AddressFamily, Type, Protocol);
         status = (INVALID_SOCKET == newSocket->Socket) ? STATUS_CONNECTION_INVALID
                                                        : STATUS_SUCCESS;
+        XPF_ASSERT(!newSocket->IsTlsSocket);
     #elif defined XPF_PLATFORM_LINUX_UM
         newSocket->Socket = socket(AddressFamily, Type, Protocol);
         status = (-1 == newSocket->Socket) ? STATUS_CONNECTION_INVALID
                                            : STATUS_SUCCESS;
+        XPF_ASSERT(!newSocket->IsTlsSocket);
     #elif defined XPF_PLATFORM_WIN_KM
         auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
         status = xpf::WskCreateSocket(&apiProvider->WskProvider,
@@ -342,6 +348,17 @@ xpf::BerkeleySocket::CreateSocket(
                                       Protocol,
                                       IsListeningSocket,
                                       &newSocket->Socket);
+        if (NT_SUCCESS(status))
+        {
+            status = xpf::WskCreateTlsSocketContext(&apiProvider->WskProvider,
+                                                    &newSocket->TlsSocketContext);
+            if (!NT_SUCCESS(status))
+            {
+                NTSTATUS cleanupStatus = xpf::WskShutdownSocket(&apiProvider->WskProvider,
+                                                                &newSocket->Socket);
+                XPF_DEATH_ON_FAILURE(NT_SUCCESS(cleanupStatus));
+            }
+        }
     #else
         #error Unknown Platform
     #endif
@@ -397,6 +414,7 @@ xpf::BerkeleySocket::ShutdownSocket(
             (void) ::closesocket(socket->Socket);
             socket->Socket = INVALID_SOCKET;
         }
+        XPF_ASSERT(!newSocket->IsTlsSocket);
     #elif defined XPF_PLATFORM_LINUX_UM
         if (-1 != socket->Socket)
         {
@@ -404,8 +422,20 @@ xpf::BerkeleySocket::ShutdownSocket(
             (void) close(socket->Socket);
             socket->Socket = -1;
         }
+        XPF_ASSERT(!newSocket->IsTlsSocket);
     #elif defined XPF_PLATFORM_WIN_KM
         auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
+
+        if (socket->IsTlsSocket)
+        {
+            xpf::WskTlsShutdown(&apiProvider->WskProvider,
+                                &socket->Socket,
+                                socket->TlsSocketContext);
+            
+            xpf::WskDestroyTlsSocketContext(&apiProvider->WskProvider,
+                                            &socket->TlsSocketContext);
+        }
+
         (void) xpf::WskShutdownSocket(&apiProvider->WskProvider,
                                       &socket->Socket);
     #else
@@ -465,6 +495,7 @@ xpf::BerkeleySocket::Bind(
         {
             return STATUS_INVALID_CONNECTION;
         }
+        XPF_ASSERT(!newSocket->IsTlsSocket);
     #elif defined XPF_PLATFORM_WIN_KM
         auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
         NTSTATUS status = xpf::WskBind(&apiProvider->WskProvider,
@@ -525,12 +556,14 @@ xpf::BerkeleySocket::Listen(
         {
             return STATUS_INVALID_CONNECTION;
         }
+        XPF_ASSERT(!newSocket->IsTlsSocket);
     #elif defined XPF_PLATFORM_LINUX_UM
         int gleResult = listen(socket->Socket, 0x7fffffff);
         if (0 != gleResult)
         {
             return STATUS_INVALID_CONNECTION;
         }
+        XPF_ASSERT(!newSocket->IsTlsSocket);
     #elif defined XPF_PLATFORM_WIN_KM
         auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
         NTSTATUS status = xpf::WskListen(&apiProvider->WskProvider,
@@ -555,6 +588,7 @@ XPF_API
 xpf::BerkeleySocket::Connect(
     _In_ xpf::BerkeleySocket::SocketApiProvider SocketApiProvider,
     _Inout_ xpf::BerkeleySocket::Socket TargetSocket,
+    _In_ _Const_ const xpf::StringView<char>& TargetHost,
     _In_ _Const_ const sockaddr* Address,
     _In_ int Length
 ) noexcept(true)
@@ -595,6 +629,7 @@ xpf::BerkeleySocket::Connect(
         {
             return STATUS_INVALID_CONNECTION;
         }
+        XPF_ASSERT(!newSocket->IsTlsSocket);
     #elif defined XPF_PLATFORM_WIN_KM
         auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
 
@@ -606,6 +641,38 @@ xpf::BerkeleySocket::Connect(
         {
             return status;
         }
+
+        if (socket->IsTlsSocket)
+        {
+            xpf::String<wchar_t> wideHostName;
+            UNICODE_STRING hostName = { 0 };
+            SECURITY_STRING secHostName = { 0 };
+
+            status = xpf::StringConversion::UTF8ToWide(TargetHost, wideHostName);
+            if (!NT_SUCCESS(status))
+            {
+                return status;
+            }
+            status = ::RtlInitUnicodeStringEx(&hostName, wideHostName.View().Buffer());
+            if (!NT_SUCCESS(status))
+            {
+                return status;
+            }
+
+            secHostName.Buffer = hostName.Buffer;
+            secHostName.Length = hostName.Length;
+            secHostName.MaximumLength = hostName.MaximumLength;
+
+            status = xpf::WskTlsSocketHandshake(&apiProvider->WskProvider,
+                                                &socket->Socket,
+                                                socket->TlsSocketContext,
+                                                &secHostName);
+            if (!NT_SUCCESS(status))
+            {
+                return status;
+            }
+        }
+
     #else
         #error Unknown Platform
     #endif
@@ -669,10 +736,12 @@ xpf::BerkeleySocket::Accept(
         newSocket->Socket = ::accept(socket->Socket, nullptr, nullptr);
         status = (INVALID_SOCKET == newSocket->Socket) ? STATUS_CONNECTION_REFUSED
                                                        : STATUS_SUCCESS;
+        XPF_ASSERT(!newSocket->IsTlsSocket);
     #elif defined XPF_PLATFORM_LINUX_UM
         newSocket->Socket = accept(socket->Socket, nullptr, nullptr);
         status = (-1 == newSocket->Socket) ? STATUS_CONNECTION_REFUSED
                                            : STATUS_SUCCESS;
+        XPF_ASSERT(!newSocket->IsTlsSocket);
     #elif defined XPF_PLATFORM_WIN_KM
         auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
         status = xpf::WskAccept(&apiProvider->WskProvider,
@@ -768,6 +837,7 @@ xpf::BerkeleySocket::Send(
                 return STATUS_NETWORK_BUSY;
             }
         }
+        XPF_ASSERT(!newSocket->IsTlsSocket);
     #elif defined XPF_PLATFORM_LINUX_UM
         ssize_t bytesSent = send(socket->Socket,
                                  Bytes,
@@ -791,12 +861,27 @@ xpf::BerkeleySocket::Send(
                 return STATUS_NETWORK_BUSY;
             }
         }
+        XPF_ASSERT(!newSocket->IsTlsSocket);
     #elif defined XPF_PLATFORM_WIN_KM
         auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
-        NTSTATUS status = xpf::WskSend(&apiProvider->WskProvider,
-                                       &socket->Socket,
-                                       NumberOfBytes,
-                                       Bytes);
+        NTSTATUS status = STATUS_UNSUCCESSFUL;
+
+        if (socket->IsTlsSocket)
+        {
+            status = xpf::WskTlsSend(&apiProvider->WskProvider,
+                                     &socket->Socket,
+                                     socket->TlsSocketContext,
+                                     NumberOfBytes,
+                                     Bytes);
+        }
+        else
+        {
+            status = xpf::WskSend(&apiProvider->WskProvider,
+                                  &socket->Socket,
+                                  NumberOfBytes,
+                                  Bytes);
+        }
+
         return  (STATUS_FILE_FORCED_CLOSED == status) ? STATUS_CONNECTION_ABORTED
                                                       : status;
     #else
@@ -878,6 +963,7 @@ xpf::BerkeleySocket::Receive(
                 return STATUS_NETWORK_BUSY;
             }
         }
+        XPF_ASSERT(!newSocket->IsTlsSocket);
     #elif defined XPF_PLATFORM_LINUX_UM
         ssize_t bytesReceived = ::recv(socket->Socket,
                                        Bytes,
@@ -920,12 +1006,26 @@ xpf::BerkeleySocket::Receive(
                 return STATUS_NETWORK_BUSY;
             }
         }
+        XPF_ASSERT(!newSocket->IsTlsSocket);
     #elif defined XPF_PLATFORM_WIN_KM
         auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
-        NTSTATUS status = xpf::WskReceive(&apiProvider->WskProvider,
-                                          &socket->Socket,
-                                          NumberOfBytes,
-                                          Bytes);
+        NTSTATUS status = STATUS_UNSUCCESSFUL;
+
+        if (socket->IsTlsSocket)
+        {
+            status = xpf::WskTlsReceive(&apiProvider->WskProvider,
+                                        &socket->Socket,
+                                        socket->TlsSocketContext,
+                                        NumberOfBytes,
+                                        Bytes);
+        }
+        else
+        {
+            status = xpf::WskReceive(&apiProvider->WskProvider,
+                                     &socket->Socket,
+                                     NumberOfBytes,
+                                     Bytes);
+        }
         return  (STATUS_FILE_FORCED_CLOSED == status) ? STATUS_CONNECTION_ABORTED
                                                       : status;
     #else

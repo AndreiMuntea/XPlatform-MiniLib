@@ -43,7 +43,33 @@ struct WskSocketProvider
 
     WSK_CLIENT_NPI WskClientNpi = { 0 };
     WSK_CLIENT_DISPATCH WskClientDispatch = { 0 };
+
+    PSecurityFunctionTableW WskSecurityFunctionTable = nullptr;
 };  // struct WskSocketProvider
+
+struct WskSocketTlsContext
+{
+    CredHandle CredentialsHandle = { 0 };
+    CtxtHandle ContextHandle = { 0 };
+    SecPkgContext_StreamSizes StreamSizes = { 0 };
+    xpf::Buffer<> TlsBuffer;
+
+    //
+    // These are used when doing receive operations.
+    // As the data size might vary, the caller might not
+    // provide a large enough buffer to hold all data.
+    //
+    // So we might receive a chunk an we need to store it until
+    // the caller reallocates. We're using TlsBuffer to pass data
+    // around, and the Decrypted message is done in-place, so
+    // this pointer is actually inside the TlsBuffer.
+    //
+    void* DecryptedData = nullptr;
+    uint32_t AvailableDecryptedData = 0;
+
+    uint32_t ReceivedTotalData = 0;
+    uint32_t ReceivedDecryptedData = 0;
+};
 
 struct WskSocket
 {
@@ -201,5 +227,59 @@ WskReceive(
     _Inout_ size_t* NumberOfBytes,
     _Inout_ uint8_t* Bytes
 ) noexcept(true);
+
+_Must_inspect_result_
+NTSTATUS
+XPF_API
+WskCreateTlsSocketContext(
+    _In_ WskSocketProvider* SocketApiProvider,
+    _Out_ WskSocketTlsContext** TlsContext
+) noexcept(true);
+
+VOID XPF_API
+WskDestroyTlsSocketContext(
+    _In_ WskSocketProvider* SocketApiProvider,
+    _Inout_ WskSocketTlsContext** TlsContext
+) noexcept(true);
+
+_Must_inspect_result_
+NTSTATUS
+XPF_API
+WskTlsSocketHandshake(
+    _In_ WskSocketProvider* SocketApiProvider,
+    _Inout_ WskSocket* Socket,
+    _Inout_ WskSocketTlsContext* TlsContext,
+    _In_ PSECURITY_STRING TargetName
+) noexcept(true);
+
+VOID XPF_API
+WskTlsShutdown(
+    _In_ WskSocketProvider* SocketApiProvider,
+    _Inout_ WskSocket* Socket,
+    _Inout_ WskSocketTlsContext* TlsContext
+) noexcept(true);
+
+_Must_inspect_result_
+NTSTATUS
+XPF_API
+WskTlsSend(
+    _In_ WskSocketProvider* SocketApiProvider,
+    _Inout_ WskSocket* Socket,
+    _Inout_ WskSocketTlsContext* TlsContext,
+    _In_ size_t NumberOfBytes,
+    _In_ _Const_ const uint8_t* Bytes
+) noexcept(true);
+
+_Must_inspect_result_
+NTSTATUS
+XPF_API
+WskTlsReceive(
+    _In_ WskSocketProvider* SocketApiProvider,
+    _Inout_ WskSocket* Socket,
+    _Inout_ WskSocketTlsContext* TlsContext,
+    _Inout_ size_t* NumberOfBytes,
+    _Inout_ uint8_t* Bytes
+) noexcept(true);
+
 };  // namespace xpf
 #endif  // XPF_PLATFORM_WIN_KM

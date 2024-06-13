@@ -156,6 +156,9 @@ using Socket = void*;
  * @param[in] IsListeningSocket - If true, the socket will be use in listening calls,
  *                                if false it will be a connection socket.
  *
+ * @param[in] IsTlsSocket       - true if the socket should use TLS,
+ *                                false otherwise.
+ *
  * @param[out] CreatedSocket    - The newly created socket.
  *
  * @return a proper NTSTATUS error code.
@@ -170,6 +173,7 @@ CreateSocket(
     _In_ int Type,
     _In_ int Protocol,
     _In_ bool IsListeningSocket,
+    _In_ bool IsTlsSocket,
     _Out_ xpf::BerkeleySocket::Socket* CreatedSocket
 ) noexcept(true);
 
@@ -240,6 +244,8 @@ Listen(
  *
  * @param[in,out] TargetSocket  - The socket created with CreateSocket() function.
  *
+ * @param[in] TargetHost        - The name of the target host. Useful for tls connections.
+ *
  * @param[in] Address           - A pointer to the sockaddr structure to which the connection should be established.
  *
  * @param[in] Length            - The length, in bytes, of the value pointed to by Address.
@@ -253,6 +259,7 @@ XPF_API
 Connect(
     _In_ xpf::BerkeleySocket::SocketApiProvider SocketApiProvider,
     _Inout_ xpf::BerkeleySocket::Socket TargetSocket,
+    _In_ _Const_ const xpf::StringView<char>& TargetHost,
     _In_ _Const_ const sockaddr* Address,
     _In_ int Length
 ) noexcept(true);
