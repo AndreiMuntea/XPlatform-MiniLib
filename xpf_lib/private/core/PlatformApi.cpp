@@ -541,7 +541,22 @@ xpf::ApiRandomUuid(
         //
         if (::KeGetCurrentIrql() == PASSIVE_LEVEL)
         {
-            status = ExUuidCreate(&newUuid);
+            uint64_t seed64 = xpf::ApiCurrentTime();
+            ULONG seed32 = LODWORD(seed64);
+
+            newUuid.Data1 = ::RtlRandomEx(&seed32);
+            newUuid.Data2 = LOWORD(::RtlRandomEx(&seed32));
+            newUuid.Data3 = LOWORD(::RtlRandomEx(&seed32));
+
+            newUuid.Data4[0] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
+            newUuid.Data4[1] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
+            newUuid.Data4[2] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
+            newUuid.Data4[3] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
+
+            newUuid.Data4[4] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
+            newUuid.Data4[5] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
+            newUuid.Data4[6] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
+            newUuid.Data4[7] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
         }
     #elif defined XPF_PLATFORM_LINUX_UM
         uuid_generate_random(newUuid);
