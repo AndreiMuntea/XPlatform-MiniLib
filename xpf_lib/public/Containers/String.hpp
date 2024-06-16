@@ -273,7 +273,7 @@ constexpr inline bool
 Equals(
     _In_ _Const_ const StringView& Other,
     _In_ bool CaseSensitive
-) noexcept(true)
+) const noexcept(true)
 {
     //
     // If the strings don't have the same size, we're done.
@@ -321,7 +321,7 @@ constexpr inline bool
 StartsWith(
     _In_ _Const_ const StringView& Prefix,
     _In_ bool CaseSensitive
-) noexcept(true)
+) const noexcept(true)
 {
     //
     // If the prefix is bigger, this can't start with it.
@@ -357,7 +357,7 @@ constexpr inline bool
 EndsWith(
     _In_ _Const_ const StringView& Suffix,
     _In_ bool CaseSensitive
-) noexcept(true)
+) const noexcept(true)
 {
     //
     // If the suffix is bigger, this can't end with it.
@@ -402,7 +402,7 @@ Substring(
     _In_ _Const_ const StringView& Substring,
     _In_ bool CaseSensitive,
     _Out_opt_ size_t* Index
-) noexcept(true)
+) const noexcept(true)
 {
     //
     // Preinitialize output parameters.

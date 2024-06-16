@@ -52,3 +52,4 @@
 #include "public/Communication/Sockets/BerkeleySocket.hpp"
 #include "public/Communication/Sockets/ServerSocket.hpp"
 #include "public/Communication/Sockets/ClientSocket.hpp"
+#include "public/Communication/http.hpp"

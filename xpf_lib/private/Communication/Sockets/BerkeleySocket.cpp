@@ -414,7 +414,7 @@ xpf::BerkeleySocket::ShutdownSocket(
             (void) ::closesocket(socket->Socket);
             socket->Socket = INVALID_SOCKET;
         }
-        XPF_ASSERT(!newSocket->IsTlsSocket);
+        XPF_ASSERT(!socket->IsTlsSocket);
     #elif defined XPF_PLATFORM_LINUX_UM
         if (-1 != socket->Socket)
         {
@@ -422,7 +422,7 @@ xpf::BerkeleySocket::ShutdownSocket(
             (void) close(socket->Socket);
             socket->Socket = -1;
         }
-        XPF_ASSERT(!newSocket->IsTlsSocket);
+        XPF_ASSERT(!socket->IsTlsSocket);
     #elif defined XPF_PLATFORM_WIN_KM
         auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
 
@@ -495,7 +495,7 @@ xpf::BerkeleySocket::Bind(
         {
             return STATUS_INVALID_CONNECTION;
         }
-        XPF_ASSERT(!newSocket->IsTlsSocket);
+        XPF_ASSERT(!socket->IsTlsSocket);
     #elif defined XPF_PLATFORM_WIN_KM
         auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
         NTSTATUS status = xpf::WskBind(&apiProvider->WskProvider,
@@ -556,14 +556,14 @@ xpf::BerkeleySocket::Listen(
         {
             return STATUS_INVALID_CONNECTION;
         }
-        XPF_ASSERT(!newSocket->IsTlsSocket);
+        XPF_ASSERT(!socket->IsTlsSocket);
     #elif defined XPF_PLATFORM_LINUX_UM
         int gleResult = listen(socket->Socket, 0x7fffffff);
         if (0 != gleResult)
         {
             return STATUS_INVALID_CONNECTION;
         }
-        XPF_ASSERT(!newSocket->IsTlsSocket);
+        XPF_ASSERT(!socket->IsTlsSocket);
     #elif defined XPF_PLATFORM_WIN_KM
         auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
         NTSTATUS status = xpf::WskListen(&apiProvider->WskProvider,
@@ -629,7 +629,8 @@ xpf::BerkeleySocket::Connect(
         {
             return STATUS_INVALID_CONNECTION;
         }
-        XPF_ASSERT(!newSocket->IsTlsSocket);
+        XPF_UNREFERENCED_PARAMETER(TargetHost);
+        XPF_ASSERT(!socket->IsTlsSocket);
     #elif defined XPF_PLATFORM_WIN_KM
         auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
 
@@ -813,6 +814,7 @@ xpf::BerkeleySocket::Send(
                                static_cast<const char*>(static_cast<const void*>(Bytes)),
                                static_cast<int>(NumberOfBytes),
                                0);
+        XPF_ASSERT(!socket->IsTlsSocket);
         if (SOCKET_ERROR != bytesSent)
         {
             return (static_cast<int>(NumberOfBytes) != bytesSent) ? STATUS_INVALID_BUFFER_SIZE
@@ -837,12 +839,12 @@ xpf::BerkeleySocket::Send(
                 return STATUS_NETWORK_BUSY;
             }
         }
-        XPF_ASSERT(!newSocket->IsTlsSocket);
     #elif defined XPF_PLATFORM_LINUX_UM
         ssize_t bytesSent = send(socket->Socket,
                                  Bytes,
                                  NumberOfBytes,
                                  MSG_NOSIGNAL);
+        XPF_ASSERT(!socket->IsTlsSocket);
         if (-1 != bytesSent)
         {
             return (static_cast<int>(NumberOfBytes) != bytesSent) ? STATUS_INVALID_BUFFER_SIZE
@@ -861,7 +863,6 @@ xpf::BerkeleySocket::Send(
                 return STATUS_NETWORK_BUSY;
             }
         }
-        XPF_ASSERT(!newSocket->IsTlsSocket);
     #elif defined XPF_PLATFORM_WIN_KM
         auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
         NTSTATUS status = STATUS_UNSUCCESSFUL;
@@ -935,6 +936,7 @@ xpf::BerkeleySocket::Receive(
                                    static_cast<char*>(static_cast<void*>(Bytes)),
                                    static_cast<int>(*NumberOfBytes),
                                    0);
+        XPF_ASSERT(!socket->IsTlsSocket);
         if (SOCKET_ERROR != bytesReceived)
         {
             if (bytesReceived > static_cast<int>(*NumberOfBytes))
@@ -963,12 +965,12 @@ xpf::BerkeleySocket::Receive(
                 return STATUS_NETWORK_BUSY;
             }
         }
-        XPF_ASSERT(!newSocket->IsTlsSocket);
     #elif defined XPF_PLATFORM_LINUX_UM
         ssize_t bytesReceived = ::recv(socket->Socket,
                                        Bytes,
                                        *NumberOfBytes,
                                        0);
+        XPF_ASSERT(!socket->IsTlsSocket);
         //
         // When a stream socket peer has performed an orderly shutdown, the
         // return value will be 0 (the traditional "end-of-file" return).
@@ -1006,7 +1008,6 @@ xpf::BerkeleySocket::Receive(
                 return STATUS_NETWORK_BUSY;
             }
         }
-        XPF_ASSERT(!newSocket->IsTlsSocket);
     #elif defined XPF_PLATFORM_WIN_KM
         auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
         NTSTATUS status = STATUS_UNSUCCESSFUL;

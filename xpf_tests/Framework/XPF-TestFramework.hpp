@@ -73,8 +73,8 @@ LogTestInfo(
     #if defined XPF_PLATFORM_WIN_UM || defined XPF_PLATFORM_LINUX_UM
         (void) vfprintf(stdout, Format, argList);
     #elif defined XPF_PLATFORM_WIN_KM
-        (void) vDbgPrintEx(DPFLTR_DEFAULT_ID,
-                           DPFLTR_INFO_LEVEL,
+        (void) vDbgPrintEx(DPFLTR_IHVDRIVER_ID,
+                           DPFLTR_ERROR_LEVEL,
                            Format,
                            argList);
     #else

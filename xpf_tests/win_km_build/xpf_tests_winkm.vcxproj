@@ -108,7 +108,7 @@
       <IntelJCCErratum>true</IntelJCCErratum>
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);$(ProjectDir)..\..\;</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>5040;4748;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>POOL_NX_OPTIN;_X86_=1;i386=1;STD_CALL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>POOL_ZERO_DOWN_LEVEL_SUPPORT;POOL_NX_OPTIN;_X86_=1;i386=1;STD_CALL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='WinKmRelease|Win32'">
@@ -121,7 +121,7 @@
       <IntelJCCErratum>true</IntelJCCErratum>
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);$(ProjectDir)..\..\;</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>5040;4603;4627;4986;4987;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>POOL_NX_OPTIN;_X86_=1;i386=1;STD_CALL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>POOL_ZERO_DOWN_LEVEL_SUPPORT;POOL_NX_OPTIN;_X86_=1;i386=1;STD_CALL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='WinKmDebug|x64'">
@@ -134,7 +134,7 @@
       <IntelJCCErratum>true</IntelJCCErratum>
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);$(ProjectDir)..\..\;</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>5040;4748;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>POOL_NX_OPTIN;_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>POOL_ZERO_DOWN_LEVEL_SUPPORT;POOL_NX_OPTIN;_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='WinKmRelease|x64'">
@@ -147,7 +147,7 @@
       <IntelJCCErratum>true</IntelJCCErratum>
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories);$(ProjectDir)..\..\;</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>5040;4603;4627;4986;4987;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>POOL_NX_OPTIN;_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>POOL_ZERO_DOWN_LEVEL_SUPPORT;POOL_NX_OPTIN;_WIN64;_AMD64_;AMD64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
