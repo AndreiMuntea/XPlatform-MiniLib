@@ -686,3 +686,66 @@ xpf::http::InitiateHttpDownload(
     return (ClientConnection.IsEmpty()) ? STATUS_INSUFFICIENT_RESOURCES
                                         : STATUS_SUCCESS;
 }
+
+/**
+ * @brief           Continues a previously opened download over a connection.
+ *
+ * @param[in]       ClientConnection - A previously opened connection.
+ * @param[in,out]   ParsedResponse -  Updates the buffer and the body. The other headers are discarded.
+ * @param[out]      HasMoreData - A boolean indicating that we still need to call HttpContinueDownload.
+ *                                If true, subsequent calls are required.
+ *
+ * @return          A proper NTSTATUS error code.
+ */
+_Must_inspect_result_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+xpf::http::HttpContinueDownload(
+    _In_ xpf::SharedPointer<xpf::IClient>& ClientConnection,
+    _Inout_ xpf::http::HttpResponse& ParsedResponse,
+    _Out_ bool* HasMoreData
+) noexcept(true)
+{
+    XPF_MAX_PASSIVE_LEVEL();
+
+    XPF_DEATH_ON_FAILURE(!ClientConnection.IsEmpty());
+    XPF_DEATH_ON_FAILURE(!ParsedResponse.ResponseBuffer.IsEmpty());
+    XPF_DEATH_ON_FAILURE(nullptr != HasMoreData);
+
+    NTSTATUS status = STATUS_UNSUCCESSFUL;
+
+    /* Invalidate the response. We are going to recycle the buffer. */
+    ParsedResponse.HttpStatusCode = 0;
+    ParsedResponse.HttpStatusMessage.Reset();
+    ParsedResponse.Headers.Clear();
+    ParsedResponse.Body.Reset();
+
+    /* Set output parameters. */
+    *HasMoreData = false;
+
+    /* Will be used to check whether we have more data or not. */
+    size_t availableBufferSize = (*ParsedResponse.ResponseBuffer).GetSize();
+    void* availableBuffer = (*ParsedResponse.ResponseBuffer).GetBuffer();
+
+    /* Receive more data. */
+    status = (*ClientConnection).ReceiveData(&availableBufferSize,
+                                             static_cast<uint8_t*>(availableBuffer));
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    /* We maxed out. */
+    if (availableBufferSize == (*ParsedResponse.ResponseBuffer).GetSize())
+    {
+        *HasMoreData = true;
+    }
+
+    /* Set the body properly. */
+    if (availableBufferSize > 0)
+    {
+        ParsedResponse.Body = xpf::StringView{ static_cast<const char*>(availableBuffer),
+                                              availableBufferSize };
+    }
+    return STATUS_SUCCESS;
+}

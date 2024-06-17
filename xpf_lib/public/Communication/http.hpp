@@ -289,7 +289,7 @@ ParseHttpResponse(
  *                  Follows the redirects and ensures the connection is established.
  *                  Appends the application/octet-stream header. Uses a GET method.
  *
- *                  It is the caller responsibility to call receive on the client connection after this method
+ *                  It is the caller responsibility to call HttpContinueDownload on the client connection after this method
  *                  to ensure that the binary is completly downloaded.
  *
  * @param[in]       Url              - The url to be used.
@@ -311,6 +311,25 @@ InitiateHttpDownload(
     _In_ _Const_ size_t HeaderItemsCount,
     _Inout_ xpf::http::HttpResponse& ParsedResponse,
     _Inout_ xpf::SharedPointer<xpf::IClient>& ClientConnection
+) noexcept(true);
+
+/**
+ * @brief           Continues a previously opened download over a connection.
+ *
+ * @param[in]       ClientConnection - A previously opened connection.
+ * @param[in,out]   ParsedResponse -  Updates the buffer and the body. The other headers are discarded.
+ * @param[out]      HasMoreData - A boolean indicating that we still need to call HttpContinueDownload.
+ *                                If true, subsequent calls are required.
+ *
+ * @return          A proper NTSTATUS error code.
+ */
+_Must_inspect_result_
+_IRQL_requires_max_(PASSIVE_LEVEL)
+NTSTATUS
+HttpContinueDownload(
+    _In_ xpf::SharedPointer<xpf::IClient>& ClientConnection,
+    _Inout_ xpf::http::HttpResponse& ParsedResponse,
+    _Out_ bool* HasMoreData
 ) noexcept(true);
 };  // namespace http
 };  // namespace xpf

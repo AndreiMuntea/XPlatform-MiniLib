@@ -628,3 +628,48 @@ xpf::ApiIsHexDigit(
                              (Character >= 'a' && Character <= 'f'));
     return isHexDigit;
 }
+
+_Must_inspect_result_
+NTSTATUS
+ApiStringToValue(
+    _In_ const char* String,
+    _In_ uint8_t Base,
+    _Out_ int32_t* Value
+) noexcept(true)
+{
+    XPF_MAX_PASSIVE_LEVEL();
+
+    #if defined XPF_PLATFORM_WIN_UM || defined XPF_PLATFORM_WIN_KM
+        xpf::String<wchar_t> wideStr;
+        UNICODE_STRING ustr = { 0 };
+        NTSTATUS status = STATUS_UNSUCCESSFUL;
+        ULONG value = 0;
+        ULONG error = 0;
+
+        status = xpf::StringConversion::UTF8ToWide(String, wideStr);
+        if (!NT_SUCCESS(status))
+        {
+            return status;
+        }
+        if (wideStr.BufferSize() / sizeof(wchar_t) >= xpf::NumericLimits<uint16_t>::MaxValue())
+        {
+            return STATUS_INVALID_BUFFER_SIZE;
+        }
+        ::RtlInitUnicodeString(&ustr, wideStr.View().Buffer());
+
+        error = ::RtlUnicodeStringToInteger(&ustr,
+                                            Base,
+                                            &value);
+        if (STATUS_SUCCESS != error)
+        {
+            return STATUS_DATA_ERROR;
+        }
+        *Value = value;
+        return STATUS_SUCCESS;
+    #elif defined XPF_PLATFORM_LINUX_UM
+        *Value = strtol(String, nullptr, Base);
+        return STATUS_SUCCESS;
+    #else
+        #error Unknown Platform
+    #endif
+}

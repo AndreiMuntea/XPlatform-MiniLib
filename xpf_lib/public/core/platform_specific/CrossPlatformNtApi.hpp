@@ -38,5 +38,12 @@ RtlRandomEx(
     _Inout_ PULONG Seed
 );
 
+NTSYSAPI ULONG NTAPI
+RtlUnicodeStringToInteger(
+    _In_ PCUNICODE_STRING String,
+    _In_opt_ ULONG Base,
+    _Out_ PULONG Value
+);
+
 EXTERN_C_END
 #endif  // XPF_PLATFORM_WIN_UM

@@ -941,5 +941,23 @@ XPF_API
 ApiIsHexDigit(
     _In_ char Character
 ) noexcept(true);
+
+/**
+ * @brief Converts an ansi string to a number.
+ *
+ * @param[in] String - The string to be converted.
+ * @param[in] Base   - The expected base in which the number is represented.
+ * @param[out] Value - The resulted value.
+ *
+ * @return A proper ntstatus error code.
+ */
+_Must_inspect_result_
+NTSTATUS
+XPF_API
+ApiStringToValue(
+    _In_ const char* String,
+    _In_ uint8_t Base,
+    _Out_ int32_t* Value
+) noexcept(true);
 };  // namespace xpf
 
