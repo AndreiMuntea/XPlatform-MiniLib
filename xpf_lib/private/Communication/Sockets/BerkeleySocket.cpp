@@ -431,7 +431,6 @@ xpf::BerkeleySocket::ShutdownSocket(
             xpf::WskTlsShutdown(&apiProvider->WskProvider,
                                 &socket->Socket,
                                 socket->TlsSocketContext);
-            
             xpf::WskDestroyTlsSocketContext(&apiProvider->WskProvider,
                                             &socket->TlsSocketContext);
         }

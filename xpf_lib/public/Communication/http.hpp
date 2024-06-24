@@ -123,7 +123,7 @@ struct HttpResponse
     /**
      * @brief   The received response code.
      */
-    size_t HttpStatusCode;
+    size_t HttpStatusCode = 0;
 
     /**
      * @brief   The status message. Shallow copy from inside ResponseBuffer.
@@ -280,8 +280,8 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 ParseHttpResponse(
-    _In_ _Const_ xpf::SharedPointer<xpf::Buffer<>>& RawResponseBuffer,
-    _Inout_ xpf::http::HttpResponse& ParsedResponse
+    _In_ _Const_ const xpf::SharedPointer<xpf::Buffer<>>& RawResponseBuffer,
+    _Inout_ xpf::http::HttpResponse* ParsedResponse
 ) noexcept(true);
 
 /**
@@ -309,7 +309,7 @@ InitiateHttpDownload(
     _In_ _Const_ const xpf::StringView<char>& Url,
     _In_opt_ _Const_ const HeaderItem* HeaderItems,
     _In_ _Const_ size_t HeaderItemsCount,
-    _Inout_ xpf::http::HttpResponse& ParsedResponse,
+    _Inout_ xpf::http::HttpResponse* ParsedResponse,
     _Inout_ xpf::SharedPointer<xpf::IClient>& ClientConnection
 ) noexcept(true);
 
@@ -327,9 +327,9 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 HttpContinueDownload(
-    _In_ xpf::SharedPointer<xpf::IClient>& ClientConnection,
-    _Inout_ xpf::http::HttpResponse& ParsedResponse,
-    _Out_ bool* HasMoreData
+    _Inout_ xpf::SharedPointer<xpf::IClient>& ClientConnection,     // NOLINT(*)
+    _Inout_ xpf::http::HttpResponse* ParsedResponse,                // NOLINT(*)
+    _Out_ bool* HasMoreData                                         // NOLINT(*)
 ) noexcept(true);
 };  // namespace http
 };  // namespace xpf

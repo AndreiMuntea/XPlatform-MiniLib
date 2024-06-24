@@ -299,8 +299,8 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 xpf::http::ParseHttpResponse(
-    _In_ _Const_ xpf::SharedPointer<xpf::Buffer<>>& RawResponseBuffer,
-    _Inout_ xpf::http::HttpResponse& ParsedResponse
+    _In_ _Const_ const xpf::SharedPointer<xpf::Buffer<>>& RawResponseBuffer,
+    _Inout_ xpf::http::HttpResponse* ParsedResponse
 ) noexcept(true)
 {
     XPF_MAX_PASSIVE_LEVEL();
@@ -312,21 +312,21 @@ xpf::http::ParseHttpResponse(
 
     xpf::StringView<char> currentLine = HttpNextLine(rawResponse);
 
-    ParsedResponse.ResponseBuffer = RawResponseBuffer;
+    ParsedResponse->ResponseBuffer = RawResponseBuffer;
 
     /* The status line first. */
     if (currentLine.IsEmpty())
     {
         return STATUS_MORE_PROCESSING_REQUIRED;
     }
-    status = HttpParseStatusLine(currentLine, ParsedResponse);
+    status = HttpParseStatusLine(currentLine, *ParsedResponse);
     if (!NT_SUCCESS(status))
     {
         return status;
     }
 
     /* Now the headers. */
-    ParsedResponse.Headers.Clear();
+    ParsedResponse->Headers.Clear();
     while (true)
     {
         /* No more line endings found. */
@@ -343,7 +343,7 @@ xpf::http::ParseHttpResponse(
         }
 
         /* Parse the current line. */
-        status = HttpParseHeaderLine(currentLine, ParsedResponse);
+        status = HttpParseHeaderLine(currentLine, *ParsedResponse);
         if (!NT_SUCCESS(status))
         {
             return status;
@@ -351,7 +351,7 @@ xpf::http::ParseHttpResponse(
     }
 
     /* And the body is the rest of the message. */
-    ParsedResponse.Body = rawResponse;
+    ParsedResponse->Body = rawResponse;
     return STATUS_SUCCESS;
 }
 
@@ -536,7 +536,7 @@ xpf::http::InitiateHttpDownload(
     _In_ _Const_ const xpf::StringView<char>& Url,
     _In_opt_ _Const_ const HeaderItem* HeaderItems,
     _In_ _Const_ size_t HeaderItemsCount,
-    _Inout_ xpf::http::HttpResponse& ParsedResponse,
+    _Inout_ xpf::http::HttpResponse* ParsedResponse,
     _Inout_ xpf::SharedPointer<xpf::IClient>& ClientConnection
 ) noexcept(true)
 {
@@ -649,7 +649,7 @@ xpf::http::InitiateHttpDownload(
             return status;
         }
 
-        if (ParsedResponse.HttpStatusCode < 300 || ParsedResponse.HttpStatusCode > 399)
+        if (ParsedResponse->HttpStatusCode < 300 || ParsedResponse->HttpStatusCode > 399)
         {
             /* If we don't have a redirect, we're done. */
             break;
@@ -658,11 +658,11 @@ xpf::http::InitiateHttpDownload(
         {
             /* Here we go again. Grab the new URL */
             bool foundRedirect = false;
-            for (size_t i = 0; i < ParsedResponse.Headers.Size(); ++i)
+            for (size_t i = 0; i < ParsedResponse->Headers.Size(); ++i)
             {
-                if (ParsedResponse.Headers[i].Key.Equals("Location", false))
+                if (ParsedResponse->Headers[i].Key.Equals("Location", false))
                 {
-                    url = ParsedResponse.Headers[i].Value;
+                    url = ParsedResponse->Headers[i].Value;
                     foundRedirect = true;
                     break;
                 }
@@ -676,7 +676,7 @@ xpf::http::InitiateHttpDownload(
         maximumRedirectsAllowed--;
     }
 
-    if (ParsedResponse.HttpStatusCode != 200)
+    if (ParsedResponse->HttpStatusCode != 200)
     {
         return STATUS_INVALID_NETWORK_RESPONSE;
     }
@@ -701,31 +701,31 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 xpf::http::HttpContinueDownload(
-    _In_ xpf::SharedPointer<xpf::IClient>& ClientConnection,
-    _Inout_ xpf::http::HttpResponse& ParsedResponse,
+    _Inout_ xpf::SharedPointer<xpf::IClient>& ClientConnection,
+    _Inout_ xpf::http::HttpResponse* ParsedResponse,
     _Out_ bool* HasMoreData
 ) noexcept(true)
 {
     XPF_MAX_PASSIVE_LEVEL();
 
     XPF_DEATH_ON_FAILURE(!ClientConnection.IsEmpty());
-    XPF_DEATH_ON_FAILURE(!ParsedResponse.ResponseBuffer.IsEmpty());
+    XPF_DEATH_ON_FAILURE(!ParsedResponse->ResponseBuffer.IsEmpty());
     XPF_DEATH_ON_FAILURE(nullptr != HasMoreData);
 
     NTSTATUS status = STATUS_UNSUCCESSFUL;
 
     /* Invalidate the response. We are going to recycle the buffer. */
-    ParsedResponse.HttpStatusCode = 0;
-    ParsedResponse.HttpStatusMessage.Reset();
-    ParsedResponse.Headers.Clear();
-    ParsedResponse.Body.Reset();
+    ParsedResponse->HttpStatusCode = 0;
+    ParsedResponse->HttpStatusMessage.Reset();
+    ParsedResponse->Headers.Clear();
+    ParsedResponse->Body.Reset();
 
     /* Set output parameters. */
     *HasMoreData = false;
 
     /* Will be used to check whether we have more data or not. */
-    size_t availableBufferSize = (*ParsedResponse.ResponseBuffer).GetSize();
-    void* availableBuffer = (*ParsedResponse.ResponseBuffer).GetBuffer();
+    size_t availableBufferSize = (*(ParsedResponse->ResponseBuffer)).GetSize();
+    void* availableBuffer = (*(ParsedResponse->ResponseBuffer)).GetBuffer();
 
     /* Receive more data. */
     status = (*ClientConnection).ReceiveData(&availableBufferSize,
@@ -736,7 +736,7 @@ xpf::http::HttpContinueDownload(
     }
 
     /* We maxed out. */
-    if (availableBufferSize == (*ParsedResponse.ResponseBuffer).GetSize())
+    if (availableBufferSize == (*(ParsedResponse->ResponseBuffer)).GetSize())
     {
         *HasMoreData = true;
     }
@@ -744,8 +744,8 @@ xpf::http::HttpContinueDownload(
     /* Set the body properly. */
     if (availableBufferSize > 0)
     {
-        ParsedResponse.Body = xpf::StringView{ static_cast<const char*>(availableBuffer),
-                                              availableBufferSize };
+        ParsedResponse->Body = xpf::StringView{ static_cast<const char*>(availableBuffer),
+                                                availableBufferSize };
     }
     return STATUS_SUCCESS;
 }

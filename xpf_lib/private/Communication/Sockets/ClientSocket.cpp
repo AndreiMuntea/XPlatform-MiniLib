@@ -64,7 +64,7 @@ xpf::ClientSocket::CreateClientSocketData(
     data->IsTlsSocket = IsTlsSocket;
 
     //
-    // Store data about the connection. 
+    // Store data about the connection.
     //
     status = data->Ip.Append(Ip);
     if (!NT_SUCCESS(status))

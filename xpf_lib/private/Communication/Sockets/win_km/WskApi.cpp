@@ -1567,7 +1567,7 @@ XpfSecAcquireCredentialsHandle(
 ) noexcept(true)
 {
     //
-    // Should always be at passive. 
+    // Should always be at passive.
     //
     XPF_MAX_PASSIVE_LEVEL();
 
@@ -1607,7 +1607,7 @@ XpfSecFreeCredentialsHandle(
 )
 {
     //
-    // Should always be at passive. 
+    // Should always be at passive.
     //
     XPF_MAX_PASSIVE_LEVEL();
 
@@ -1634,23 +1634,23 @@ _Success_(return == SEC_E_OK)
 _IRQL_requires_max_(PASSIVE_LEVEL)
 static SECURITY_STATUS
 XpfSecInitializeSecurityContextW(
-    _In_ xpf::WskSocketProvider * SocketApiProvider,
-    _In_opt_ PCredHandle Credential,
-    _In_opt_ PCtxtHandle Context,
-    _In_opt_ PSECURITY_STRING TargetName,
-    _In_ unsigned long ContextReq,
-    _In_ unsigned long Reserved1,
-    _In_ unsigned long TargetDataRep,
-    _In_opt_ PSecBufferDesc Input,
-    _In_ unsigned long Reserved2,
-    _Inout_opt_ PCtxtHandle NewContext,
-    _Inout_opt_ PSecBufferDesc Output,
-    _Out_ unsigned long* ContextAttr,
-    _Out_opt_ PTimeStamp Expiry
+    _In_ xpf::WskSocketProvider * SocketApiProvider,        // NOLINT(*)
+    _In_opt_ PCredHandle Credential,                        // NOLINT(*)
+    _In_opt_ PCtxtHandle Context,                           // NOLINT(*)
+    _In_opt_ PSECURITY_STRING TargetName,                   // NOLINT(*)
+    _In_ unsigned long ContextReq,                          // NOLINT(*)
+    _In_ unsigned long Reserved1,                           // NOLINT(*)
+    _In_ unsigned long TargetDataRep,                       // NOLINT(*)
+    _In_opt_ PSecBufferDesc Input,                          // NOLINT(*)
+    _In_ unsigned long Reserved2,                           // NOLINT(*)
+    _Inout_opt_ PCtxtHandle NewContext,                     // NOLINT(*)
+    _Inout_opt_ PSecBufferDesc Output,                      // NOLINT(*)
+    _Out_ unsigned long* ContextAttr,                       // NOLINT(*)
+    _Out_opt_ PTimeStamp Expiry                             // NOLINT(*)
 ) noexcept(true)
 {
     //
-    // Should always be at passive. 
+    // Should always be at passive.
     //
     XPF_MAX_PASSIVE_LEVEL();
 
@@ -1692,7 +1692,7 @@ XpfSecFreeContextBuffer(
 ) noexcept(true)
 {
     //
-    // Should always be at passive. 
+    // Should always be at passive.
     //
     XPF_MAX_PASSIVE_LEVEL();
 
@@ -1728,14 +1728,14 @@ _Success_(return == SEC_E_OK)
 _Must_inspect_result_
 static SECURITY_STATUS
 XpfSecQueryContextAttributes(
-    _In_ xpf::WskSocketProvider * SocketApiProvider,
-    _In_ PCtxtHandle Context,
-    _In_ unsigned long Attribute,
-    _Out_ PVOID Buffer
+    _In_ xpf::WskSocketProvider * SocketApiProvider,        // NOLINT(*)
+    _In_ PCtxtHandle Context,                               // NOLINT(*)
+    _In_ unsigned long Attribute,                           // NOLINT(*)
+    _Out_ PVOID Buffer                                      // NOLINT(*)
 ) noexcept(true)
 {
     //
-    // Should always be at passive. 
+    // Should always be at passive.
     //
     XPF_MAX_PASSIVE_LEVEL();
 
@@ -1773,7 +1773,7 @@ XpfSecEncryptMessage(
 ) noexcept(true)
 {
     //
-    // Should always be at passive. 
+    // Should always be at passive.
     //
     XPF_MAX_PASSIVE_LEVEL();
 
@@ -1812,7 +1812,7 @@ XpfSecDecryptMessage(
 ) noexcept(true)
 {
     //
-    // Should always be at passive. 
+    // Should always be at passive.
     //
     XPF_MAX_PASSIVE_LEVEL();
 
@@ -1845,7 +1845,7 @@ XpfFinalizeHandshake(
 ) noexcept(true)
 {
     //
-    // Should always be at passive. 
+    // Should always be at passive.
     //
     XPF_MAX_PASSIVE_LEVEL();
 
@@ -1898,7 +1898,7 @@ xpf::WskCreateTlsSocketContext(
 ) noexcept(true)
 {
     //
-    // Should always be at passive. 
+    // Should always be at passive.
     //
     XPF_MAX_PASSIVE_LEVEL();
 
@@ -2011,7 +2011,7 @@ xpf::WskDestroyTlsSocketContext(
 ) noexcept(true)
 {
     //
-    // Should always be at passive. 
+    // Should always be at passive.
     //
     XPF_MAX_PASSIVE_LEVEL();
 
@@ -2064,7 +2064,7 @@ xpf::WskTlsSocketHandshake(
 ) noexcept(true)
 {
     //
-    // Should always be at passive. 
+    // Should always be at passive.
     //
     XPF_MAX_PASSIVE_LEVEL();
 
@@ -2134,12 +2134,12 @@ xpf::WskTlsSocketHandshake(
 
     while (true)
     {
-        unsigned long contextRequest = ISC_REQ_ALLOCATE_MEMORY      |   // The security package allocates output buffers for you.
+        unsigned long contextRequest = ISC_REQ_ALLOCATE_MEMORY      |   // The security package allocates output buffers for you.       // NOLINT(*)
                                                                         // When you have finished using the output buffers,
                                                                         // free them by calling the FreeContextBuffer function.
                                        ISC_REQ_CONFIDENTIALITY      |   // Encrypt messages by using the EncryptMessage function.
                                        ISC_REQ_USE_SUPPLIED_CREDS   |   // Schannel must not attempt to supply credentials
-                                                                        // for the client automatically. 
+                                                                        // for the client automatically.
                                        ISC_REQ_REPLAY_DETECT        |   // Detect replayed messages that have been encoded by
                                                                         // using the EncryptMessage or MakeSignature functions.
                                        ISC_REQ_INTEGRITY            |   // Sign messagesand verify signatures by using the
@@ -2183,16 +2183,16 @@ xpf::WskTlsSocketHandshake(
                                                      nullptr);
         context = &TlsContext->ContextHandle;
 
-        // 
-        // See RandyGaul's comment on https://gist.github.com/mmozeiko/c0dfcc8fec527a90a02145d2cc0bfb6d 
-        // 
+        //
+        // See RandyGaul's comment on https://gist.github.com/mmozeiko/c0dfcc8fec527a90a02145d2cc0bfb6d
+        //
         // "Sometimes during the handshake SEC_E_INCOMPLETE_MESSAGE can be encountered,
         //  meaning a decrypt failed as the full record was not present.
         //  In this case we need to call recv and append more data, then try again."
-        // 
-        if (inbuffers[1].BufferType == SECBUFFER_EXTRA && 
+        //
+        if (inbuffers[1].BufferType == SECBUFFER_EXTRA &&
             inbuffers[1].cbBuffer > 0)
-        {               
+        {
             //
             // SECBUFFER_EXTRA means that there are some bytes that has not
             // been processed. This can happen if we are negotiating a
@@ -2343,7 +2343,7 @@ xpf::WskTlsShutdown(
 ) noexcept(true)
 {
     //
-    // Should always be at passive. 
+    // Should always be at passive.
     //
     XPF_MAX_PASSIVE_LEVEL();
 
@@ -2363,12 +2363,12 @@ xpf::WskTlsShutdown(
 
     while (true)
     {
-        unsigned long contextRequest = ISC_REQ_ALLOCATE_MEMORY      |    // The security package allocates output buffers for you.
+        unsigned long contextRequest = ISC_REQ_ALLOCATE_MEMORY      |    // The security package allocates output buffers for you.  // NOLINT(*)
                                                                          // When you have finished using the output buffers,
                                                                          // free them by calling the FreeContextBuffer function.
                                        ISC_REQ_CONFIDENTIALITY      |    // Encrypt messages by using the EncryptMessage function.
                                        ISC_REQ_USE_SUPPLIED_CREDS   |    // Schannel must not attempt to supply credentials
-                                                                         // for the client automatically. 
+                                                                         // for the client automatically.
                                        ISC_REQ_REPLAY_DETECT        |    // Detect replayed messages that have been encoded by
                                                                          // using the EncryptMessage or MakeSignature functions.
                                        ISC_REQ_INTEGRITY            |    // Sign messagesand verify signatures by using the
@@ -2400,7 +2400,7 @@ xpf::WskTlsShutdown(
             .pBuffers  = outbuffers
         };
 
-        unsigned long contextAttr = 0;
+        unsigned long contextAttr = 0;  // NOLINT(*)
 
         SECURITY_STATUS secStatus = XpfSecInitializeSecurityContextW(SocketApiProvider,
                                                                      &TlsContext->CredentialsHandle,
@@ -2471,7 +2471,7 @@ xpf::WskTlsSend(
 ) noexcept(true)
 {
     //
-    // Should always be at passive. 
+    // Should always be at passive.
     //
     XPF_MAX_PASSIVE_LEVEL();
 
@@ -2491,13 +2491,13 @@ xpf::WskTlsSend(
         // We negotiatated how many bytes we need to send - won't exceed that.
         //
         XPF_ASSERT(TlsContext->TlsBuffer.GetSize() >= (static_cast<size_t>(TlsContext->StreamSizes.cbHeader) +
-                                                       static_cast<size_t>(TlsContext->StreamSizes.cbMaximumMessage) + 
+                                                       static_cast<size_t>(TlsContext->StreamSizes.cbMaximumMessage) +
                                                        static_cast<size_t>(TlsContext->StreamSizes.cbTrailer)));
         uint32_t toSend = min(static_cast<uint32_t>(NumberOfBytes),
                               TlsContext->StreamSizes.cbMaximumMessage);
 
         SecBuffer buffers[3] = { 0 };
-        
+
         buffers[0].BufferType = SECBUFFER_STREAM_HEADER;
         buffers[0].pvBuffer = TlsContext->TlsBuffer.GetBuffer();
         buffers[0].cbBuffer = TlsContext->StreamSizes.cbHeader;
@@ -2509,7 +2509,7 @@ xpf::WskTlsSend(
 
         buffers[2].BufferType = SECBUFFER_STREAM_TRAILER;
         buffers[2].pvBuffer = xpf::AlgoAddToPointer(TlsContext->TlsBuffer.GetBuffer(),
-                                                    static_cast<size_t>(buffers[0].cbBuffer) + 
+                                                    static_cast<size_t>(buffers[0].cbBuffer) +
                                                     static_cast<size_t>(buffers[1].cbBuffer));
         buffers[2].cbBuffer = TlsContext->StreamSizes.cbTrailer;
 
@@ -2577,7 +2577,7 @@ xpf::WskTlsReceive(
 ) noexcept(true)
 {
     //
-    // Should always be at passive. 
+    // Should always be at passive.
     //
     XPF_MAX_PASSIVE_LEVEL();
 
@@ -2668,7 +2668,7 @@ xpf::WskTlsReceive(
             //
 
             SecBuffer buffers[4] = { 0 };
-        
+
             buffers[0].BufferType = SECBUFFER_DATA;
             buffers[0].pvBuffer = TlsContext->TlsBuffer.GetBuffer();
             buffers[0].cbBuffer = TlsContext->ReceivedTotalData;

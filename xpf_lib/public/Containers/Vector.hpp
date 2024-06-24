@@ -18,6 +18,7 @@
 #include "xpf_lib/public/core/Core.hpp"
 #include "xpf_lib/public/core/TypeTraits.hpp"
 #include "xpf_lib/public/core/PlatformApi.hpp"
+#include "xpf_lib/public/core/Algorithm.hpp"
 
 #include "xpf_lib/public/Memory/MemoryAllocator.hpp"
 #include "xpf_lib/public/Memory/CompressedPair.hpp"
@@ -756,6 +757,112 @@ Erase(
     }
 
     return STATUS_SUCCESS;
+}
+
+/**
+ * @brief       Uses iterative heapsort to sort the elements with the provided SortingPredicate.
+ *              The heapsort implementation here is considered an unstable sort.
+ *              Unstable sorting algorithm can be defined as sorting algorithm in which the order of objects
+ *              with the same values in the sorted array are not guaranteed to be the same as in the input array.
+ *
+ * @param[in]   SortingPredicate - a lambda with the signature(const& Left, const& Right) which returns
+ *                                 true if left should appear before right in the sorted array.
+ *
+ * @return      This function is guaranteed to succed. It does not return anything.
+ *
+ * @note        Please see the following rerefence:
+ *              " Knuth, Donald (1997). "§5.2.3, Sorting by Selection".
+ *                The Art of Computer Programming. Vol. 3: Sorting and Searching (3rd ed.).
+ *                Addison-Wesley. pp. 144–155. ISBN 978-0-201-89685-5. "
+ */
+template <class Predicate>
+inline void
+Sort(
+    _In_ Predicate SortingPredicate
+) noexcept(true)
+{
+    //
+    // In a max-heap, the children of an element from index i are the ones from index
+    // (i*2) + 1 and (i*2) + 2 respectively. So the elements in the second half are leafs.
+    //
+    size_t start = this->Size() / 2;
+    size_t end = this->Size();
+
+    //
+    // Helper macro to exchange elements
+    //
+    #define XPF_VECTOR_SWAP_ELEMENTS_AT(idx1, idx2)     \
+    {                                                   \
+        Type& a = this->operator[](idx1);               \
+        Type& b = this->operator[](idx2);               \
+                                                        \
+        Type temp{ xpf::Move(a) };                      \
+        a = xpf::Move(b);                               \
+        b = xpf::Move(temp);                            \
+    }
+
+    //
+    // The heapsort has two steps:
+    //      1. Construction of the max heap - we need to re-arange the elements
+    //         so that they have the max heap property.
+    //      2. The actual sorting which basically means moving the root (element 0)
+    //         to the end, and then restoring the max heap property.
+    //
+    while (end > 1)
+    {
+        if (start > 0)
+        {
+            //
+            // We are constructing the max heap. This will decrease until it is 0.
+            // Only after then the sorting begins.
+            //
+            start = start - 1;
+        }
+        else
+        {
+            //
+            // We're in sorting phase. Decrease the end and move the root to the last.
+            //
+            end = end - 1;
+            XPF_VECTOR_SWAP_ELEMENTS_AT(0, end);
+        }
+
+        //
+        // Restore the max-heap property.
+        //
+        size_t root = start;
+        while (2 * root < end - 1)            /* While the root has at least one child */
+        {
+            size_t child = 2 * root + 1;      /* Left child of root. */
+
+            if (child < end - 1)              /* Check if there is a right child. */
+            {
+                /* Check if the right child is bigger than left. We need the bigger child, always. */
+                const bool isLeftSmaller = SortingPredicate(this->operator[](child),
+                                                            this->operator[](child+1));
+                if (isLeftSmaller)
+                {
+                    child = child + 1;
+                }
+            }
+
+            /* Now check if root is smaller. */
+            const bool isRootSmaller = SortingPredicate(this->operator[](root),
+                                                        this->operator[](child));
+            if (isRootSmaller)
+            {
+                /* Swap root and child and continue swapping the child down the heap. */
+                XPF_VECTOR_SWAP_ELEMENTS_AT(root, child);
+                root = child;
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    #undef XPF_VECTOR_SWAP_ELEMENTS_AT
 }
 
  private:

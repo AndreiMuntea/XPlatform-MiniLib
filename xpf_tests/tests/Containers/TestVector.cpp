@@ -251,3 +251,51 @@ XPF_TEST_SCENARIO(TestVector, Resize)
     XPF_TEST_EXPECT_TRUE(vector1[3] == L'D');
     XPF_TEST_EXPECT_TRUE(vector1[4] == L'E');
 }
+
+/**
+ * @brief       This tests the sorting of a vector.
+ */
+XPF_TEST_SCENARIO(TestVector, TestSort)
+{
+    xpf::Vector<uint64_t> vector;
+    /* Sort empty */
+    vector.Sort([&](const uint64_t& Left, const uint64_t& Right)
+                {
+                    return Left < Right;
+                });
+
+    /* Populate array with random values. */
+    for (size_t i = 210283; i > 0; --i)
+    {
+        uuid_t randomValue = { 0 };
+        xpf::ApiRandomUuid(&randomValue);
+
+        /* Ugly but we can generate random uuids .. maybe we can generate random numbers in future as well. */
+        /* Will be changed when we do so. For now this suffice. */
+        static_assert(sizeof(uuid_t) == 2 * sizeof(uint64_t));
+        uint64_t value = *static_cast<uint64_t*>(static_cast<void*>(&randomValue));
+
+        XPF_TEST_EXPECT_TRUE(NT_SUCCESS(vector.Emplace(value)));
+    }
+
+    /* Sort ascending. */
+    vector.Sort([&](const uint64_t& Left, const uint64_t& Right)
+                {
+                    return Left < Right;
+                });
+
+    for (size_t i = 1; i < 210283; ++i)
+    {
+        XPF_TEST_EXPECT_TRUE(vector[i - 1] <= vector[i]);
+    }
+
+    /* Sort descending. */
+    vector.Sort([&](const uint64_t& Left, const uint64_t& Right)
+                {
+                    return Left > Right;
+                });
+    for (size_t i = 1; i < 210283; ++i)
+    {
+        XPF_TEST_EXPECT_TRUE(vector[i - 1] >= vector[i]);
+    }
+}
