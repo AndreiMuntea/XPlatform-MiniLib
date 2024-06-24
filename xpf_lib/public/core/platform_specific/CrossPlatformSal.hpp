@@ -89,4 +89,14 @@
     #endif  // _Analysis_assume_
     #define _Analysis_assume_(Unused)
 
+    #if defined _IRQL_requires_max_
+        #undef _IRQL_requires_max_
+    #endif  // _IRQL_requires_max_
+    #define _IRQL_requires_max_(Unused)
+
+    #if defined _Use_decl_annotations_
+        #undef _Use_decl_annotations_
+    #endif  // _Use_decl_annotations_
+    #define _Use_decl_annotations_
+
 #endif  // _MSC_VER

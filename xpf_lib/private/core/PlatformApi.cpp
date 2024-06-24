@@ -630,8 +630,8 @@ xpf::ApiIsHexDigit(
 }
 
 _Must_inspect_result_
-NTSTATUS
-ApiStringToValue(
+NTSTATUS XPF_API
+xpf::ApiStringToValue(
     _In_ const char* String,
     _In_ uint8_t Base,
     _Out_ int32_t* Value

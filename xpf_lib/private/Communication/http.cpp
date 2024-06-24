@@ -24,11 +24,6 @@ XPF_SECTION_PAGED;
 static constexpr const char gHttpHeaderLineEnding[] = "\r\n";
 
 /**
- * @brief   The specification is explicit about : being the separator
- */
-static constexpr const char gHttpHeaderSeparator[] = ":";
-
-/**
  * @brief   The textual representation of supported HTTP versions.
  */
 static constexpr const xpf::http::HttpVersionMap gHttpSupportedVersions[] =
@@ -295,8 +290,7 @@ HttpParseHeaderLine(
     return ParsedResponse.Headers.Emplace(xpf::Move(headerItem));
 }
 
-_Must_inspect_result_
-_IRQL_requires_max_(PASSIVE_LEVEL)
+_Use_decl_annotations_
 NTSTATUS
 xpf::http::ParseHttpResponse(
     _In_ _Const_ const xpf::SharedPointer<xpf::Buffer<>>& RawResponseBuffer,
@@ -355,8 +349,7 @@ xpf::http::ParseHttpResponse(
     return STATUS_SUCCESS;
 }
 
-_Must_inspect_result_
-_IRQL_requires_max_(PASSIVE_LEVEL)
+_Use_decl_annotations_
 NTSTATUS
 xpf::http::BuildHttpRequest(
     _In_ _Const_ const xpf::StringView<char>& Host,
@@ -375,17 +368,17 @@ xpf::http::BuildHttpRequest(
 
     Request.Reset();
 
-    /**
-     * @brief Helper macro to append data to a request.
-     */
-    #define HTTP_REQUEST_APPEND(Request, Data)  \
-    {                                           \
-        status = Request.Append(Data);          \
-        if (!NT_SUCCESS(status))                \
-        {                                       \
-            return status;                      \
-        }                                       \
-    }
+    /* Doxygen does not play nice with macros. */
+    #ifndef DOXYGEN_SHOULD_SKIP_THIS
+        #define HTTP_REQUEST_APPEND(Request, Data)  \
+        {                                           \
+            status = Request.Append(Data);          \
+            if (!NT_SUCCESS(status))                \
+            {                                       \
+                return status;                      \
+            }                                       \
+        }
+    #endif  // DOXYGEN_SHOULD_SKIP_THIS
 
     /* GET */
     HTTP_REQUEST_APPEND(Request, Method);
@@ -436,8 +429,7 @@ xpf::http::BuildHttpRequest(
     return status;
 }
 
-_Must_inspect_result_
-_IRQL_requires_max_(PASSIVE_LEVEL)
+_Use_decl_annotations_
 NTSTATUS
 xpf::http::ParseUrlInformation(
     _In_ _Const_ const xpf::StringView<char>& Url,
@@ -448,18 +440,18 @@ xpf::http::ParseUrlInformation(
 
     NTSTATUS status = STATUS_UNSUCCESSFUL;
 
-    /**
-     * @brief   Helper macro to assign an url part to url information.
-     */
-    #define HTTP_URL_PART_ASSIGN(UrlPart, View)         \
-    {                                                   \
-        UrlPart.Reset();                                \
-        status = UrlPart.Append(View);                  \
-        if (!NT_SUCCESS(status))                        \
-        {                                               \
-            return status;                              \
-        }                                               \
-    }
+    /* Doxygen does not play nice with macros. */
+    #ifndef DOXYGEN_SHOULD_SKIP_THIS
+        #define HTTP_URL_PART_ASSIGN(UrlPart, View)         \
+        {                                                   \
+            UrlPart.Reset();                                \
+            status = UrlPart.Append(View);                  \
+            if (!NT_SUCCESS(status))                        \
+            {                                               \
+                return status;                              \
+            }                                               \
+        }
+    #endif  // DOXYGEN_SHOULD_SKIP_THIS
 
     /* Save the original URL.*/
     HTTP_URL_PART_ASSIGN(UrlInformation.Url, Url);
@@ -529,8 +521,7 @@ xpf::http::ParseUrlInformation(
     return STATUS_SUCCESS;
 }
 
-_Must_inspect_result_
-_IRQL_requires_max_(PASSIVE_LEVEL)
+_Use_decl_annotations_
 NTSTATUS
 xpf::http::InitiateHttpDownload(
     _In_ _Const_ const xpf::StringView<char>& Url,
@@ -687,18 +678,7 @@ xpf::http::InitiateHttpDownload(
                                         : STATUS_SUCCESS;
 }
 
-/**
- * @brief           Continues a previously opened download over a connection.
- *
- * @param[in]       ClientConnection - A previously opened connection.
- * @param[in,out]   ParsedResponse -  Updates the buffer and the body. The other headers are discarded.
- * @param[out]      HasMoreData - A boolean indicating that we still need to call HttpContinueDownload.
- *                                If true, subsequent calls are required.
- *
- * @return          A proper NTSTATUS error code.
- */
-_Must_inspect_result_
-_IRQL_requires_max_(PASSIVE_LEVEL)
+_Use_decl_annotations_
 NTSTATUS
 xpf::http::HttpContinueDownload(
     _Inout_ xpf::SharedPointer<xpf::IClient>& ClientConnection,

@@ -213,7 +213,6 @@ struct UrlInfo
  * @return          A proper NTSTATUS error code.
  */
 _Must_inspect_result_
-_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 ParseUrlInformation(
     _In_ _Const_ const xpf::StringView<char>& Url,
@@ -235,7 +234,7 @@ ParseUrlInformation(
  * @param[in]       ResourcePath     -   The http resource path (for example /foobar/otherbar/somepage)
  * @param[in]       Version          -   The http version (see enum HttpVersion)
  * @param[in]       Parameters       -   The http request parameters (for example ?param1=value1&param2=value2)
- * @param[in,opt]   HeaderItems      -   The header items to be included in the request.
+ * @param[in]       HeaderItems      -   The header items to be included in the request.
  *                                       This is a variable sized array.
  * @param[in]       HeaderItemsCount -   The number of elements in the HeaderItems array.
  * @param[in,out]   Request          -   Will contain the request string and headers properly formed.
@@ -243,7 +242,6 @@ ParseUrlInformation(
  * @return          A proper NTSTATUS error code.
  */
 _Must_inspect_result_
-_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 BuildHttpRequest(
     _In_ _Const_ const xpf::StringView<char>& Host,
@@ -277,7 +275,6 @@ BuildHttpRequest(
  *                  STATUS_MORE_PROCESSING_REQUIRED is returned.
  */
 _Must_inspect_result_
-_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 ParseHttpResponse(
     _In_ _Const_ const xpf::SharedPointer<xpf::Buffer<>>& RawResponseBuffer,
@@ -293,7 +290,7 @@ ParseHttpResponse(
  *                  to ensure that the binary is completly downloaded.
  *
  * @param[in]       Url              - The url to be used.
- * @param[in,opt]   HeaderItems      - The header items to be included in the request.
+ * @param[in]       HeaderItems      - The header items to be included in the request.
  *                                     This is a variable sized array.
  * @param[in]       HeaderItemsCount - The number of elements in the HeaderItems array.
  * @param[in,out]   ParsedResponse   - The initial response containing part of the object and the
@@ -303,7 +300,6 @@ ParseHttpResponse(
  * @return          A proper NTSTATUS error code.
  */
 _Must_inspect_result_
-_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 InitiateHttpDownload(
     _In_ _Const_ const xpf::StringView<char>& Url,
@@ -324,7 +320,6 @@ InitiateHttpDownload(
  * @return          A proper NTSTATUS error code.
  */
 _Must_inspect_result_
-_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
 HttpContinueDownload(
     _Inout_ xpf::SharedPointer<xpf::IClient>& ClientConnection,     // NOLINT(*)

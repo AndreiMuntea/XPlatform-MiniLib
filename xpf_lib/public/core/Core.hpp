@@ -140,6 +140,11 @@
      */
     #define XPF_FUNCSIG()                       __FUNCSIG__
 
+    /**
+     * @brief Helper macro to define a packed struct, that's it a struct with a 1-byte alignment.
+     */
+    #define XPF_PACK(Definition)                __pragma(pack(push, 1)) Definition __pragma(pack(pop))
+
 #elif defined XPF_COMPILER_CLANG || defined XPF_COMPILER_GCC
 
     /**
@@ -177,6 +182,11 @@
      * @brief Grab the function signature
      */
     #define XPF_FUNCSIG()                       __PRETTY_FUNCTION__
+
+    /**
+     * @brief Helper macro to define a packed struct, that's it a struct with a 1-byte alignment.
+     */
+    #define XPF_PACK(Definition)                Definition __attribute__((__packed__))
 
 #else
     #error Unsupported Compiler.

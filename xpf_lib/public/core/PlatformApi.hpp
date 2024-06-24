@@ -945,9 +945,9 @@ ApiIsHexDigit(
 /**
  * @brief Converts an ansi string to a number.
  *
- * @param[in] String - The string to be converted.
- * @param[in] Base   - The expected base in which the number is represented.
- * @param[out] Value - The resulted value.
+ * @param[in]  String - The string to be converted.
+ * @param[in]  Base   - The expected base in which the number is represented.
+ * @param[out] Value  - The resulted value.
  *
  * @return A proper ntstatus error code.
  */

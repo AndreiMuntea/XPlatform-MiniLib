@@ -768,8 +768,6 @@ Erase(
  * @param[in]   SortingPredicate - a lambda with the signature(const& Left, const& Right) which returns
  *                                 true if left should appear before right in the sorted array.
  *
- * @return      This function is guaranteed to succed. It does not return anything.
- *
  * @note        Please see the following rerefence:
  *              " Knuth, Donald (1997). "§5.2.3, Sorting by Selection".
  *                The Art of Computer Programming. Vol. 3: Sorting and Searching (3rd ed.).
@@ -788,18 +786,19 @@ Sort(
     size_t start = this->Size() / 2;
     size_t end = this->Size();
 
-    //
-    // Helper macro to exchange elements
-    //
-    #define XPF_VECTOR_SWAP_ELEMENTS_AT(idx1, idx2)     \
-    {                                                   \
-        Type& a = this->operator[](idx1);               \
-        Type& b = this->operator[](idx2);               \
-                                                        \
-        Type temp{ xpf::Move(a) };                      \
-        a = xpf::Move(b);                               \
-        b = xpf::Move(temp);                            \
-    }
+
+    /* Doxygen does not play nice with macros. */
+    #ifndef DOXYGEN_SHOULD_SKIP_THIS
+        #define XPF_VECTOR_SWAP_ELEMENTS_AT(idx1, idx2)     \
+        {                                                   \
+            Type& a = this->operator[](idx1);               \
+            Type& b = this->operator[](idx2);               \
+                                                            \
+            Type temp{ xpf::Move(a) };                      \
+            a = xpf::Move(b);                               \
+            b = xpf::Move(temp);                            \
+        }
+    #endif  // DOXYGEN_SHOULD_SKIP_THIS
 
     //
     // The heapsort has two steps:
