@@ -121,6 +121,26 @@ ApiZeroMemory(
 ) noexcept(true);
 
 /**
+ * @brief Compares two blocks of memory to determine whether the specified number of bytes are identical.
+ *
+ * @param[in] Source1 - A pointer to a caller-allocated block of memory to compare.
+ *
+ * @param[in] Source2 - A pointer to a caller-allocated block of memory that is compared to the block of
+ *                      memory to which Source1 points.
+ *
+ * @param[in] Size    - Specifies the number of bytes to be compared.
+ *
+ * @return true if Source1 and Source2 are equivalent; otherwise, it returns false.
+ */
+bool
+XPF_API
+ApiEqualMemory(
+    _In_reads_bytes_(Size) void const* Source1,
+    _In_reads_bytes_(Size) void const* Source2,
+    _In_ size_t Size
+) noexcept(true);
+
+/**
  * @brief Frees a block of memory.
  * 
  * @param[in,out] MemoryBlock - To be freed.

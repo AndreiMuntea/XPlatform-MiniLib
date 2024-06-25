@@ -167,4 +167,26 @@ AlgoAddToPointer(
 
     return pointer;
 }
+
+/**
+ * @brief Adds an offset to a pointer - const variant.
+ *
+ * @param[in] Pointer - Pointer to be addred to.
+ *
+ * @param[in] Offset - Offset to be added to pointer
+ *
+ * @return Pointer after it was added to.
+ *
+ */
+inline const void*
+AlgoAddToPointer(
+    _In_opt_ const void* Pointer,
+    _In_ size_t Offset
+) noexcept(true)
+{
+    const uint8_t* pointer = static_cast<const uint8_t*>(Pointer);
+    pointer += Offset;
+
+    return pointer;
+}
 };  // namespace xpf

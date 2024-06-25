@@ -47,6 +47,7 @@
 #include "public/Utility/EventFramework.hpp"
 #include "public/Utility/ISerializable.hpp"
 #include "public/Utility/ProtobufSerializer.hpp"
+#include "public/Utility/PdbSymbolParser.hpp"
 
 #include "public/Communication/IServerClient.hpp"
 #include "public/Communication/Sockets/BerkeleySocket.hpp"

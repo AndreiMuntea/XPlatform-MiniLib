@@ -123,6 +123,32 @@ xpf::ApiZeroMemory(
     #endif
 }
 
+bool
+XPF_API
+xpf::ApiEqualMemory(
+    _In_reads_bytes_(Size) void const* Source1,
+    _In_reads_bytes_(Size) void const* Source2,
+    _In_ size_t Size
+) noexcept(true)
+{
+    XPF_MAX_DISPATCH_LEVEL();
+
+    if ((nullptr == Source1) || (nullptr == Source2) || (0 == Size))
+    {
+        return false;
+    }
+
+    #if defined XPF_PLATFORM_WIN_KM || defined XPF_PLATFORM_WIN_UM
+        const BOOL result = RtlEqualMemory(Source1, Source2, Size);
+        return FALSE != result;
+    #elif defined XPF_PLATFORM_LINUX_UM
+        const int result = memcmp(Source1, Source2, Size);
+        return (result == 0);
+    #else
+        #error Unknown Platform!
+    #endif
+}
+
 void
 XPF_API
 xpf::ApiFreeMemory(
