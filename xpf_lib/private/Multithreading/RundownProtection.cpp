@@ -39,7 +39,7 @@ xpf::RundownProtection::Acquire(
         //
         // Grab the current value of rundown.
         //
-        const uint64_t currentValue = this->m_Rundown;
+        const uint64_t currentValue = xpf::ApiAtomicCompareExchange(&this->m_Rundown, uint64_t{0}, uint64_t{ 0 });
 
         //
         // The parity bit is used to check if the Rundown is active => no further access is allowed.
@@ -95,7 +95,7 @@ xpf::RundownProtection::Release(
         //
         // Grab the current value of rundown.
         //
-        const uint64_t currentValue = this->m_Rundown;
+        const uint64_t currentValue = xpf::ApiAtomicCompareExchange(&this->m_Rundown, uint64_t{0}, uint64_t{ 0 });
 
         //
         // We increment with an increment of 2.
@@ -148,7 +148,7 @@ xpf::RundownProtection::WaitForRelease(
         //
         // Grab the current value of rundown.
         //
-        const uint64_t currentValue = this->m_Rundown;
+        const uint64_t currentValue = xpf::ApiAtomicCompareExchange(&this->m_Rundown, uint64_t{0}, uint64_t{ 0 });
 
         //
         // If the rundown bit is set, we wait for rundown to be released.
