@@ -1427,10 +1427,14 @@ ParseSymbolInformation(
         }
         symInfo.SymbolRVA = *symbolRva;
 
-        status = Symbols.Emplace(xpf::Move(symInfo));
-        if (!NT_SUCCESS(status))
+        /* ??_C@ are mangled strings - we will skip them as they only pollute. */
+        if (!symInfo.SymbolName.View().StartsWith("??_c@_", false))
         {
-            return status;
+            status = Symbols.Emplace(xpf::Move(symInfo));
+            if (!NT_SUCCESS(status))
+            {
+                return status;
+            }
         }
     }
 
@@ -1620,6 +1624,24 @@ ExtractSymbols(
                   {
                         return Left.SymbolRVA < Right.SymbolRVA;
                   });
+
+    /* Also remove duplicates - Now that they are sorted we can easily do so. */
+    for (size_t i = 1; i < Symbols->Size(); )
+    {
+        if ((*Symbols)[i].SymbolRVA == (*Symbols)[i - 1].SymbolRVA)
+        {
+            status = Symbols->Erase(i);
+            if (!NT_SUCCESS(status))
+            {
+                return status;
+            }
+        }
+        else
+        {
+            i++;
+        }
+    }
+
     return STATUS_SUCCESS;
 }
 };  // namespace pdb
