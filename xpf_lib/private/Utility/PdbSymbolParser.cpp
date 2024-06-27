@@ -948,6 +948,19 @@ DefragmentDirectoryStream(
                            msfHeader->BlockSize);
     }
 
+    /* Sanity check that the stream sizes fit. */
+    const xpf::pdb::StreamDirectory* streamDirectory = static_cast<const xpf::pdb::StreamDirectory*>(
+                                                       DirectoryStream->GetBuffer());
+    uint32_t directoryStreamSize = 0;
+    if (!xpf::ApiNumbersSafeAdd(uint32_t{ sizeof(uint32_t) }, streamDirectory->NumberOfStreams, &directoryStreamSize))
+    {
+        return STATUS_DATA_ERROR;
+    }
+    if (directoryStreamSize >= PdbSize)
+    {
+        return STATUS_DATA_ERROR;
+    }
+
     return STATUS_SUCCESS;
 }
 
