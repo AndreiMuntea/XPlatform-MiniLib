@@ -12,6 +12,7 @@ include_directories( "${CMAKE_CURRENT_LIST_DIR}/.." )
 ADD_LIBRARY( "xpf_lib" STATIC "xpf.hpp"
                               "private/core/PlatformApi.cpp"
                               "private/Memory/LookasideListAllocator.cpp"
+                              "private/Memory/SplitAllocator.cpp"
                               "private/Locks/BusyLock.cpp"
                               "private/Locks/ReadWriteLock.cpp"
                               "private/Containers/String.cpp"
