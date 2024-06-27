@@ -154,18 +154,11 @@ XpfWskAddrinfoExWtoAddrinfo(
         //
         // Now link the pointers.
         //
-        if (nullptr != prevOutput)
-        {
-            prevOutput->ai_next = crtOutput;
-            prevOutput = crtOutput;
-        }
-        else
-        {
-            /* First structure. We don't want to lose it. */
-            *Output = crtOutput;
-        }
+        crtOutput->ai_next = prevOutput;
+        prevOutput = crtOutput;
     }
 
+    *Output = prevOutput;
     return STATUS_SUCCESS;
 }
 
@@ -385,7 +378,6 @@ xpf::WskInitializeCompletionContext(
         status = STATUS_INSUFFICIENT_RESOURCES;
         goto CleanUp;
     }
-    Context->WasIrpUsed = FALSE;
 
     //
     // Now create the completion event.
@@ -444,7 +436,6 @@ xpf::WskDeinitializeCompletionContext(
         ::IoFreeIrp(Context->Irp);
         Context->Irp = nullptr;
     }
-    Context->WasIrpUsed = FALSE;
 }
 
 _Must_inspect_result_
@@ -1837,6 +1828,74 @@ XpfSecDecryptMessage(
                                                                        QOP);
 }
 
+_Function_class_(DELETE_SECURITY_CONTEXT_FN)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Success_(return == SEC_E_OK)
+_Must_inspect_result_
+static SECURITY_STATUS
+XpfSecDeleteSecurityContext(
+    _In_ xpf::WskSocketProvider * SocketApiProvider,
+    _In_ PCtxtHandle Context
+) noexcept(true)
+{
+    //
+    // Should always be at passive.
+    //
+    XPF_MAX_PASSIVE_LEVEL();
+
+    //
+    // Should always be in system process.
+    //
+    XPF_DEATH_ON_FAILURE(PsGetCurrentProcess() == PsInitialSystemProcess);
+
+    //
+    // Api was not resolved.
+    //
+    if ((nullptr == SocketApiProvider) ||
+        (nullptr == SocketApiProvider->WskSecurityFunctionTable) ||
+        (nullptr == SocketApiProvider->WskSecurityFunctionTable->DeleteSecurityContext))
+    {
+        return SEC_E_TARGET_UNKNOWN;
+    }
+
+    return SocketApiProvider->WskSecurityFunctionTable->DeleteSecurityContext(Context);
+}
+
+_Function_class_(APPLY_CONTROL_TOKEN_FN)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+_Success_(return == SEC_E_OK)
+_Must_inspect_result_
+static SECURITY_STATUS
+XpfSecApplyControlToken(
+    _In_ xpf::WskSocketProvider* SocketApiProvider,
+    _In_ PCtxtHandle Context,
+    _In_ PSecBufferDesc Input
+) noexcept(true)
+{
+    //
+    // Should always be at passive.
+    //
+    XPF_MAX_PASSIVE_LEVEL();
+
+    //
+    // Should always be in system process.
+    //
+    XPF_DEATH_ON_FAILURE(PsGetCurrentProcess() == PsInitialSystemProcess);
+
+    //
+    // Api was not resolved.
+    //
+    if ((nullptr == SocketApiProvider) ||
+        (nullptr == SocketApiProvider->WskSecurityFunctionTable) ||
+        (nullptr == SocketApiProvider->WskSecurityFunctionTable->ApplyControlToken))
+    {
+        return SEC_E_TARGET_UNKNOWN;
+    }
+
+    return SocketApiProvider->WskSecurityFunctionTable->ApplyControlToken(Context,
+                                                                          Input);
+}
+
 _Must_inspect_result_
 static NTSTATUS
 XpfFinalizeHandshake(
@@ -2326,6 +2385,14 @@ xpf::WskTlsSocketHandshake(
     XpfSecFreeContextBuffer(SocketApiProvider,
                             outbuffers[0].pvBuffer);
 
+    if (!NT_SUCCESS(status) && SecIsValidHandle(&TlsContext->ContextHandle))
+    {
+        SECURITY_STATUS cleanupStatus = XpfSecDeleteSecurityContext(SocketApiProvider,
+                                                                    &TlsContext->ContextHandle);
+        SecInvalidateHandle(&TlsContext->ContextHandle);
+        XPF_DEATH_ON_FAILURE(SEC_E_OK == cleanupStatus);
+    }
+
     if (isAttached)
     {
         ::KeUnstackDetachProcess(&state);
@@ -2333,7 +2400,6 @@ xpf::WskTlsSocketHandshake(
     }
     return status;
 }
-
 
 VOID XPF_API
 xpf::WskTlsShutdown(
@@ -2349,6 +2415,7 @@ xpf::WskTlsShutdown(
 
     bool isAttached = false;
     KAPC_STATE state = { 0 };
+    SECURITY_STATUS secStatus = SEC_E_OK;
 
     if (PsGetCurrentProcess() != PsInitialSystemProcess)
     {
@@ -2402,19 +2469,27 @@ xpf::WskTlsShutdown(
 
         unsigned long contextAttr = 0;  // NOLINT(*)
 
-        SECURITY_STATUS secStatus = XpfSecInitializeSecurityContextW(SocketApiProvider,
-                                                                     &TlsContext->CredentialsHandle,
-                                                                     &TlsContext->ContextHandle,
-                                                                     NULL,
-                                                                     contextRequest,
-                                                                     0,
-                                                                     SECURITY_NETWORK_DREP,
-                                                                     &indesc,
-                                                                     0,
-                                                                     &TlsContext->ContextHandle,
-                                                                     &outdesc,
-                                                                     &contextAttr,
-                                                                     nullptr);
+        secStatus = XpfSecApplyControlToken(SocketApiProvider,
+                                            &TlsContext->ContextHandle,
+                                            &indesc);
+        if (secStatus != SEC_E_OK)
+        {
+            break;
+        }
+
+        secStatus = XpfSecInitializeSecurityContextW(SocketApiProvider,
+                                                     &TlsContext->CredentialsHandle,
+                                                     &TlsContext->ContextHandle,
+                                                     NULL,
+                                                     contextRequest,
+                                                     0,
+                                                     SECURITY_NETWORK_DREP,
+                                                     &indesc,
+                                                     0,
+                                                     &TlsContext->ContextHandle,
+                                                     &outdesc,
+                                                     &contextAttr,
+                                                     nullptr);
         if (secStatus == SEC_I_CONTINUE_NEEDED)
         {
             NTSTATUS status = STATUS_UNSUCCESSFUL;
@@ -2449,6 +2524,10 @@ xpf::WskTlsShutdown(
             break;
         }
     }
+
+    secStatus = XpfSecDeleteSecurityContext(SocketApiProvider,
+                                            &TlsContext->ContextHandle);
+    XPF_DEATH_ON_FAILURE(SEC_E_OK == secStatus);
 
 CleanUp:
     if (isAttached)

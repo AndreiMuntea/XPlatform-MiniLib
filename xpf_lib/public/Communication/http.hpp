@@ -118,7 +118,7 @@ struct HttpResponse
     /**
      * @brief   The received http version as enum.
      */
-    xpf::http::HttpVersion Version;
+    xpf::http::HttpVersion Version = xpf::http::HttpVersion::MaxHttpVersion;
 
     /**
      * @brief   The received response code.

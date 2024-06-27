@@ -348,7 +348,7 @@ xpf::BerkeleySocket::CreateSocket(
                                       Protocol,
                                       IsListeningSocket,
                                       &newSocket->Socket);
-        if (NT_SUCCESS(status))
+        if (NT_SUCCESS(status) && newSocket->IsTlsSocket)
         {
             status = xpf::WskCreateTlsSocketContext(&apiProvider->WskProvider,
                                                     &newSocket->TlsSocketContext);

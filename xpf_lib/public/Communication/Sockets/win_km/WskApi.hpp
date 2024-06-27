@@ -30,7 +30,6 @@ struct WskCompletionContext
 {
     KEVENT CompletionEvent = { 0 };
     PIRP Irp = nullptr;
-    BOOLEAN WasIrpUsed = FALSE;
 };
 
 struct WskSocketProvider
