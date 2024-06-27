@@ -51,7 +51,7 @@ struct WskSocketTlsContext
     CredHandle CredentialsHandle = { 0 };
     CtxtHandle ContextHandle = { 0 };
     SecPkgContext_StreamSizes StreamSizes = { 0 };
-    xpf::Buffer<> TlsBuffer;
+    xpf::Buffer<xpf::SplitAllocator> TlsBuffer;
 
     //
     // These are used when doing receive operations.
@@ -87,7 +87,7 @@ struct WskBuffer
 {
     WSK_BUF WskBuf = { 0 };
     BOOLEAN ArePagesResident = FALSE;
-    xpf::Buffer<xpf::MemoryAllocator> RawBuffer;
+    xpf::Buffer<xpf::SplitAllocator> RawBuffer;
 };  // struct WskBuffer
 
 _Must_inspect_result_

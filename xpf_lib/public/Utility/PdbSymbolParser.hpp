@@ -64,7 +64,7 @@ struct SymbolInformation
     /**
      * @brief   The name of the symbol, this can be mangled.
      */
-    xpf::String<char>   SymbolName;
+    xpf::String<char, xpf::SplitAllocator>   SymbolName;
 
     /**
      * @brief   The RVA of the symbol, can be used with module base
@@ -87,7 +87,7 @@ NTSTATUS XPF_API
 ExtractSymbols(
     _In_ const void* Pdb,
     _In_ const size_t& PdbSize,
-    _Out_ xpf::Vector<xpf::pdb::SymbolInformation>* Symbols
+    _Out_ xpf::Vector<xpf::pdb::SymbolInformation, xpf::SplitAllocator>* Symbols
 ) noexcept(true);
 };  // namespace pdb
 };  // namespace xpf

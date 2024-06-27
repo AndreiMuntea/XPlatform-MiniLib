@@ -858,7 +858,7 @@ static NTSTATUS XPF_API
 DefragmentDirectoryStream(
     _In_ const void* PdbHeader,
     _In_ const size_t& PdbSize,
-    _Out_ xpf::Buffer<>* DirectoryStream
+    _Out_ xpf::Buffer<xpf::SplitAllocator>* DirectoryStream
 ) noexcept(true)
 {
     XPF_MAX_PASSIVE_LEVEL();
@@ -972,7 +972,7 @@ DefragmentStream(
     _In_ const size_t& PdbSize,
     _In_ const xpf::pdb::StreamDirectory* DirectoryStream,
     _In_ const uint32_t& StreamIndex,
-    _Out_ xpf::Buffer<>* Stream
+    _Out_ xpf::Buffer<xpf::SplitAllocator>* Stream
 ) noexcept(true)
 {
     XPF_MAX_PASSIVE_LEVEL();
@@ -1072,7 +1072,7 @@ _Must_inspect_result_
 static NTSTATUS XPF_API
 ParseDebugInfoModules(
     _In_ const xpf::pdb::DebugInformationHeader* DebugInformationHeader,
-    _Out_ xpf::Vector<xpf::pdb::DebugInformationModuleInfoEntry>* ModulesInformation
+    _Out_ xpf::Vector<xpf::pdb::DebugInformationModuleInfoEntry, xpf::SplitAllocator>* ModulesInformation
 ) noexcept(true)
 {
     XPF_MAX_PASSIVE_LEVEL();
@@ -1184,7 +1184,7 @@ ParseSectionHeaders(
     _In_ const size_t& PdbSize,
     _In_ const xpf::pdb::StreamDirectory* DirectoryStream,
     _In_ const xpf::pdb::DebugInformationOptionalDebugHeader* OptionalDebugHeader,
-    _Out_ xpf::Vector<xpf::pdb::ImageSectionHeader>* SectionHeaders
+    _Out_ xpf::Vector<xpf::pdb::ImageSectionHeader, xpf::SplitAllocator>* SectionHeaders
 ) noexcept(true)
 {
     XPF_MAX_PASSIVE_LEVEL();
@@ -1194,7 +1194,7 @@ ParseSectionHeaders(
     XPF_DEATH_ON_FAILURE(nullptr != SectionHeaders);
 
     NTSTATUS status = STATUS_UNSUCCESSFUL;
-    xpf::Buffer<> sectionHeadersStream;
+    xpf::Buffer<xpf::SplitAllocator> sectionHeadersStream;
 
     /* Preinit output. */
     SectionHeaders->Clear();
@@ -1257,7 +1257,7 @@ ParseSectionHeaders(
  */
 static xpf::Optional<uint32_t> XPF_API
 SymbolToRva(
-    _In_ const xpf::Vector<xpf::pdb::ImageSectionHeader>& Sections,
+    _In_ const xpf::Vector<xpf::pdb::ImageSectionHeader, xpf::SplitAllocator>& Sections,
     _In_ uint32_t SymbolSection,
     _In_ uint32_t SymbolOffset
 ) noexcept(true)
@@ -1315,11 +1315,11 @@ SymbolToRva(
 _Must_inspect_result_
 static NTSTATUS XPF_API
 ParseSymbolInformation(
-    _In_ const xpf::Vector<xpf::pdb::ImageSectionHeader>& Sections,
+    _In_ const xpf::Vector<xpf::pdb::ImageSectionHeader, xpf::SplitAllocator>& Sections,
     _In_ const void* Stream,
     _In_ const size_t& StreamSize,
     _Inout_ size_t* CurrentOffset,
-    _Inout_ xpf::Vector<xpf::pdb::SymbolInformation>& Symbols
+    _Inout_ xpf::Vector<xpf::pdb::SymbolInformation, xpf::SplitAllocator>& Symbols
 ) noexcept(true)
 {
     XPF_MAX_PASSIVE_LEVEL();
@@ -1467,14 +1467,14 @@ ParseSymbolsFromStream(
     _In_ const size_t& PdbSize,
     _In_ const xpf::pdb::StreamDirectory* DirectoryStream,
     _In_ const uint32_t& StreamIndex,
-    _In_ const xpf::Vector<xpf::pdb::ImageSectionHeader>& Sections,
-    _Inout_ xpf::Vector<xpf::pdb::SymbolInformation>& Symbols
+    _In_ const xpf::Vector<xpf::pdb::ImageSectionHeader, xpf::SplitAllocator>& Sections,
+    _Inout_ xpf::Vector<xpf::pdb::SymbolInformation, xpf::SplitAllocator>& Symbols
 ) noexcept(true)
 {
     XPF_MAX_PASSIVE_LEVEL();
 
     NTSTATUS status = STATUS_UNSUCCESSFUL;
-    xpf::Buffer<> defragmentedStream;
+    xpf::Buffer<xpf::SplitAllocator> defragmentedStream;
 
     /* Make stream continuous. */
     status = xpf::pdb::DefragmentStream(PdbHeader,
@@ -1508,7 +1508,7 @@ NTSTATUS XPF_API
 ExtractSymbols(
     _In_ const void* Pdb,
     _In_ const size_t& PdbSize,
-    _Out_ xpf::Vector<xpf::pdb::SymbolInformation>* Symbols
+    _Out_ xpf::Vector<xpf::pdb::SymbolInformation, xpf::SplitAllocator>* Symbols
 ) noexcept(true)
 {
     XPF_MAX_PASSIVE_LEVEL();
@@ -1517,11 +1517,11 @@ ExtractSymbols(
 
     NTSTATUS status = STATUS_UNSUCCESSFUL;
 
-    xpf::Buffer<> directoryStreamBuffer;
-    xpf::Buffer<> debugInfoStreamBuffer;
+    xpf::Buffer<xpf::SplitAllocator> directoryStreamBuffer;
+    xpf::Buffer<xpf::SplitAllocator> debugInfoStreamBuffer;
 
-    xpf::Vector<xpf::pdb::DebugInformationModuleInfoEntry> modules;
-    xpf::Vector<xpf::pdb::ImageSectionHeader> sectionHeaders;
+    xpf::Vector<xpf::pdb::DebugInformationModuleInfoEntry, xpf::SplitAllocator> modules;
+    xpf::Vector<xpf::pdb::ImageSectionHeader, xpf::SplitAllocator> sectionHeaders;
 
     const xpf::pdb::MsfHeader* msfHeader = static_cast<const xpf::pdb::MsfHeader*>(Pdb);
     const xpf::pdb::StreamDirectory* streamDirectory = nullptr;

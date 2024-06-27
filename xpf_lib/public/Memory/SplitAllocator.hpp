@@ -42,6 +42,8 @@ SplitAllocatorInitializeSupport(
  * @brief   SplitAllocator requires some extra steps to properly clean up.
  *          It is the caller responsibility to ensure this is called
  *          at the end.
+ *
+ * @return  Nothing.
  */
 void XPF_API
 SplitAllocatorDeinitializeSupport(
@@ -72,6 +74,7 @@ SplitAllocatorAllocate(
  * @param[in]     CriticalAllocation    - A boolean indicating whether the
  *                                        allocation is considered critical or not.
  *
+ * @return Nothing.
  */
 void XPF_API
 SplitAllocatorFree(

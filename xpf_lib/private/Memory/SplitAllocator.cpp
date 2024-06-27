@@ -68,11 +68,12 @@ class SplitLookasideGroup
      */
     SplitLookasideGroup(
         _In_ bool IsCriticalAllocator
-    ) noexcept(true) : m_Allocator64b{     size_t{ 64 }     + sizeof(xpf::SplitAlloc::AllocationBlock),IsCriticalAllocator },
-                       m_Allocator512b{    size_t{ 512 }    + sizeof(xpf::SplitAlloc::AllocationBlock),IsCriticalAllocator },
-                       m_Allocator4096b{   size_t{ 4096 }   + sizeof(xpf::SplitAlloc::AllocationBlock),IsCriticalAllocator },
-                       m_Allocator32768b{  size_t{ 32768 }  + sizeof(xpf::SplitAlloc::AllocationBlock),IsCriticalAllocator },
-                       m_Allocator262144b{ size_t{ 262144 } + sizeof(xpf::SplitAlloc::AllocationBlock),IsCriticalAllocator },
+    ) noexcept(true) : m_Allocator64b{      size_t{ 64 }      + sizeof(xpf::SplitAlloc::AllocationBlock),IsCriticalAllocator },
+                       m_Allocator512b{     size_t{ 512 }     + sizeof(xpf::SplitAlloc::AllocationBlock),IsCriticalAllocator },
+                       m_Allocator4096b{    size_t{ 4096 }    + sizeof(xpf::SplitAlloc::AllocationBlock),IsCriticalAllocator },
+                       m_Allocator32768b{   size_t{ 32768 }   + sizeof(xpf::SplitAlloc::AllocationBlock),IsCriticalAllocator },
+                       m_Allocator262144b{  size_t{ 262144 }  + sizeof(xpf::SplitAlloc::AllocationBlock),IsCriticalAllocator },
+                       m_Allocator2097152b{ size_t{ 2097152 } + sizeof(xpf::SplitAlloc::AllocationBlock),IsCriticalAllocator },
                        m_IsCriticalAllocator{ IsCriticalAllocator }
     {
         XPF_MAX_DISPATCH_LEVEL();
@@ -132,6 +133,10 @@ class SplitLookasideGroup
         else if (BlockSize <= 262144)
         {
             block = this->m_Allocator262144b.AllocateMemory(requiredBytes);
+        }
+        else if (BlockSize <= 2097152)
+        {
+            block = this->m_Allocator2097152b.AllocateMemory(requiredBytes);
         }
         else
         {
@@ -208,6 +213,10 @@ class SplitLookasideGroup
         {
             this->m_Allocator262144b.FreeMemory(allocationStart);
         }
+        else if (blockSize <= 2097152)
+        {
+            this->m_Allocator2097152b.FreeMemory(allocationStart);
+        }
         else
         {
             if (this->m_IsCriticalAllocator)
@@ -228,6 +237,7 @@ class SplitLookasideGroup
     xpf::LookasideListAllocator m_Allocator4096b;
     xpf::LookasideListAllocator m_Allocator32768b;
     xpf::LookasideListAllocator m_Allocator262144b;
+    xpf::LookasideListAllocator m_Allocator2097152b;
 };  // class SplitLookasideGroup
 };  // namespace SplitAllocator
 };  // namespace xpf

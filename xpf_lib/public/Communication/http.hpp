@@ -113,7 +113,7 @@ struct HttpResponse
      *          invalid memory. So the http response will reference the original response buffer,
      *          to ensure its lifespan won't end before the response goes out.
      */
-    xpf::SharedPointer<xpf::Buffer<>> ResponseBuffer;
+    xpf::SharedPointer<xpf::Buffer<xpf::SplitAllocator>, xpf::SplitAllocator> ResponseBuffer;
 
     /**
      * @brief   The received http version as enum.
@@ -158,50 +158,50 @@ struct UrlInfo
     /**
      * @brief   The original URL.
      */
-    xpf::String<char> Url;
+    xpf::String<char, xpf::SplitAllocator> Url;
 
     /**
      * @brief The first part of the URL is the scheme, which indicates the protocol that
      *        the browser must use to request the resource.
      */
-    xpf::String<char> Scheme;
+    xpf::String<char, xpf::SplitAllocator> Scheme;
 
     /**
      * @brief Next follows the authority, which is separated from the scheme by the character pattern ://.
      *        If present the authority includes both the domain (e.g. www.example.com) and the port
      *        (80), separated by a colon:
      */
-    xpf::String<char> Authority;
+    xpf::String<char, xpf::SplitAllocator> Authority;
 
     /**
      * @brief The domain indicates which Web server is being requested.
      */
-    xpf::String<char> Domain;
+    xpf::String<char, xpf::SplitAllocator> Domain;
 
     /**
      * @brief The port indicates the technical "gate" used to access the resources on the web server.
      *        It is usually omitted if the web server uses the standard ports of the HTTP protocol
      *        (80 for HTTP and 443 for HTTPS) to grant access to its resources. Otherwise it is mandatory.
      */
-    xpf::String<char> Port;
+    xpf::String<char, xpf::SplitAllocator> Port;
 
     /**
      * @brief  is the path to the resource on the Web server. In the early days of the Web, a path
      *         like this represented a physical file location on the Web server.
      *         Nowadays, it is mostly an abstraction handled by Web servers without any physical reality.
      */
-    xpf::String<char> Path;
+    xpf::String<char, xpf::SplitAllocator> Path;
 
     /**
      * @brief Extra parameters provided to the Web server. 
      */
-    xpf::String<char> Parameters;
+    xpf::String<char, xpf::SplitAllocator> Parameters;
 
     /**
      * @brief  An anchor represents a sort of "bookmark" inside the resource, giving the browser the
      *         directions to show the content located at that "bookmarked" spot.
      */
-    xpf::String<char> Anchor;
+    xpf::String<char, xpf::SplitAllocator> Anchor;
 };  // struct UrlInfo
 
 /**
@@ -251,7 +251,7 @@ BuildHttpRequest(
     _In_ _Const_ const xpf::http::HttpVersion& Version,
     _In_opt_ _Const_ const HeaderItem* HeaderItems,
     _In_ _Const_ size_t HeaderItemsCount,
-    _Inout_ xpf::String<char>& Request
+    _Inout_ xpf::String<char, xpf::SplitAllocator>& Request
 ) noexcept(true);
 
 /**
@@ -277,7 +277,7 @@ BuildHttpRequest(
 _Must_inspect_result_
 NTSTATUS
 ParseHttpResponse(
-    _In_ _Const_ const xpf::SharedPointer<xpf::Buffer<>>& RawResponseBuffer,
+    _In_ _Const_ const xpf::SharedPointer<xpf::Buffer<xpf::SplitAllocator>, xpf::SplitAllocator>& RawResponseBuffer,
     _Inout_ xpf::http::HttpResponse* ParsedResponse
 ) noexcept(true);
 
@@ -298,6 +298,9 @@ ParseHttpResponse(
  * @param[in,out]   ClientConnection - A newly established socket connection.
  *
  * @return          A proper NTSTATUS error code.
+ *
+ * @note            As the http code may require multiple allocations, it uses by default SplitAllocator.
+ *                  Please ensure you initialize the SplitAllocator support before using it. See xpf::SplitAllocator.
  */
 _Must_inspect_result_
 NTSTATUS
@@ -306,7 +309,7 @@ InitiateHttpDownload(
     _In_opt_ _Const_ const HeaderItem* HeaderItems,
     _In_ _Const_ size_t HeaderItemsCount,
     _Inout_ xpf::http::HttpResponse* ParsedResponse,
-    _Inout_ xpf::SharedPointer<xpf::IClient>& ClientConnection
+    _Inout_ xpf::SharedPointer<xpf::IClient, xpf::SplitAllocator>& ClientConnection
 ) noexcept(true);
 
 /**
@@ -322,9 +325,9 @@ InitiateHttpDownload(
 _Must_inspect_result_
 NTSTATUS
 HttpContinueDownload(
-    _Inout_ xpf::SharedPointer<xpf::IClient>& ClientConnection,     // NOLINT(*)
-    _Inout_ xpf::http::HttpResponse* ParsedResponse,                // NOLINT(*)
-    _Out_ bool* HasMoreData                                         // NOLINT(*)
+    _Inout_ xpf::SharedPointer<xpf::IClient, xpf::SplitAllocator>& ClientConnection,     // NOLINT(*)
+    _Inout_ xpf::http::HttpResponse* ParsedResponse,                                     // NOLINT(*)
+    _Out_ bool* HasMoreData                                                              // NOLINT(*)
 ) noexcept(true);
 };  // namespace http
 };  // namespace xpf

@@ -139,7 +139,7 @@ xpf::ApiEqualMemory(
     }
 
     #if defined XPF_PLATFORM_WIN_KM || defined XPF_PLATFORM_WIN_UM
-        const BOOL result = RtlEqualMemory(Source1, Source2, Size);
+        const BOOLEAN result = RtlEqualMemory(Source1, Source2, Size);
         return FALSE != result;
     #elif defined XPF_PLATFORM_LINUX_UM
         const int result = memcmp(Source1, Source2, Size);
