@@ -26,6 +26,13 @@
 #if defined XPF_PLATFORM_WIN_KM
 namespace xpf
 {
+
+/**
+ * @brief   The allocations performed by the wsk api can fragment the memory quite a bit.
+ *          We define a separated allocator which will point to the special split memory allocator.
+ */
+#define XPF_WSK_API_ALLOCATOR  xpf::PolymorphicAllocator{ .AllocFunction = &xpf::SplitAllocator::AllocateMemory,     \
+                                                          .FreeFunction  = &xpf::SplitAllocator::FreeMemory }
 struct WskCompletionContext
 {
     KEVENT CompletionEvent = { 0 };
@@ -51,7 +58,7 @@ struct WskSocketTlsContext
     CredHandle CredentialsHandle = { 0 };
     CtxtHandle ContextHandle = { 0 };
     SecPkgContext_StreamSizes StreamSizes = { 0 };
-    xpf::Buffer<xpf::SplitAllocator> TlsBuffer;
+    xpf::Buffer TlsBuffer{ XPF_WSK_API_ALLOCATOR };
 
     //
     // These are used when doing receive operations.
@@ -87,7 +94,7 @@ struct WskBuffer
 {
     WSK_BUF WskBuf = { 0 };
     BOOLEAN ArePagesResident = FALSE;
-    xpf::Buffer<xpf::SplitAllocator> RawBuffer;
+    xpf::Buffer RawBuffer{ XPF_WSK_API_ALLOCATOR };
 };  // struct WskBuffer
 
 _Must_inspect_result_

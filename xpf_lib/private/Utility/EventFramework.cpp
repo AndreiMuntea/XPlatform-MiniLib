@@ -62,7 +62,7 @@ xpf::EventBus::NotifyListeners(
     //
     // Grab a reference to the current listeners list.
     //
-    xpf::SharedPointer<ListenersList, xpf::CriticalMemoryAllocator> listenersSnapshot;
+    xpf::SharedPointer<ListenersList> listenersSnapshot;
     {
         xpf::SharedLockGuard listenersLock{ this->m_ListenersLock };
         listenersSnapshot = this->m_Listeners;
@@ -82,7 +82,7 @@ xpf::EventBus::NotifyListeners(
     //
     for (size_t i = 0; i < currentListenersList.Size(); ++i)
     {
-        xpf::SharedPointer<xpf::EventListenerData, xpf::CriticalMemoryAllocator> currentListener = currentListenersList[i];
+        xpf::SharedPointer<xpf::EventListenerData> currentListener = currentListenersList[i];
         if (currentListener.IsEmpty())
         {
             continue;
@@ -130,7 +130,7 @@ xpf::EventBus::Rundown(
             xpf::EventBus::ListenersList& listenersList = (*this->m_Listeners);
             for (size_t i = 0; i < listenersList.Size(); ++i)
             {
-                xpf::SharedPointer<xpf::EventListenerData, xpf::CriticalMemoryAllocator> currentListener = listenersList[i];
+                xpf::SharedPointer<xpf::EventListenerData> currentListener = listenersList[i];
                 if (!currentListener.IsEmpty())
                 {
                     (*currentListener).Rundown.WaitForRelease();
@@ -178,7 +178,7 @@ xpf::EventBus::RegisterListener(
     //
     // Now we create the event data listener structure.
     //
-    auto listenerDataSharedPtr = xpf::MakeShared<xpf::EventListenerData, xpf::CriticalMemoryAllocator>();
+    auto listenerDataSharedPtr = xpf::MakeSharedWithAllocator<xpf::EventListenerData>(this->m_Listeners.GetAllocator());
     if (listenerDataSharedPtr.IsEmpty())
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -198,7 +198,7 @@ xpf::EventBus::RegisterListener(
     // Here we need to clone the listeners first. Hold the lock with minimal scope.
     //
     xpf::ExclusiveLockGuard listenersGuard{ this->m_ListenersLock };
-    xpf::SharedPointer<ListenersList, xpf::CriticalMemoryAllocator> newListenersList = this->CloneListeners();
+    xpf::SharedPointer<ListenersList> newListenersList = this->CloneListeners();
     if (newListenersList.IsEmpty())
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -258,7 +258,7 @@ xpf::EventBus::UnregisterListener(
 
         for (size_t i = 0; i < currentListenersList.Size(); ++i)
         {
-            xpf::SharedPointer<xpf::EventListenerData, xpf::CriticalMemoryAllocator> currentListener = currentListenersList[i];
+            xpf::SharedPointer<xpf::EventListenerData> currentListener = currentListenersList[i];
             if (currentListener.IsEmpty())
             {
                 continue;
@@ -288,7 +288,7 @@ xpf::EventBus::UnregisterListener(
     //
     {
         xpf::ExclusiveLockGuard listenersGuard{ this->m_ListenersLock };
-        xpf::SharedPointer<ListenersList, xpf::CriticalMemoryAllocator> newListenersList = this->CloneListeners();
+        xpf::SharedPointer<ListenersList> newListenersList = this->CloneListeners();
         if (!newListenersList.IsEmpty())
         {
             this->m_Listeners = newListenersList;
@@ -298,7 +298,7 @@ xpf::EventBus::UnregisterListener(
     return STATUS_SUCCESS;
 }
 
-xpf::SharedPointer<xpf::EventBus::ListenersList, xpf::CriticalMemoryAllocator>
+xpf::SharedPointer<xpf::EventBus::ListenersList>
 XPF_API
 xpf::EventBus::CloneListeners(
     void
@@ -306,15 +306,15 @@ xpf::EventBus::CloneListeners(
 {
     XPF_MAX_PASSIVE_LEVEL();
 
-    xpf::SharedPointer<xpf::EventBus::ListenersList, xpf::CriticalMemoryAllocator> clone;
+    xpf::SharedPointer<xpf::EventBus::ListenersList> clone;
 
     //
     // On insufficient resources, return empty list.
     //
-    clone = xpf::MakeShared<xpf::EventBus::ListenersList, xpf::CriticalMemoryAllocator>();
+    clone = xpf::MakeSharedWithAllocator<xpf::EventBus::ListenersList>(this->m_Listeners.GetAllocator());
     if (clone.IsEmpty())
     {
-        return xpf::SharedPointer<xpf::EventBus::ListenersList, xpf::CriticalMemoryAllocator>();
+        return clone;
     }
 
     //
@@ -328,7 +328,7 @@ xpf::EventBus::CloneListeners(
 
     for (size_t i = 0; i < currentListeners.Size(); ++i)
     {
-        xpf::SharedPointer<xpf::EventListenerData, xpf::CriticalMemoryAllocator> currentListenerSharedPtr = currentListeners[i];
+        xpf::SharedPointer<xpf::EventListenerData> currentListenerSharedPtr = currentListeners[i];
 
         //
         // Don't enqueue empty listeners.
@@ -351,10 +351,11 @@ xpf::EventBus::CloneListeners(
         //
         // If any allocation is failing, we return an empty list.
         //
-        auto newListenerSharedPtr = xpf::MakeShared<xpf::EventListenerData, xpf::CriticalMemoryAllocator>();
+        auto newListenerSharedPtr = xpf::MakeSharedWithAllocator<xpf::EventListenerData>(this->m_Listeners.GetAllocator());
         if (newListenerSharedPtr.IsEmpty())
         {
-            return xpf::SharedPointer<xpf::EventBus::ListenersList, xpf::CriticalMemoryAllocator>();
+            clone.Reset();
+            return clone;
         }
         xpf::EventListenerData& newListener = *newListenerSharedPtr;
 
@@ -370,7 +371,8 @@ xpf::EventBus::CloneListeners(
         auto status = (*clone).Emplace(newListenerSharedPtr);
         if (!NT_SUCCESS(status))
         {
-            return xpf::SharedPointer<xpf::EventBus::ListenersList, xpf::CriticalMemoryAllocator>();
+            clone.Reset();
+            return clone;
         }
     }
 

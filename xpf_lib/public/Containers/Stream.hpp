@@ -142,14 +142,13 @@ WriteBytes(
  * @brief   This is a stream reader class which allows easy peeking into a data buffer.
  *          Espeacially useful for deserializing data.
  */
-template <class AllocatorType = xpf::MemoryAllocator>
 class StreamReader final : public virtual xpf::IStreamReader
 {
  public:
 /**
  * @brief Copy and move semantics are deleted.
  */
-XPF_CLASS_COPY_MOVE_BEHAVIOR(StreamReader<AllocatorType>, delete);
+XPF_CLASS_COPY_MOVE_BEHAVIOR(StreamReader, delete);
 
 /**
  * @brief StreamReader constructor - default.
@@ -158,7 +157,7 @@ XPF_CLASS_COPY_MOVE_BEHAVIOR(StreamReader<AllocatorType>, delete);
  *                         This won't be modified by the StreamReader class - it is read only.
  */
 StreamReader(
-    _In_ const xpf::Buffer<AllocatorType>& DataBuffer
+    _In_ const xpf::Buffer& DataBuffer
 ) noexcept(true): xpf::IStreamReader(),
                   m_Buffer{ DataBuffer }
 {
@@ -274,7 +273,7 @@ ReadBytes(
 }
 
  private:
-     const xpf::Buffer<AllocatorType>& m_Buffer;
+     const xpf::Buffer& m_Buffer;
      size_t m_Cursor = 0;
 };  // StreamReader
 
@@ -289,14 +288,13 @@ ReadBytes(
  * @brief   This is a stream reader class which allows easy writing into a data buffer.
  *          Espeacially useful for serializing data.
  */
-template <class AllocatorType = xpf::MemoryAllocator>
 class StreamWriter final : public virtual xpf::IStreamWriter
 {
  public:
 /**
  * @brief Copy and move semantics are deleted.
  */
-XPF_CLASS_COPY_MOVE_BEHAVIOR(StreamWriter<AllocatorType>, delete);
+XPF_CLASS_COPY_MOVE_BEHAVIOR(StreamWriter, delete);
 
 /**
  * @brief StreamWriter constructor - default.
@@ -304,7 +302,7 @@ XPF_CLASS_COPY_MOVE_BEHAVIOR(StreamWriter<AllocatorType>, delete);
  * @param[in,out] DataBuffer - The binary blob of data from where this stream will write to.
  */
 StreamWriter(
-    _Inout_ xpf::Buffer<AllocatorType>& DataBuffer
+    _Inout_ xpf::Buffer& DataBuffer
 ) noexcept(true): xpf::IStreamWriter(),
                   m_Buffer{ DataBuffer }
 {
@@ -402,7 +400,7 @@ WriteBytes(
 }
 
  private:
-     xpf::Buffer<AllocatorType>& m_Buffer;
+     xpf::Buffer& m_Buffer;
      size_t m_Cursor = 0;
 };  // StreamWriter
 };  // namespace xpf

@@ -23,7 +23,7 @@ XPF_TEST_SCENARIO(TestUniquePointer, DefaultConstructorDestructor)
     xpf::UniquePointer<int> ptr;
     XPF_TEST_EXPECT_TRUE(ptr.IsEmpty());
 
-    auto ptrSize = 2 * sizeof(void*);           // compressed_pair(allocator, buffer)
+    auto ptrSize = 4 * sizeof(void*);           // compressed_pair(allocator, buffer)
     XPF_TEST_EXPECT_TRUE(sizeof(ptr) == ptrSize);
 }
 

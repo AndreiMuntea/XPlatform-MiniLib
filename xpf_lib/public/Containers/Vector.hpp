@@ -37,16 +37,26 @@ namespace xpf
  * @brief This is the class to create a managed buffer.
  *        It is internally used by vector class and other classes as well.
  */
-template <class AllocatorType = xpf::MemoryAllocator>
 class Buffer final
 {
  public:
 /**
- * @brief Buffer constructor - default.
+ * @brief       Buffer constructor - default.
+ *
+ * @param[in]   Allocator - to be used when performing allocations.
+ *
+ * @note        For now only state-less allocators are supported.
  */
 Buffer(
-    void
-) noexcept(true) = default;
+    _In_ xpf::PolymorphicAllocator Allocator = xpf::PolymorphicAllocator{}
+) noexcept(true)
+{
+    XPF_DEATH_ON_FAILURE(nullptr != Allocator.AllocFunction);
+    XPF_DEATH_ON_FAILURE(nullptr != Allocator.FreeFunction);
+
+    this->m_CompressedPair.First() = Allocator;
+    this->m_CompressedPair.Second() = nullptr;
+}
 
 /**
  * @brief Buffer will destroy the underlying resources - if any.
@@ -174,7 +184,7 @@ Clear(
 
     if (nullptr != buffer)
     {
-        allocator.FreeMemory(buffer);
+        allocator.FreeFunction(buffer);
         buffer = nullptr;
     }
 
@@ -201,7 +211,7 @@ GetSize(
  *
  * @note This might be nullptr if the buffer is empty.
  */
-inline const auto&
+inline const void* const&
 GetBuffer(
     void
 ) const noexcept(true)
@@ -216,7 +226,7 @@ GetBuffer(
  *
  * @note This might be nullptr if the buffer is empty.
  */
-inline auto&
+inline void*&
 GetBuffer(
     void
 ) noexcept(true)
@@ -230,9 +240,8 @@ GetBuffer(
  * @return A const reference to the underlying allocator.
  *
  */
-inline const AllocatorType&
+inline const xpf::PolymorphicAllocator&
 GetAllocator(
-    void
 ) const noexcept(true)
 {
     return this->m_CompressedPair.First();
@@ -244,7 +253,7 @@ GetAllocator(
  * @return A non-const reference to the underlying allocator.
  *
  */
-inline AllocatorType&
+inline xpf::PolymorphicAllocator&
 GetAllocator(
     void
 ) noexcept(true)
@@ -287,7 +296,7 @@ Resize(
     // The size is not zero, so we need a large-enough buffer to accomodate the elements.
     // We'll copy the rest of the elements in the newBuffer.
     //
-    void* newBuffer = this->GetAllocator().AllocateMemory(Size);
+    void* newBuffer = this->GetAllocator().AllocFunction(Size);
     if (nullptr != newBuffer)
     {
         xpf::ApiZeroMemory(newBuffer, Size);
@@ -345,11 +354,10 @@ Resize(
    /**
     * @brief Using a compressed pair here will guarantee that we benefit
     *        from empty base class optimization as most allocators are stateless.
-    *        So the sizeof(Buffer) will actually be equal to sizeof(Type*) + 2 * sizeof(size_t).
     *        This comes with the cost of making the code a bit more harder to read,
     *        but using some allocator& and buffer& when needed I think it's reasonable.
     */
-    xpf::CompressedPair<AllocatorType, void*> m_CompressedPair;
+    xpf::CompressedPair<xpf::PolymorphicAllocator, void*> m_CompressedPair;
     size_t m_Size = 0;
 };  // class Buffer
 //
@@ -362,17 +370,24 @@ Resize(
  * @brief This is the class to mimic std::vector
  *        More functionality can be added when needed.
  */
-template <class Type,
-          class AllocatorType = xpf::MemoryAllocator>
+template <class Type>
 class Vector final
 {
  public:
 /**
- * @brief Vector constructor - default.
+ * @brief       Vector constructor - default.
+ *
+ * @param[in]   Allocator - to be used when performing allocations.
+ *
+ * @note        For now only state-less allocators are supported.
  */
 Vector(
-    void
-) noexcept(true) = default;
+    _In_ xpf::PolymorphicAllocator Allocator = xpf::PolymorphicAllocator{}
+) noexcept(true) : m_Buffer{ Allocator },
+                   m_Size{ 0 }
+{
+    XPF_NOTHING();
+}
 
 /**
  * @brief Destructor will destroy the underlying buffer - if any.
@@ -514,6 +529,20 @@ Size(
 }
 
 /**
+ * @brief Gets the underlying Allocator.
+ *
+ * @return A const reference to the underlying allocator.
+ *
+ */
+inline const xpf::PolymorphicAllocator&
+GetAllocator(
+    void
+) const noexcept(true)
+{
+    return this->m_Buffer.GetAllocator();
+}
+
+/**
  * @brief Destroys the underlying buffer if any.
  */
 inline void
@@ -577,7 +606,7 @@ Resize(
     //
     // Allocate a new buffer with the given size.
     //
-    Buffer<AllocatorType> tempBuffer;
+    Buffer tempBuffer{ this->m_Buffer.GetAllocator() };
     const NTSTATUS status = tempBuffer.Resize(sizeInBytes);
     if (!NT_SUCCESS(status))
     {
@@ -689,7 +718,8 @@ Reserve(
     _In_ _Const_ const Type& Value
 ) noexcept(true)
 {
-    xpf::Vector<Type, AllocatorType> clone;
+    xpf::Vector<Type> clone(this->m_Buffer.GetAllocator().First(),
+                            this->m_Buffer.GetAllocator().Second());
     NTSTATUS status = STATUS_UNSUCCESSFUL;
 
     for (size_t i = 0; i < N; ++i)
@@ -875,7 +905,7 @@ Sort(
     */
     static constexpr size_t SHRINK_FACTOR = 4;
 
-    xpf::Buffer<AllocatorType> m_Buffer;
+    xpf::Buffer m_Buffer;
     size_t m_Size = 0;
 };  // class Vector
 };  // namespace xpf

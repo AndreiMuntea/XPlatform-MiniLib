@@ -293,7 +293,7 @@ HttpParseHeaderLine(
 _Use_decl_annotations_
 NTSTATUS
 xpf::http::ParseHttpResponse(
-    _In_ _Const_ const xpf::SharedPointer<xpf::Buffer<xpf::SplitAllocator>, xpf::SplitAllocator>& RawResponseBuffer,
+    _In_ _Const_ const xpf::SharedPointer<xpf::Buffer>& RawResponseBuffer,
     _Inout_ xpf::http::HttpResponse* ParsedResponse
 ) noexcept(true)
 {
@@ -359,7 +359,7 @@ xpf::http::BuildHttpRequest(
     _In_ _Const_ const xpf::http::HttpVersion& Version,
     _In_opt_ _Const_ const HeaderItem* HeaderItems,
     _In_ _Const_ size_t HeaderItemsCount,
-    _Inout_ xpf::String<char, xpf::SplitAllocator>& Request
+    _Inout_ xpf::String<char>& Request
 ) noexcept(true)
 {
     XPF_MAX_PASSIVE_LEVEL();
@@ -528,7 +528,7 @@ xpf::http::InitiateHttpDownload(
     _In_opt_ _Const_ const HeaderItem* HeaderItems,
     _In_ _Const_ size_t HeaderItemsCount,
     _Inout_ xpf::http::HttpResponse* ParsedResponse,
-    _Inout_ xpf::SharedPointer<xpf::IClient, xpf::SplitAllocator>& ClientConnection
+    _Inout_ xpf::SharedPointer<xpf::IClient>& ClientConnection
 ) noexcept(true)
 {
     XPF_MAX_PASSIVE_LEVEL();
@@ -543,7 +543,7 @@ xpf::http::InitiateHttpDownload(
     xpf::http::UrlInfo urlInfo;
 
     /* The client socket we get during the connection. */
-    xpf::SharedPointer<xpf::ClientSocket, xpf::SplitAllocator> clientSocket;
+    xpf::SharedPointer<xpf::ClientSocket> clientSocket;
 
     while (maximumRedirectsAllowed > 0)
     {
@@ -568,16 +568,17 @@ xpf::http::InitiateHttpDownload(
         const bool isTlsSocket = port.StartsWith("443", true);
 
         /* Now create the socket. */
-        clientSocket = xpf::MakeShared<ClientSocket, xpf::SplitAllocator>(domain,
-                                                                          port,
-                                                                          isTlsSocket);
+        clientSocket = xpf::MakeSharedWithAllocator<xpf::ClientSocket>(ClientConnection.GetAllocator(),
+                                                                       domain,
+                                                                       port,
+                                                                       isTlsSocket);
         if (clientSocket.IsEmpty())
         {
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
         /* Now build the http request. */
-        xpf::String<char, xpf::SplitAllocator> request;
+        xpf::String<char> request;
         status = xpf::http::BuildHttpRequest(urlInfo.Domain.View(),
                                              "GET",
                                              urlInfo.Path.View(),
@@ -608,8 +609,9 @@ xpf::http::InitiateHttpDownload(
         }
 
         /* Ensure the response buffer is big enough. */
-        xpf::SharedPointer<xpf::Buffer<xpf::SplitAllocator>, xpf::SplitAllocator> sharedBuffer;
-        sharedBuffer = xpf::MakeShared<xpf::Buffer<xpf::SplitAllocator>, xpf::SplitAllocator>();
+        xpf::SharedPointer<xpf::Buffer> sharedBuffer = xpf::MakeSharedWithAllocator<xpf::Buffer>(
+                                                       ParsedResponse->ResponseBuffer.GetAllocator(),   // For sharedptr
+                                                       ParsedResponse->ResponseBuffer.GetAllocator());  // For buffer
         if (sharedBuffer.IsEmpty())
         {
             return STATUS_INSUFFICIENT_RESOURCES;
@@ -674,7 +676,8 @@ xpf::http::InitiateHttpDownload(
     }
 
     /* Got an original connection. return it. */
-    ClientConnection = xpf::DynamicSharedPointerCast<xpf::IClient, xpf::ClientSocket>(clientSocket);
+    ClientConnection = xpf::DynamicSharedPointerCast<xpf::IClient,
+                                                     xpf::ClientSocket>(clientSocket);
     return (ClientConnection.IsEmpty()) ? STATUS_INSUFFICIENT_RESOURCES
                                         : STATUS_SUCCESS;
 }
@@ -682,7 +685,7 @@ xpf::http::InitiateHttpDownload(
 _Use_decl_annotations_
 NTSTATUS
 xpf::http::HttpContinueDownload(
-    _Inout_ xpf::SharedPointer<xpf::IClient, xpf::SplitAllocator>& ClientConnection,
+    _Inout_ xpf::SharedPointer<xpf::IClient>& ClientConnection,
     _Inout_ xpf::http::HttpResponse* ParsedResponse,
     _Out_ bool* HasMoreData
 ) noexcept(true)

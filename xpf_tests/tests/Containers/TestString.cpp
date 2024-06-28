@@ -644,7 +644,7 @@ XPF_TEST_SCENARIO(TestString, DefaultConstructorDestructor)
     //
     // Should be the same size due to compressed_pair.
     //
-    static_assert(sizeof(void*) + sizeof(size_t) == static_cast<size_t>(sizeof(string)),
+    static_assert(sizeof(void*) * 3 + sizeof(size_t) == static_cast<size_t>(sizeof(string)),
                   "Compile time assert for size!");
 
     //
@@ -657,7 +657,7 @@ XPF_TEST_SCENARIO(TestString, DefaultConstructorDestructor)
     //
     // Should be the same size due to compressed_pair.
     //
-    static_assert(sizeof(void*) + sizeof(size_t) == static_cast<size_t>(sizeof(wstring)),
+    static_assert(sizeof(void*) * 3 + sizeof(size_t) == static_cast<size_t>(sizeof(wstring)),
                   "Compile time assert for size!");
 }
 

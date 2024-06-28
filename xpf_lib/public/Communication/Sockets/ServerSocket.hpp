@@ -243,7 +243,7 @@ CloseClientConnection(
      void* m_ServerSocketData = nullptr;
 
     xpf::Optional<xpf::ReadWriteLock> m_ServerLock;
-    xpf::Vector<xpf::SharedPointer<xpf::IClientCookie>> m_Clients;
+    xpf::Vector<xpf::SharedPointer<xpf::IClientCookie>> m_Clients{ xpf::PolymorphicAllocator() };
 
     bool m_IsStarted = false;
 };  // class ServerSocket

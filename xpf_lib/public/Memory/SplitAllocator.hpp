@@ -26,31 +26,6 @@
 namespace xpf
 {
 /**
- * @brief   SplitAllocator requires some extra initialization.
- *          It is the caller responsibility to ensure this is called
- *          before using the split allocator.
- *
- * @return  A proper NTSTATUS error code.
- */
-_Must_inspect_result_
-NTSTATUS XPF_API
-SplitAllocatorInitializeSupport(
-    void
-) noexcept(true);
-
-/**
- * @brief   SplitAllocator requires some extra steps to properly clean up.
- *          It is the caller responsibility to ensure this is called
- *          at the end.
- *
- * @return  Nothing.
- */
-void XPF_API
-SplitAllocatorDeinitializeSupport(
-    void
-) noexcept(true);
-
-/**
  * @brief Allocates a block of memory with the required size.
  * 
  * @param[in] BlockSize             - The requsted block size.
@@ -85,24 +60,23 @@ SplitAllocatorFree(
 /**
  * @brief   A convenience class which wraps C-APIs
  */
-template <bool IsCritical>
-class SplitAllocatorTemplate
+class SplitAllocator
 {
  public:
 /**
  * @brief   Default constructor.
  */
-SplitAllocatorTemplate(void) noexcept(true) = default;
+     SplitAllocator(void) noexcept(true) = default;
 
 /**
  * @brief   Default destructor.
  */
-~SplitAllocatorTemplate(void) noexcept(true) = default;
+~SplitAllocator(void) noexcept(true) = default;
 
 /**
  * @brief   This class can be moved and copied.
  */
-XPF_CLASS_COPY_MOVE_BEHAVIOR(SplitAllocatorTemplate, default);
+XPF_CLASS_COPY_MOVE_BEHAVIOR(SplitAllocator, default);
 
 /**
  * @brief Allocates a block of memory with the required size.
@@ -113,13 +87,13 @@ XPF_CLASS_COPY_MOVE_BEHAVIOR(SplitAllocatorTemplate, default);
  */
 _Check_return_
 _Ret_maybenull_
-inline void*
+static inline void*
 AllocateMemory(
     _In_ size_t BlockSize
 ) noexcept(true)
 {
     return xpf::SplitAllocatorAllocate(BlockSize,
-                                       IsCritical);
+                                       false);
 }
 
 /**
@@ -128,23 +102,70 @@ AllocateMemory(
 * @param[in,out] MemoryBlock - To be freed.
 * 
 */
-inline void
+static inline void
 FreeMemory(
     _Inout_ void* MemoryBlock
 ) noexcept(true)
 {
     xpf::SplitAllocatorFree(MemoryBlock,
-                            IsCritical);
+                            false);
 }
-};  // class SplitAllocatorTemlate
+};  // class SplitAllocator
+
 
 /**
- * @brief   Ease of life for using the non-critical split allocator.
+ * @brief   A convenience class which wraps C-APIs
+ *          for critical allocations
  */
-using SplitAllocator = xpf::SplitAllocatorTemplate<false>;
+class SplitAllocatorCritical
+{
+ public:
+/**
+ * @brief   Default constructor.
+ */
+SplitAllocatorCritical(void) noexcept(true) = default;
 
 /**
- * @brief   Ease of life for using the critical split allocator.
+ * @brief   Default destructor.
  */
-using SplitAllocatorCritical = xpf::SplitAllocatorTemplate<true>;
+~SplitAllocatorCritical(void) noexcept(true) = default;
+
+/**
+ * @brief   This class can be moved and copied.
+ */
+XPF_CLASS_COPY_MOVE_BEHAVIOR(SplitAllocatorCritical, default);
+
+/**
+ * @brief Allocates a block of memory with the required size.
+ * 
+ * @param[in] BlockSize - The requsted block size.
+ * 
+ * @return A block of memory with the required size, or null on failure.
+ */
+_Check_return_
+_Ret_maybenull_
+static inline void*
+AllocateMemory(
+    _In_ size_t BlockSize
+) noexcept(true)
+{
+    return xpf::SplitAllocatorAllocate(BlockSize,
+                                       true);
+}
+
+/**
+* @brief Frees a block of memory.
+* 
+* @param[in,out] MemoryBlock - To be freed.
+* 
+*/
+static inline void
+FreeMemory(
+    _Inout_ void* MemoryBlock
+) noexcept(true)
+{
+    xpf::SplitAllocatorFree(MemoryBlock,
+                            true);
+}
+};  // class SplitAllocator
 };  // namespace xpf

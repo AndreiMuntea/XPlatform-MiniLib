@@ -104,14 +104,14 @@ NTSTATUS
 XPF_API
 xpf::StringConversion::WideToUTF8(
     _In_ _Const_ const xpf::StringView<wchar_t>& Input,
-    _Out_ xpf::String<char>& Output
+    _Inout_ xpf::String<char>& Output
 ) noexcept(true)
 {
     size_t outSizeInBytes = 0;
     size_t inSizeInBytes = 0;
 
     NTSTATUS status = STATUS_UNSUCCESSFUL;
-    xpf::Buffer outBuffer;
+    xpf::Buffer outBuffer{ Output.GetAllocator() };
 
     //
     // We don't expect this to be called at higher IRQL.
@@ -255,15 +255,14 @@ NTSTATUS
 XPF_API
 xpf::StringConversion::UTF8ToWide(
     _In_ _Const_ const xpf::StringView<char>& Input,
-    _Out_ xpf::String<wchar_t>& Output
+    _Inout_ xpf::String<wchar_t>& Output
 ) noexcept(true)
 {
     size_t outSizeInBytes = 0;
     size_t inSizeInBytes = 0;
 
     NTSTATUS status = STATUS_UNSUCCESSFUL;
-    xpf::Buffer outBuffer;
-
+    xpf::Buffer outBuffer{ Output.GetAllocator() };
     //
     // We don't expect this to be called at higher IRQL.
     // So assert here to catch invalid usage.

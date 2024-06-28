@@ -113,18 +113,10 @@ xpf::LookasideListAllocator::AllocateMemory(
     }
     else
     {
+        xpf::ApiZeroMemory(memoryBlock, this->m_ElementSize);
         xpf::ApiAtomicDecrement(&this->m_CurrentElements);
     }
 
-    //
-    // Ensure we don't send garbage back.
-    // It is especially useful as the memory block might contain a valid "next" pointer.
-    // We don't want the caller to play with it :)
-    //
-    if (nullptr != memoryBlock)
-    {
-        memoryBlock->Next = nullptr;
-    }
     return memoryBlock;
 }
 

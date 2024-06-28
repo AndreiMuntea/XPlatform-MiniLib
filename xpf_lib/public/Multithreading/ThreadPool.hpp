@@ -32,6 +32,15 @@
 
 namespace xpf
 {
+
+/**
+ * @brief   The allocations performed by the thread pool need to be non paged on windows kernel, as the threadpool
+ *          is required to run at dispatch level as well. We define a separated allocator which will point to the
+ *          critical memory allocator.
+ */
+#define XPF_THREADPOOL_ALLOCATOR  xpf::PolymorphicAllocator{ .AllocFunction = &xpf::CriticalMemoryAllocator::AllocateMemory,     \
+                                                             .FreeFunction  = &xpf::CriticalMemoryAllocator::FreeMemory }
+
 /**
  * @brief   Forward definition.
  */
@@ -212,7 +221,7 @@ CreateThreadContext(
 void
 XPF_API
 DestroyThreadContext(
-    _Inout_ xpf::SharedPointer<xpf::ThreadPoolThreadContext, xpf::CriticalMemoryAllocator>& ThreadContext
+    _Inout_ xpf::SharedPointer<xpf::ThreadPoolThreadContext>& ThreadContext
 ) noexcept(true);
 
 
@@ -238,7 +247,7 @@ _Must_inspect_result_
 NTSTATUS
 XPF_API
 CreateWorkItem(
-    _Inout_ xpf::SharedPointer<xpf::ThreadPoolThreadContext, xpf::CriticalMemoryAllocator>& ThreadContext,      // NOLINT(*)
+    _Inout_ xpf::SharedPointer<xpf::ThreadPoolThreadContext>& ThreadContext,      // NOLINT(*)
     _In_ xpf::thread::Callback UserCallback,
     _In_ xpf::thread::Callback NotProcessedCallback,
     _In_opt_ xpf::thread::CallbackArgument UserCallbackArgument
@@ -301,8 +310,7 @@ ThreadPoolProcessWorkItems(
       * @brief  This will be the currently available list of threads.
       *         This won't exceed MAX_THREAD_QUOTA.
       */
-     xpf::Vector<xpf::SharedPointer<xpf::ThreadPoolThreadContext, xpf::CriticalMemoryAllocator>,
-                 xpf::CriticalMemoryAllocator> m_Threads;
+     xpf::Vector<xpf::SharedPointer<xpf::ThreadPoolThreadContext>> m_Threads{ XPF_THREADPOOL_ALLOCATOR };
      /**
       * @brief  This will guard the access to the m_Threads. 
       */

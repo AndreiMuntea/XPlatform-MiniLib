@@ -32,6 +32,15 @@ namespace xpf
 {
 
 /**
+ * @brief   The allocations performed by the event framework need to be non paged on windows kernel, as it is
+ *          is required to run at dispatch level as well. We define a separated allocator which will point to the
+ *          critical memory allocator.
+ */
+#define XPF_EVENT_FRAMEWORK_ALLOCATOR  xpf::PolymorphicAllocator{                                       \
+                                       .AllocFunction = &xpf::CriticalMemoryAllocator::AllocateMemory,  \
+                                       .FreeFunction  = &xpf::CriticalMemoryAllocator::FreeMemory }
+
+/**
  * @brief       Define this here separetely as it is easier to
  *              change in future if the need arise.
  *              Uniquely identifies an event.
@@ -179,9 +188,7 @@ class EventBus final
 /**
  * @brief This is useful to ease the access to the Listeners.
  */
-using ListenersList = xpf::Vector<xpf::SharedPointer<xpf::EventListenerData,
-                                                     xpf::CriticalMemoryAllocator>,
-                                  xpf::CriticalMemoryAllocator>;
+using ListenersList = xpf::Vector<xpf::SharedPointer<xpf::EventListenerData>>;
  public:
 /**
  * @brief EventBus constructor - default.
@@ -285,7 +292,7 @@ NotifyListeners(
  * @note That the already run down listeners will not be cloned.
  *       The method must be called with the listeners lock taken.
  */
-xpf::SharedPointer<ListenersList, xpf::CriticalMemoryAllocator>
+xpf::SharedPointer<ListenersList>
 XPF_API
 CloneListeners(
     void
@@ -306,7 +313,7 @@ CloneListeners(
      *              so the in-progress listeners will consume events with the old list,
      *              and won't be affected.
      */
-     xpf::SharedPointer<ListenersList, xpf::CriticalMemoryAllocator> m_Listeners;
+     xpf::SharedPointer<ListenersList> m_Listeners{ XPF_EVENT_FRAMEWORK_ALLOCATOR };
      /**
       * @brief  This will guard the access to the m_Listeners. 
       */

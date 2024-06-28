@@ -25,7 +25,6 @@
 #include "xpf_lib/public/Containers/Vector.hpp"
 
 
-
 namespace xpf
 {
 //
@@ -527,8 +526,7 @@ RemoveSuffix(
  * @brief This is the class to mimic std::string
  *        More functionality can be added when needed.
  */
-template <class CharType,
-          class AllocatorType = xpf::MemoryAllocator>
+template <class CharType>
 class String final
 {
 static_assert(xpf::IsSameType<CharType, char>     ||
@@ -536,11 +534,18 @@ static_assert(xpf::IsSameType<CharType, char>     ||
               "Unsupported Character Type!");
  public:
 /**
- * @brief String constructor - default.
+ * @brief       String constructor - default.
+ *
+ * @param[in]   Allocator - to be used when performing allocations.
+ *
+ * @note        For now only state-less allocators are supported.
  */
 String(
-    void
-) noexcept(true) = default;
+    _In_ xpf::PolymorphicAllocator Allocator = xpf::PolymorphicAllocator{}
+) noexcept(true): m_Buffer{ Allocator }
+{
+    XPF_NOTHING();
+}
 
 /**
  * @brief Destructor will destroy the underlying buffer - if any.
@@ -670,6 +675,20 @@ BufferSize(
     const size_t bufferSize = this->m_Buffer.GetSize() / sizeof(CharType);
     return (bufferSize == 0) ? bufferSize
                              : (bufferSize - 1);
+}
+
+/**
+ * @brief Gets the underlying Allocator.
+ *
+ * @return A const reference to the underlying allocator.
+ *
+ */
+inline const xpf::PolymorphicAllocator&
+GetAllocator(
+    void
+) const noexcept(true)
+{
+    return this->m_Buffer.GetAllocator();
 }
 
 /**
@@ -812,7 +831,7 @@ ExtendWithBuffer(
     //
     // Now let's create a new buffer.
     //
-    Buffer<AllocatorType> tempBuffer;
+    Buffer tempBuffer{ this->m_Buffer.GetAllocator() };
     const NTSTATUS status = tempBuffer.Resize(sizeInBytes);
     if (!NT_SUCCESS(status))
     {
@@ -845,7 +864,7 @@ ExtendWithBuffer(
 }
 
  private:
-    xpf::Buffer<AllocatorType> m_Buffer;
+    xpf::Buffer m_Buffer;
 };  // class String
 
 //
@@ -860,7 +879,7 @@ namespace StringConversion
  * 
  * @param[in] Input - The string to be converted. This is a wide string.
  * 
- * @param[out] Output - The result of the conversion. This will be an UTF-8 string.
+ * @param[in,out] Output - The result of the conversion. This will be an UTF-8 string.
  *
  * @return a proper NTSTATUS error code.
  */
@@ -869,7 +888,7 @@ NTSTATUS
 XPF_API
 WideToUTF8(
     _In_ _Const_ const xpf::StringView<wchar_t>& Input,
-    _Out_ xpf::String<char>& Output
+    _Inout_ xpf::String<char>& Output
 ) noexcept(true);
 
 /**
@@ -877,7 +896,7 @@ WideToUTF8(
  *
  * @param[in] Input - The string to be converted. This is an UTF-8 string.
  *
- * @param[out] Output - The result of the conversion. This will be a wide string.
+ * @param[in,out] Output - The result of the conversion. This will be a wide string.
  *
  * @return a proper NTSTATUS error code.
  */
@@ -886,7 +905,7 @@ NTSTATUS
 XPF_API
 UTF8ToWide(
     _In_ _Const_ const xpf::StringView<char>& Input,
-    _Out_ xpf::String<wchar_t>& Output
+    _Inout_ xpf::String<wchar_t>& Output
 ) noexcept(true);
 };  // namespace StringConversion
 };  // namespace xpf

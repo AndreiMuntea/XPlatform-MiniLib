@@ -24,7 +24,7 @@ XPF_TEST_SCENARIO(TestVector, DefaultConstructorDestructor)
     XPF_TEST_EXPECT_TRUE(vector.Size() == size_t{ 0 });
     XPF_TEST_EXPECT_TRUE(vector.IsEmpty());
 
-    const size_t expectedVectorSize = sizeof(void*) + 2 * sizeof(size_t);
+    const size_t expectedVectorSize = sizeof(void*) * 3 + 2 * sizeof(size_t);
     static_assert(expectedVectorSize == static_cast<size_t>(sizeof(vector)),
                   "Compile time size check!");
 }

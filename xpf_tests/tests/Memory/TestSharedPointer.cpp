@@ -24,7 +24,7 @@ XPF_TEST_SCENARIO(TestSharedPointer, DefaultConstructorDestructor)
     xpf::SharedPointer<int> ptr;
     XPF_TEST_EXPECT_TRUE(ptr.IsEmpty());
 
-    auto ptrSize = 2 * sizeof(void*);           // reference counter
+    auto ptrSize = 4 * sizeof(void*);           // reference counter
     XPF_TEST_EXPECT_TRUE(sizeof(ptr) == ptrSize);
 }
 

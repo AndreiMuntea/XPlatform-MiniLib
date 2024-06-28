@@ -139,7 +139,6 @@ Destruct(
 }
 };  // class MemoryAllocator
 
-
 /**
  * @brief This is a memory allocator which allocates critical memory.
  *        Uses default alloc memory function, with critical=true.
@@ -201,4 +200,31 @@ FreeMemory(
     xpf::ApiFreeMemory(MemoryBlock);
 }
 };  // class CriticalMemoryAllocator
+
+/**
+ * @brief   Helper for the default template of allocate memory.
+ */
+using FnMemoryAlloc = decltype(xpf::MemoryAllocator::AllocateMemory)*;
+
+/**
+ * @brief   Helper for the default template of freeing memory.
+ */
+using FnMemoryFree = decltype(xpf::MemoryAllocator::FreeMemory)*;
+
+/**
+ * @brief   A simple structure to store alloc and free functions.
+ */
+struct PolymorphicAllocator
+{
+    /**
+     * @brief   This API is used to allocate memory. 
+     */
+    FnMemoryAlloc AllocFunction = &xpf::MemoryAllocator::AllocateMemory;
+
+    /**
+     * @brief   This API is used to free memory. 
+     */
+    FnMemoryFree FreeFunction = &xpf::MemoryAllocator::FreeMemory;
+};  // struct PolymorphicAllocator
+
 };  // namespace xpf

@@ -221,7 +221,7 @@ xpf::Protobuf::DeserializeBinaryBlob(
     //
     // Allocate a large enough buffer to read the data.
     //
-    xpf::Vector<uint8_t> binaryBlob;
+    xpf::Vector<uint8_t> binaryBlob{ Buffer.GetAllocator() };
     if (!NT_SUCCESS(binaryBlob.Resize(binaryBlobSize)))
     {
         return false;

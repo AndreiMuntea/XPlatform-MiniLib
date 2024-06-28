@@ -23,7 +23,7 @@ _Must_inspect_result_
 NTSTATUS
 XPF_API
 xpf::ThreadPool::CreateWorkItem(
-    _Inout_ xpf::SharedPointer<xpf::ThreadPoolThreadContext, xpf::CriticalMemoryAllocator>& ThreadContext,
+    _Inout_ xpf::SharedPointer<xpf::ThreadPoolThreadContext>& ThreadContext,
     _In_ xpf::thread::Callback UserCallback,
     _In_ xpf::thread::Callback NotProcessedCallback,
     _In_opt_ xpf::thread::CallbackArgument UserCallbackArgument
@@ -151,7 +151,7 @@ xpf::ThreadPool::Enqueue(
     //
     // The lock will have minimal scope - just grab a reference to the selected thread.
     //
-    xpf::SharedPointer<xpf::ThreadPoolThreadContext, xpf::CriticalMemoryAllocator> currentThread;
+    xpf::SharedPointer<xpf::ThreadPoolThreadContext> currentThread;
     {
         xpf::SharedLockGuard threadGuard{ this->m_ThreadsLock };
         if (currentRoundRobinIndex < this->m_Threads.Size())
@@ -295,7 +295,7 @@ xpf::ThreadPool::CreateThreadContext(
     //
     XPF_MAX_PASSIVE_LEVEL();
 
-    xpf::SharedPointer<xpf::ThreadPoolThreadContext, xpf::CriticalMemoryAllocator> threadContextSharedPtr;
+    xpf::SharedPointer<xpf::ThreadPoolThreadContext> threadContextSharedPtr;
     NTSTATUS status = STATUS_UNSUCCESSFUL;
 
     //
@@ -320,7 +320,7 @@ xpf::ThreadPool::CreateThreadContext(
     //
     // Threads will be stored in non-paged memory. They are critical allocations.
     //
-    threadContextSharedPtr = xpf::MakeShared<xpf::ThreadPoolThreadContext, xpf::CriticalMemoryAllocator>();
+    threadContextSharedPtr = xpf::MakeSharedWithAllocator<xpf::ThreadPoolThreadContext>(this->m_Threads.GetAllocator());
     if (threadContextSharedPtr.IsEmpty())
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -380,7 +380,7 @@ CleanUp:
 void
 XPF_API
 xpf::ThreadPool::DestroyThreadContext(
-    _Inout_ xpf::SharedPointer<xpf::ThreadPoolThreadContext, xpf::CriticalMemoryAllocator>& ThreadContext
+    _Inout_ xpf::SharedPointer<xpf::ThreadPoolThreadContext>& ThreadContext
 ) noexcept(true)
 {
     XPF_MAX_PASSIVE_LEVEL();
