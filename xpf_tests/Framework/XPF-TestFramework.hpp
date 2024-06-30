@@ -197,6 +197,7 @@ const xpf_test::TestScenarioCallback* gXpfEndMarker = nullptr;
                 /* Mark the test as failed. */                                                                          \
                 (*_XpfArgScenario) = STATUS_UNSUCCESSFUL;                                                               \
             }                                                                                                           \
+            _Analysis_assume_((Condition));                                                                             \
         }
 
 /**

@@ -145,6 +145,11 @@
      */
     #define XPF_PACK(Definition)                __pragma(pack(push, 1)) Definition __pragma(pack(pop))
 
+    /**
+     * @brief Helper macro to get the intrinsic of return address.
+     */
+    #define XPF_RETURN_ADDRESS()                _ReturnAddress()
+
 #elif defined XPF_COMPILER_CLANG || defined XPF_COMPILER_GCC
 
     /**
@@ -187,6 +192,11 @@
      * @brief Helper macro to define a packed struct, that's it a struct with a 1-byte alignment.
      */
     #define XPF_PACK(Definition)                Definition __attribute__((__packed__))
+
+    /**
+     * @brief Helper macro to get the intrinsic of return address.
+     */
+    #define XPF_RETURN_ADDRESS()                __builtin_return_address(0)
 
 #else
     #error Unsupported Compiler.
@@ -245,6 +255,7 @@
     #include <iconv.h>
     #include <wchar.h>
     #include <netdb.h>
+    #include <execinfo.h>
     #include <sys/types.h>
     #include <sys/time.h>
     #include <sys/socket.h>

@@ -764,3 +764,32 @@ XPF_TEST_SCENARIO(TestPlatformApi, RandomUuid)
 
     XPF_TEST_EXPECT_TRUE(false == xpf::ApiAreUuidsEqual(first, second));
 }
+
+/**
+ * @brief       This tests the stack captures
+ *
+ */
+XPF_TEST_SCENARIO(TestPlatformApi, StackBacktraceCapture)
+{
+    void* frames[32] = { 0 };
+    const uint32_t framesCount = XPF_ARRAYSIZE(frames);
+    uint32_t capturedFramesCount = 0;
+    NTSTATUS status = STATUS_UNSUCCESSFUL;
+
+    status = xpf::ApiCaptureStackBacktrace(frames, framesCount, &capturedFramesCount);
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
+
+    XPF_TEST_EXPECT_TRUE(capturedFramesCount <= framesCount);
+    XPF_TEST_EXPECT_TRUE(capturedFramesCount > 0);
+
+    bool foundReturnAddressOnStack = false;
+    for (size_t i = 0; i < capturedFramesCount; ++i)
+    {
+        foundReturnAddressOnStack = (frames[i] == XPF_RETURN_ADDRESS());
+        if (foundReturnAddressOnStack)
+        {
+            break;
+        }
+    }
+    XPF_TEST_EXPECT_TRUE(foundReturnAddressOnStack);
+}

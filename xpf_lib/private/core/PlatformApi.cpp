@@ -699,3 +699,83 @@ xpf::ApiStringToValue(
         #error Unknown Platform
     #endif
 }
+
+_Must_inspect_result_
+NTSTATUS
+XPF_API
+xpf::ApiCaptureStackBacktrace(
+    _Inout_ void** Frames,
+    _In_ uint32_t Count,
+    _Out_ uint32_t* CapturedFrames
+) noexcept(true)
+{
+    XPF_MAX_DISPATCH_LEVEL();
+
+    /* Sanity checks. */
+    if (nullptr == Frames || 0 == Count || nullptr == CapturedFrames)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Preinit output. */
+    *CapturedFrames = 0;
+    xpf::ApiZeroMemory(*Frames,
+                       Count * sizeof(void*));
+
+    NTSTATUS status = STATUS_UNSUCCESSFUL;
+
+    #if defined XPF_PLATFORM_WIN_UM
+        __try
+        {
+            *CapturedFrames = ::RtlWalkFrameChain(&Frames[0],
+                                                  Count,
+                                                  0);
+            status = STATUS_SUCCESS;
+        }
+        __except(EXCEPTION_EXECUTE_HANDLER)
+        {
+            status = STATUS_UNHANDLED_EXCEPTION;
+        }
+    #elif defined XPF_PLATFORM_WIN_KM
+        __try
+        {
+            *CapturedFrames = ::RtlWalkFrameChain(&Frames[0],
+                                                  Count,
+                                                  0);
+            if (::KeGetCurrentIrql() <= APC_LEVEL)
+            {
+                (*CapturedFrames) += ::RtlWalkFrameChain(&Frames[(*CapturedFrames)],
+                                                         Count - (*CapturedFrames),
+                                                         1);
+            }
+            status = STATUS_SUCCESS;
+        }
+        __except(EXCEPTION_EXECUTE_HANDLER)
+        {
+            status = STATUS_UNHANDLED_EXCEPTION;
+        }
+    #elif defined XPF_PLATFORM_LINUX_UM
+        if (Count <= xpf::NumericLimits<int32_t>::MaxValue())
+        {
+            int capturedFrames = backtrace(&Frames[0],
+                                           static_cast<int>(Count));
+            if (capturedFrames > 0)
+            {
+                *CapturedFrames = static_cast<uint32_t>(capturedFrames);
+                status = STATUS_SUCCESS;
+            }
+        }
+    #else
+        #error Unknown Platform
+    #endif
+
+    /* Don't return garbage. */
+    if (!NT_SUCCESS(status))
+    {
+        *CapturedFrames = 0;
+        xpf::ApiZeroMemory(*Frames,
+                           Count * sizeof(void*));
+    }
+    /* Propagate the status.*/
+    return status;
+}

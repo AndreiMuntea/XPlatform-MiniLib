@@ -979,5 +979,25 @@ ApiStringToValue(
     _In_ uint8_t Base,
     _Out_ int32_t* Value
 ) noexcept(true);
+
+/**
+ * @brief   Captures a backtrace for the calling thread, in the
+ *          array pointed to by Frames. A stack backtrace is the series of
+ *          currently active function calls for the thread.
+ *
+ * @param[in,out]  Frames          - Will contain the caller addresses,
+ * @param[in]      Count           - The number of elements that the Frames array can store.
+ * @param[out]     CapturedFrames  - The number of captured frames.
+ *
+ * @return A proper ntstatus error code.
+ */
+_Must_inspect_result_
+NTSTATUS
+XPF_API
+ApiCaptureStackBacktrace(
+    _Inout_ void** Frames,
+    _In_ uint32_t Count,
+    _Out_ uint32_t* CapturedFrames
+) noexcept(true);
 };  // namespace xpf
 

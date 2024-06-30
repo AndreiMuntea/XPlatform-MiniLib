@@ -16,12 +16,33 @@
 
 #pragma once
 
-#if defined XPF_PLATFORM_WIN_UM
+#if defined XPF_PLATFORM_WIN_UM || defined XPF_PLATFORM_WIN_KM
 EXTERN_C_START
 
-#if defined XPF_COMPILER_MSVC
+#if defined XPF_COMPILER_MSVC && defined XPF_PLATFORM_WIN_UM
     #pragma comment(lib, "ntdll.lib")
-#endif
+#endif  // XPF_COMPILER_MSVC && XPF_PLATFORM_WIN_UM
+
+
+//
+// COMMON AREA - for both um and km
+//
+
+
+NTSYSAPI ULONG NTAPI
+RtlWalkFrameChain(
+    _Out_ PVOID* Callers,
+    _In_ ULONG Count,
+    _In_ ULONG Flags
+);
+
+
+//
+// Only UM fill.
+//
+
+
+#if defined XPF_PLATFORM_WIN_UM
 
 NTSYSAPI WCHAR NTAPI
 RtlDowncaseUnicodeChar(
@@ -44,6 +65,7 @@ RtlUnicodeStringToInteger(
     _In_opt_ ULONG Base,
     _Out_ PULONG Value
 );
+#endif  // XPF_PLATFORM_WIN_UM
 
 EXTERN_C_END
-#endif  // XPF_PLATFORM_WIN_UM
+#endif  // XPF_PLATFORM_WIN_UM || XPF_PLATFORM_WIN_KM
