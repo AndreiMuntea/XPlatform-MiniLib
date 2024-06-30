@@ -215,12 +215,6 @@
     #include <Wsk.h>
 
 #elif defined XPF_PLATFORM_WIN_UM
-
-    /**
-     * @brief For the use of winsockets we require the Ws2_32 library.
-     */
-    #pragma comment(lib, "Ws2_32.lib")
-
     /**
      * @brief Do not include ntstatus as it will be included by ntstatus header.
      */
@@ -305,22 +299,22 @@
      * @brief Asserts on debug that the code is indeed running at PASSIVE LEVEL.
      *        This is valid only for windows KM.
      */
-    #define XPF_MAX_PASSIVE_LEVEL()         XPF_ASSERT(::KeGetCurrentIrql() == PASSIVE_LEVEL);          \
-                                            _Analysis_assume_(KeGetCurrentIrql() == PASSIVE_LEVEL);     \
+    #define XPF_MAX_PASSIVE_LEVEL()         XPF_DEATH_ON_FAILURE(::KeGetCurrentIrql() == PASSIVE_LEVEL);    \
+                                            _Analysis_assume_(KeGetCurrentIrql() == PASSIVE_LEVEL);         \
                                             PAGED_CODE();
 
     /**
      * @brief Asserts on debug that the code is indeed running at max APC LEVEL.
      *        This is valid only for windows KM.
      */
-    #define XPF_MAX_APC_LEVEL()             XPF_ASSERT(::KeGetCurrentIrql() <= APC_LEVEL);              \
-                                            _Analysis_assume_(KeGetCurrentIrql() <= APC_LEVEL);         \
+    #define XPF_MAX_APC_LEVEL()             XPF_DEATH_ON_FAILURE(::KeGetCurrentIrql() <= APC_LEVEL);        \
+                                            _Analysis_assume_(KeGetCurrentIrql() <= APC_LEVEL);             \
                                             PAGED_CODE();
 
     /**
      * @brief Asserts on debug that the code is indeed running at max DISPATCH LEVEL.
      */
-    #define XPF_MAX_DISPATCH_LEVEL()        XPF_ASSERT(::KeGetCurrentIrql() <= DISPATCH_LEVEL);         \
+    #define XPF_MAX_DISPATCH_LEVEL()        XPF_DEATH_ON_FAILURE(::KeGetCurrentIrql() <= DISPATCH_LEVEL);   \
                                             _Analysis_assume_(KeGetCurrentIrql() <= DISPATCH_LEVEL);
 
     /**

@@ -28,9 +28,9 @@ typedef struct _XPF_RW_LOCK
 {
     #if defined XPF_PLATFORM_WIN_UM
         //
-        // On windows user mode we use a SRWLOCK.
+        // On windows user mode we use a RTL_RESOURCE.
         //
-        SRWLOCK RwLock;
+        RTL_RESOURCE RwLock;
     #elif defined XPF_PLATFORM_WIN_KM
         //
         // On Windows kernel mode we use an ERESOURCE.
@@ -105,9 +105,9 @@ xpf::ReadWriteLock::Create(
     //
     #if defined XPF_PLATFORM_WIN_UM
         //
-        // Initialize the SRW Lock. This function can't fail.
+        // Initialize the RTL_RESOURCE. This function can't fail.
         //
-        ::InitializeSRWLock(&lock->RwLock);
+        ::RtlInitializeResource(&lock->RwLock);
     #elif defined XPF_PLATFORM_WIN_KM
         //
         // Initialize the ERESOURCE structure.
@@ -191,10 +191,7 @@ xpf::ReadWriteLock::Destroy(
     // Platform specific cleanup.
     //
     #if defined XPF_PLATFORM_WIN_UM
-        //
-        // On windows UM no extra cleanup is required for SRWLOCK.
-        //
-        UNREFERENCED_PARAMETER(lock);
+        ::RtlDeleteResource(&lock->RwLock);
     #elif defined XPF_PLATFORM_WIN_KM
         //
         // On windows KM we destroy the ERESOURCE. This should never faile
@@ -243,7 +240,9 @@ xpf::ReadWriteLock::LockExclusive(
     XPF_RW_LOCK* lock = static_cast<XPF_RW_LOCK*>(this->m_Lock);
 
     #if defined XPF_PLATFORM_WIN_UM
-        ::AcquireSRWLockExclusive(&lock->RwLock);
+        const BOOLEAN wasAcquired = ::RtlAcquireResourceExclusive(&lock->RwLock,
+                                                                  TRUE);
+        XPF_DEATH_ON_FAILURE(FALSE != wasAcquired);
     #elif defined XPF_PLATFORM_WIN_KM
         //
         // First we enter a critical region. Will leave it on release.
@@ -308,8 +307,7 @@ xpf::ReadWriteLock::UnLockExclusive(
     XPF_RW_LOCK* lock = static_cast<XPF_RW_LOCK*>(this->m_Lock);
 
     #if defined XPF_PLATFORM_WIN_UM
-        _Analysis_assume_lock_held_(lock->RwLock);
-        ::ReleaseSRWLockExclusive(&lock->RwLock);
+        ::RtlReleaseResource(&lock->RwLock);
     #elif defined XPF_PLATFORM_WIN_KM
         ::ExReleaseResourceLite(&lock->RwLock);
         ::KeLeaveCriticalRegion();
@@ -349,7 +347,9 @@ xpf::ReadWriteLock::LockShared(
     XPF_RW_LOCK* lock = static_cast<XPF_RW_LOCK*>(this->m_Lock);
 
     #if defined XPF_PLATFORM_WIN_UM
-        ::AcquireSRWLockShared(&lock->RwLock);
+        const BOOLEAN wasAcquired = ::RtlAcquireResourceShared(&lock->RwLock,
+                                                               TRUE);
+        XPF_DEATH_ON_FAILURE(FALSE != wasAcquired);
     #elif defined XPF_PLATFORM_WIN_KM
         //
         // First we enter a critical region. Will leave it on release.
@@ -413,7 +413,7 @@ xpf::ReadWriteLock::UnLockShared(
     XPF_RW_LOCK* lock = static_cast<XPF_RW_LOCK*>(this->m_Lock);
 
     #if defined XPF_PLATFORM_WIN_UM
-        ::ReleaseSRWLockShared(&lock->RwLock);
+        ::RtlReleaseResource(&lock->RwLock);
     #elif defined XPF_PLATFORM_WIN_KM
         ::ExReleaseResourceLite(&lock->RwLock);
         ::KeLeaveCriticalRegion();

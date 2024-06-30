@@ -34,8 +34,7 @@ XPF_SECTION_PAGED;
  * 
  * @param[in] Parameter - This will be an InternalContext.
  */
-static DWORD
-WINAPI
+static NTSTATUS NTAPI
 XpfInternalThreadRunCallback(
     _In_ PVOID Parameter
 ) noexcept(true)
@@ -60,8 +59,7 @@ XpfInternalThreadRunCallback(
  * 
  * @param[in] Parameter - This will be an InternalContext.
  */
-static void
-NTAPI
+static void NTAPI
 XpfInternalThreadRunCallback(
     _In_ PVOID Parameter
 ) noexcept(true)
@@ -163,12 +161,22 @@ xpf::thread::Thread::Run(
     // Now create a thread using platform-specific API.
     //
     #if defined XPF_PLATFORM_WIN_UM
-        this->m_Context.ThreadHandle = ::CreateThread(NULL,
-                                                      0,
-                                                      static_cast<LPTHREAD_START_ROUTINE>(&XpfInternalThreadRunCallback),
-                                                      static_cast<LPVOID>(&this->m_Context),
-                                                      0,
-                                                      NULL);
+        const NTSTATUS status = ::NtCreateThreadEx(&this->m_Context.ThreadHandle,
+                                                   THREAD_ALL_ACCESS,
+                                                   NULL,
+                                                   NtCurrentProcess(),
+                                                   static_cast<PUSER_THREAD_START_ROUTINE>(&XpfInternalThreadRunCallback),
+                                                   static_cast<LPVOID>(&this->m_Context),
+                                                   0,
+                                                   0,
+                                                   0,
+                                                   0,
+                                                   NULL);
+        if (!NT_SUCCESS(status))
+        {
+            this->m_Context.ThreadHandle = nullptr;
+            return status;
+        }
         if ((NULL == this->m_Context.ThreadHandle) || (INVALID_HANDLE_VALUE == this->m_Context.ThreadHandle))
         {
             this->m_Context.ThreadHandle = nullptr;
@@ -288,12 +296,13 @@ xpf::thread::Thread::Join(
     // to terminate a thread. It's a logic error if it can't be finished gracefully.
     //
     #if defined XPF_PLATFORM_WIN_UM
-        const DWORD waitResult = ::WaitForSingleObject(this->m_Context.ThreadHandle,
-                                                       INFINITE);
-        XPF_DEATH_ON_FAILURE(WAIT_OBJECT_0 == waitResult);
+        const NTSTATUS waitResult = ::NtWaitForSingleObject(this->m_Context.ThreadHandle,
+                                                            FALSE,
+                                                            NULL);
+        XPF_DEATH_ON_FAILURE(NT_SUCCESS(waitResult));
 
-        const BOOL closeResult = ::CloseHandle(this->m_Context.ThreadHandle);
-        XPF_DEATH_ON_FAILURE(FALSE != closeResult);
+        const NTSTATUS closeResult = ::NtClose(this->m_Context.ThreadHandle);
+        XPF_DEATH_ON_FAILURE(NT_SUCCESS(closeResult));
 
     #elif defined XPF_PLATFORM_WIN_KM
         const NTSTATUS status = ::KeWaitForSingleObject(this->m_Context.ThreadHandle,

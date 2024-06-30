@@ -77,11 +77,13 @@ xpf::Signal::Create(
         // On Windows UM we'll use an Event object to represent a signal.
         // The m_SignalHandle will be the event handle returned by CreateEventW.
         //
-        HANDLE eventHandle = ::CreateEventW(NULL,
-                                            (ManualReset) ? TRUE : FALSE,
-                                            FALSE,
-                                            NULL);
-        if ((NULL == eventHandle) || (INVALID_HANDLE_VALUE == eventHandle))
+        HANDLE eventHandle = NULL;
+        status = ::NtCreateEvent(&eventHandle,
+                                 EVENT_ALL_ACCESS,
+                                 NULL,
+                                 (ManualReset) ? NT_EVENT_TYPE_NOTIFICATION : NT_EVENT_TYPE_SYNCHRONIZATION,
+                                 FALSE);
+        if (!NT_SUCCESS(status) || (NULL == eventHandle) || (INVALID_HANDLE_VALUE == eventHandle))
         {
             status = STATUS_INVALID_HANDLE;
             goto Exit;
@@ -187,8 +189,8 @@ xpf::Signal::Destroy(
         //
         if (nullptr != this->m_SignalHandle.Handle)
         {
-            const BOOL closeStatus = ::CloseHandle(this->m_SignalHandle.Handle);
-            XPF_DEATH_ON_FAILURE(FALSE != closeStatus);
+            const NTSTATUS closeStatus = ::NtClose(this->m_SignalHandle.Handle);
+            XPF_DEATH_ON_FAILURE(NT_SUCCESS(closeStatus));
 
             this->m_SignalHandle.Handle = nullptr;
         }
@@ -242,7 +244,7 @@ xpf::Signal::Set(
         XPF_DEATH_ON_FAILURE(nullptr != this->m_SignalHandle.Handle);
         _Analysis_assume_(nullptr != this->m_SignalHandle.Handle);
 
-        (VOID) ::SetEvent(this->m_SignalHandle.Handle);
+        (VOID) ::NtSetEvent(this->m_SignalHandle.Handle, nullptr);
 
     #elif defined XPF_PLATFORM_WIN_KM
         XPF_DEATH_ON_FAILURE(nullptr != this->m_SignalHandle.Handle);
@@ -308,7 +310,7 @@ xpf::Signal::Reset(
         XPF_DEATH_ON_FAILURE(nullptr != this->m_SignalHandle.Handle);
         _Analysis_assume_(nullptr != this->m_SignalHandle.Handle);
 
-        (VOID) ::ResetEvent(this->m_SignalHandle.Handle);
+        (VOID) ::NtResetEvent(this->m_SignalHandle.Handle, nullptr);
 
     #elif defined XPF_PLATFORM_WIN_KM
         XPF_DEATH_ON_FAILURE(nullptr != this->m_SignalHandle.Handle);
@@ -360,10 +362,24 @@ xpf::Signal::Wait(
         XPF_DEATH_ON_FAILURE(nullptr != this->m_SignalHandle.Handle);
         _Analysis_assume_(nullptr != this->m_SignalHandle.Handle);
 
-        const DWORD waitResult = ::WaitForSingleObject(this->m_SignalHandle.Handle,
-                                                       TimeoutInMilliSeconds);
-        waitSatisfied = (WAIT_OBJECT_0 == waitResult) ? true
-                                                      : false;
+        //
+        // Specifies the absolute or relative time, in units of 100 nanoseconds,
+        // for which the wait is to occur. A negative value indicates relative time
+        //
+        LARGE_INTEGER interval;
+        xpf::ApiZeroMemory(&interval, sizeof(interval));
+
+        //
+        // 1 millisecond = 1000000 nanoseconds
+        // 1 millisecond = 10000 (100 ns)
+        //
+        interval.QuadPart = static_cast<LONG64>(-10000) * static_cast<LONG64>(TimeoutInMilliSeconds);
+
+        const NTSTATUS waitResult = ::NtWaitForSingleObject(this->m_SignalHandle.Handle,
+                                                            FALSE,
+                                                            &interval);
+        waitSatisfied = (STATUS_SUCCESS == waitResult) ? true
+                                                       : false;
     #elif defined XPF_PLATFORM_WIN_KM
         //
         // Specifies the absolute or relative time, in units of 100 nanoseconds,

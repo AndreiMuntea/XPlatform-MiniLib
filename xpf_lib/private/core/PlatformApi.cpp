@@ -68,7 +68,7 @@ xpf::ApiPanic(
         _Analysis_assume_(KeGetCurrentIrql() <= APC_LEVEL);
         ::ExRaiseStatus(Status);
     #elif defined XPF_PLATFORM_WIN_UM
-        ::RaiseException(ERROR_UNHANDLED_EXCEPTION, 0, 0, NULL);
+        ::RtlRaiseStatus(Status);
     #elif defined XPF_PLATFORM_LINUX_UM
         ::raise(SIGSEGV);
     #else
@@ -90,7 +90,6 @@ xpf::ApiCopyMemory(
     {
         return;
     }
-
     #if defined XPF_PLATFORM_WIN_KM ||  defined XPF_PLATFORM_WIN_UM
         RtlMoveMemory(Destination, Source, Size);
     #elif defined XPF_PLATFORM_LINUX_UM
@@ -113,7 +112,6 @@ xpf::ApiZeroMemory(
     {
         return;
     }
-
     #if defined XPF_PLATFORM_WIN_KM || defined XPF_PLATFORM_WIN_UM
         (void) ::RtlSecureZeroMemory(Destination, Size);
     #elif defined XPF_PLATFORM_LINUX_UM
@@ -138,15 +136,7 @@ xpf::ApiEqualMemory(
         return false;
     }
 
-    #if defined XPF_PLATFORM_WIN_KM || defined XPF_PLATFORM_WIN_UM
-        const BOOLEAN result = RtlEqualMemory(Source1, Source2, Size);
-        return FALSE != result;
-    #elif defined XPF_PLATFORM_LINUX_UM
-        const int result = memcmp(Source1, Source2, Size);
-        return (result == 0);
-    #else
-        #error Unknown Platform!
-    #endif
+    return 0 == ::memcmp(Source1, Source2, Size);
 }
 
 void
@@ -172,9 +162,12 @@ xpf::ApiFreeMemory(
         ::ExFreePoolWithTag(MemoryBlock,
                             'nmS+');
     #elif defined XPF_PLATFORM_WIN_UM
-        BOOL result = ::HeapFree(::GetProcessHeap(),
-                                 0,
-                                 MemoryBlock);
+        PVOID heapHandle = NULL;
+        ::RtlGetProcessHeaps(1, &heapHandle);
+
+        const BOOLEAN result = ::RtlFreeHeap(heapHandle,
+                                             0,
+                                             MemoryBlock);
         /* We allocated from the process heap. This shouldn't fail. */
         XPF_DEATH_ON_FAILURE(FALSE != result);
     #elif defined XPF_PLATFORM_LINUX_UM
@@ -252,10 +245,12 @@ xpf::ApiAllocateMemory(
                                             BlockSize,
                                             'nmS+');
         #elif defined XPF_PLATFORM_WIN_UM
-            block = ::HeapAlloc(::GetProcessHeap(),
-                                0,
-                                BlockSize);
+        PVOID heapHandle = NULL;
+        ::RtlGetProcessHeaps(1, &heapHandle);
 
+        block = ::RtlAllocateHeap(heapHandle,
+                                  0,
+                                  BlockSize);
         #elif defined XPF_PLATFORM_LINUX_UM
             block = ::aligned_alloc(XPF_DEFAULT_ALIGNMENT,
                                     BlockSize);
@@ -306,7 +301,7 @@ xpf::ApiSleep(
 {
     XPF_MAX_DISPATCH_LEVEL();
 
-    #if defined XPF_PLATFORM_WIN_KM
+    #if defined XPF_PLATFORM_WIN_KM || defined XPF_PLATFORM_WIN_UM
         //
         // Specifies the absolute or relative time, in units of 100 nanoseconds,
         // for which the wait is to occur. A negative value indicates relative time
@@ -323,15 +318,16 @@ xpf::ApiSleep(
         //
         // We don't care about the return status.
         //
+        #if defined XPF_PLATFORM_WIN_KM
         if (APC_LEVEL >= ::KeGetCurrentIrql())
         {
             const NTSTATUS status = ::KeDelayExecutionThread(KernelMode, FALSE, &interval);
             XPF_UNREFERENCED_PARAMETER(status);
         }
-
-    #elif defined XPF_PLATFORM_WIN_UM
-        ::Sleep(NumberOfMilliSeconds);
-
+        #else
+            const NTSTATUS status = ::NtDelayExecution(FALSE, &interval);
+            XPF_UNREFERENCED_PARAMETER(status);
+        #endif  // XPF_PLATFORM_WIN_KM
     #elif defined XPF_PLATFORM_LINUX_UM
         //
         // We round the value up, so we sleep at least one second.
@@ -381,15 +377,15 @@ xpf::ApiCurrentTime(
 
         return static_cast<uint64_t>(largeInteger.QuadPart);
     #elif defined XPF_PLATFORM_WIN_UM
-        FILETIME fileTime;
-        xpf::ApiZeroMemory(&fileTime, sizeof(fileTime));
+    
+        LARGE_INTEGER largeInteger;
+        xpf::ApiZeroMemory(&largeInteger, sizeof(largeInteger));
 
-        ::GetSystemTimeAsFileTime(&fileTime);
-
-        ULARGE_INTEGER largeInteger = { 0 };
-        largeInteger.LowPart = fileTime.dwLowDateTime;
-        largeInteger.HighPart = fileTime.dwHighDateTime;
-
+        NTSTATUS status = ::NtQuerySystemTime(&largeInteger);
+        if (!NT_SUCCESS(status))
+        {
+            largeInteger.QuadPart = 0;
+        }
         return static_cast<uint64_t>(largeInteger.QuadPart);
 
     #elif defined XPF_PLATFORM_LINUX_UM
@@ -441,32 +437,30 @@ xpf::ApiCharToLower(
 {
     XPF_MAX_DISPATCH_LEVEL();
 
-    #if defined XPF_PLATFORM_WIN_UM
-            return ::RtlDowncaseUnicodeChar(Character);
-    #elif defined XPF_PLATFORM_LINUX_UM
-        return static_cast<wchar_t>(::towlower(static_cast<wint_t>(Character)));
-    #elif defined XPF_PLATFORM_WIN_KM
-        if (::KeGetCurrentIrql() == PASSIVE_LEVEL)
+    #if defined XPF_PLATFORM_WIN_KM
+        //
+        // This function can only work properly at PASSIVE LEVEL.
+        // However don't fail the operation and do best effort.
+        // If the character is ANSI we can xor with 0x20.
+        // And leave all other characters intact.
+        //
+        if (::KeGetCurrentIrql() != PASSIVE_LEVEL)
         {
-            return ::RtlDowncaseUnicodeChar(Character);
-        }
-        else
-        {
-            //
-            // This function can only work properly at PASSIVE LEVEL.
-            // However don't fail the operation and do best effort.
-            // If the character is ANSI we can xor with 0x20.
-            // And leave all other characters intact.
-            //
             if (Character >= L'A' && Character <= L'Z')
             {
                 Character = Character ^ 0x20;
             }
             return Character;
         }
+    #endif  // XPF_PLATFORM_WIN_KM
+
+    #if defined XPF_PLATFORM_WIN_KM || defined XPF_PLATFORM_WIN_UM
+        return static_cast<wchar_t>(::RtlDowncaseUnicodeChar(static_cast<wint_t>(Character)));
+    #elif defined XPF_PLATFORM_LIN_UM
+        return static_cast<wchar_t>(towlower(static_cast<wint_t>(Character)));
     #else
         #error Unknown Platform
-    #endif
+    #endif 
 }
 
 wchar_t
@@ -477,32 +471,33 @@ xpf::ApiCharToUpper(
 {
     XPF_MAX_DISPATCH_LEVEL();
 
-    #if defined XPF_PLATFORM_WIN_UM
-        return ::RtlUpcaseUnicodeChar(Character);
-    #elif defined XPF_PLATFORM_LINUX_UM
-        return static_cast<wchar_t>(::towupper(static_cast<wint_t>(Character)));
-    #elif defined XPF_PLATFORM_WIN_KM
-        if (::KeGetCurrentIrql() == PASSIVE_LEVEL)
+    #if defined XPF_PLATFORM_WIN_KM
+        //
+        // This function can only work properly at PASSIVE LEVEL.
+        // However don't fail the operation and do best effort.
+        // If the character is ANSI we can xor with 0x20.
+        // And leave all other characters intact.
+        //
+        if (::KeGetCurrentIrql() != PASSIVE_LEVEL)
         {
-            return ::RtlUpcaseUnicodeChar(Character);
-        }
-        else
-        {
-            //
-            // This function can only work properly at PASSIVE LEVEL.
-            // However don't fail the operation and do best effort.
-            // If the character is ANSI we can xor with 0x20.
-            // And leave all other characters intact.
-            //
-            if (Character >= L'a' && Character <= L'z')
+            if (Character >= L'A' && Character <= L'Z')
             {
                 Character = Character ^ 0x20;
             }
             return Character;
         }
+    #endif  // XPF_PLATFORM_WIN_KM
+
+    static_assert(sizeof(wint_t) == sizeof(wchar_t), "Invalid size for wchar_t!");
+
+    #if defined XPF_PLATFORM_WIN_KM || defined XPF_PLATFORM_WIN_UM
+        return static_cast<wchar_t>(::RtlUpcaseUnicodeChar(static_cast<wint_t>(Character)));
+    #elif defined XPF_PLATFORM_LIN_UM
+        return static_cast<wchar_t>(towupper(static_cast<wint_t>(Character)));
     #else
         #error Unknown Platform
-    #endif
+    #endif 
+
 }
 
 bool
@@ -656,51 +651,6 @@ xpf::ApiIsHexDigit(
 }
 
 _Must_inspect_result_
-NTSTATUS XPF_API
-xpf::ApiStringToValue(
-    _In_ const char* String,
-    _In_ uint8_t Base,
-    _Out_ int32_t* Value
-) noexcept(true)
-{
-    XPF_MAX_PASSIVE_LEVEL();
-
-    #if defined XPF_PLATFORM_WIN_UM || defined XPF_PLATFORM_WIN_KM
-        xpf::String<wchar_t> wideStr;
-        UNICODE_STRING ustr = { 0 };
-        NTSTATUS status = STATUS_UNSUCCESSFUL;
-        ULONG value = 0;
-        ULONG error = 0;
-
-        status = xpf::StringConversion::UTF8ToWide(String, wideStr);
-        if (!NT_SUCCESS(status))
-        {
-            return status;
-        }
-        if (wideStr.BufferSize() / sizeof(wchar_t) >= xpf::NumericLimits<uint16_t>::MaxValue())
-        {
-            return STATUS_INVALID_BUFFER_SIZE;
-        }
-        ::RtlInitUnicodeString(&ustr, wideStr.View().Buffer());
-
-        error = ::RtlUnicodeStringToInteger(&ustr,
-                                            Base,
-                                            &value);
-        if (STATUS_SUCCESS != error)
-        {
-            return STATUS_DATA_ERROR;
-        }
-        *Value = value;
-        return STATUS_SUCCESS;
-    #elif defined XPF_PLATFORM_LINUX_UM
-        *Value = strtol(String, nullptr, Base);
-        return STATUS_SUCCESS;
-    #else
-        #error Unknown Platform
-    #endif
-}
-
-_Must_inspect_result_
 NTSTATUS
 XPF_API
 xpf::ApiCaptureStackBacktrace(
@@ -712,7 +662,7 @@ xpf::ApiCaptureStackBacktrace(
     XPF_MAX_DISPATCH_LEVEL();
 
     /* Sanity checks. */
-    if (nullptr == Frames || 0 == Count || nullptr == CapturedFrames)
+    if ((nullptr == Frames) || (0 == Count) || (nullptr == CapturedFrames))
     {
         return STATUS_INVALID_PARAMETER;
     }

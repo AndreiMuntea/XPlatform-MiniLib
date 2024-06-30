@@ -963,24 +963,6 @@ ApiIsHexDigit(
 ) noexcept(true);
 
 /**
- * @brief Converts an ansi string to a number.
- *
- * @param[in]  String - The string to be converted.
- * @param[in]  Base   - The expected base in which the number is represented.
- * @param[out] Value  - The resulted value.
- *
- * @return A proper ntstatus error code.
- */
-_Must_inspect_result_
-NTSTATUS
-XPF_API
-ApiStringToValue(
-    _In_ const char* String,
-    _In_ uint8_t Base,
-    _Out_ int32_t* Value
-) noexcept(true);
-
-/**
  * @brief   Captures a backtrace for the calling thread, in the
  *          array pointed to by Frames. A stack backtrace is the series of
  *          currently active function calls for the thread.

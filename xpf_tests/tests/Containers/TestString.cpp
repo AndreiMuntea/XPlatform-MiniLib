@@ -851,8 +851,8 @@ XPF_TEST_SCENARIO(TestStringConversion, TestUtf8ToWideAndBack)
     XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
     XPF_TEST_EXPECT_TRUE(utf8Str.View().Equals("ab 12 x y z", true));
 
-    const xpf::StringView<wchar_t> wideInput = L"quick \u7C21\u0642\u03a0 fox";
+    const xpf::StringView<wchar_t> wideInput = L"quick z\u00df\u6c34\U0001d10b fox";
     XPF_TEST_EXPECT_TRUE(NT_SUCCESS(xpf::StringConversion::WideToUTF8(wideInput, utf8Str)));
     XPF_TEST_EXPECT_TRUE(NT_SUCCESS(xpf::StringConversion::UTF8ToWide(utf8Str.View(), wideStr)));
-    XPF_TEST_EXPECT_TRUE(wideStr.View().Equals(L"quick \u7C21\u0642\u03a0 fox", true));
+    XPF_TEST_EXPECT_TRUE(wideStr.View().Equals(L"quick z\u00df\u6c34\U0001d10b fox", true));
 }

@@ -178,22 +178,7 @@ xpf::StringConversion::WideToUTF8(
     //
     // Now we do the actual conversion.
     //
-    #if defined XPF_PLATFORM_WIN_UM
-        {
-            const int cchOutSize = ::WideCharToMultiByte(CP_UTF8,
-                                                         WC_ERR_INVALID_CHARS,
-                                                         Input.Buffer(),
-                                                         static_cast<int>(inSizeInBytes / sizeof(wchar_t)),
-                                                         static_cast<LPSTR>(outBuffer.GetBuffer()),
-                                                         static_cast<int>(outBuffer.GetSize()),
-                                                         NULL,
-                                                         NULL);
-            if (0 >= cchOutSize)
-            {
-                return STATUS_FAIL_CHECK;
-            }
-        }
-    #elif defined XPF_PLATFORM_WIN_KM
+    #if defined XPF_PLATFORM_WIN_UM || defined XPF_PLATFORM_WIN_KM
         {
             //
             // This API returns the required size in number of bytes.
@@ -329,23 +314,7 @@ xpf::StringConversion::UTF8ToWide(
     //
     // Now we do the actual conversion.
     //
-    #if defined XPF_PLATFORM_WIN_UM
-        {
-            //
-            // This API returns the required size in number of characters.
-            //
-            const int cchOutSize = ::MultiByteToWideChar(CP_UTF8,
-                                                         MB_ERR_INVALID_CHARS,
-                                                         Input.Buffer(),
-                                                         static_cast<int>(inSizeInBytes / sizeof(char)),
-                                                         static_cast<LPWSTR>(outBuffer.GetBuffer()),
-                                                         static_cast<int>(outBuffer.GetSize() / sizeof(wchar_t)));
-            if (0 >= cchOutSize)
-            {
-                return STATUS_FAIL_CHECK;
-            }
-        }
-    #elif defined XPF_PLATFORM_WIN_KM
+    #if defined XPF_PLATFORM_WIN_UM || defined XPF_PLATFORM_WIN_KM
         {
             //
             // This API returns the required size in number of bytes.

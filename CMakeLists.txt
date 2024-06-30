@@ -20,17 +20,26 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     else()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
     endif()
+
+    # Remove any existing exception handling flags
+    string(REGEX REPLACE "/EH[sac]+" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    string(REGEX REPLACE "/GX"       "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+    string(REGEX REPLACE "/GR"       "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+
     # Set the compile options
     add_compile_options("/WX"           # Treat warning as errors
-                        "/GS"           # Buffer security checks
                         "/Gy"           # Function level linking
+                        "/GS-"          # Disable security checks
+                        "/GR-"          # Disable RTTI
                         "/Os")          # Favor size
     # Set the link options
-    add_link_options("/INCREMENTAL:YES"     # Opt in of incremental linking.
-                     "/LTCG:INCREMENTAL"    # Generate code during link time.
-                     "/CETCOMPAT"           # Binary is CET Shadow Stack compatible.
+    add_link_options("/CETCOMPAT"           # Binary is CET Shadow Stack compatible.
                      "/OPT:REF"             # Remove unreferenced functions and data.
                      "/OPT:ICF=5")          # Identical COMDAT folding with 5 passes.
+                   
+    # Linker options
+    add_link_options("ntdll.lib"      # Link with ntdll.lib
+                     "Ws2_32.lib")    # Link with ws32
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     # Compile options
     add_compile_options("-Wall"                             # Enable standard set of warnings
