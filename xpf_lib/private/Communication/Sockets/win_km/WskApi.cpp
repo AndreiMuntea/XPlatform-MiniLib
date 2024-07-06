@@ -1485,6 +1485,27 @@ typedef struct _SCH_CREDENTIALS
 } SCH_CREDENTIALS, *PSCH_CREDENTIALS;
 
 ///
+/// https://learn.microsoft.com/en-us/windows/win32/api/schannel/ns-schannel-schannel_cred
+/// The SCHANNEL_CRED structure is deprecated. You should use SCH_CREDENTIALS instead.
+///
+typedef struct _SCHANNEL_CRED {
+    DWORD             dwVersion;
+    DWORD             cCreds;
+    PVOID*            paCred;
+    void*             hRootStore;
+    DWORD             cMappers;
+    struct _HMAPPER** aphMappers;
+    DWORD             cSupportedAlgs;
+    void*             palgSupportedAlgs;
+    DWORD             grbitEnabledProtocols;
+    DWORD             dwMinimumCipherStrength;
+    DWORD             dwMaximumCipherStrength;
+    DWORD             dwSessionLifespan;
+    DWORD             dwFlags;
+    DWORD             dwCredFormat;
+} SCHANNEL_CRED, *PSCHANNEL_CRED;
+
+///
 /// Definitions in schannel.h
 ///
 
@@ -1535,6 +1556,21 @@ typedef struct _SCH_CREDENTIALS
 #define SEC_E_INCOMPLETE_MESSAGE        ((HRESULT)(0x80090318L))
 #define SEC_I_CONTINUE_NEEDED           ((HRESULT)(0x00090312L))
 #define SEC_I_INCOMPLETE_CREDENTIALS    ((HRESULT)(0x00090320L))
+
+#define SP_PROT_TLS1_1_SERVER           0x00000100
+#define SP_PROT_TLS1_1_CLIENT           0x00000200
+#define SP_PROT_TLS1_1                  (SP_PROT_TLS1_1_SERVER | \
+                                         SP_PROT_TLS1_1_CLIENT)
+
+#define SP_PROT_TLS1_2_SERVER           0x00000400
+#define SP_PROT_TLS1_2_CLIENT           0x00000800
+#define SP_PROT_TLS1_2                  (SP_PROT_TLS1_2_SERVER | \
+                                         SP_PROT_TLS1_2_CLIENT)
+
+#define SP_PROT_TLS1_3_SERVER           0x00001000
+#define SP_PROT_TLS1_3_CLIENT           0x00002000
+#define SP_PROT_TLS1_3                  (SP_PROT_TLS1_3_SERVER | \
+                                         SP_PROT_TLS1_3_CLIENT)
 
 /*******************************************************************************************
  *                              SECURE SOCKET HELPERS                                      *
@@ -1967,11 +2003,16 @@ xpf::WskCreateTlsSocketContext(
     SECURITY_STATUS securityStatus = SEC_E_OK;
     bool isAttached = false;
     KAPC_STATE state = { 0 };
+    RTL_OSVERSIONINFOW version = { 0 };
 
+    UNICODE_STRING schannelName = RTL_CONSTANT_STRING(SCHANNEL_NAME_W);
     WskSocketTlsContext* tlsContext = nullptr;
+
+    PVOID usedCredentials = nullptr;
+    SCHANNEL_CRED legacyCredentials = { 0 };
+
     SCH_CREDENTIALS credentials = { 0 };
     TLS_PARAMETERS tlsParameters[1] = { 0 };
-    UNICODE_STRING schannelName = RTL_CONSTANT_STRING(SCHANNEL_NAME_W);
 
     *TlsContext = nullptr;
 
@@ -2014,12 +2055,31 @@ xpf::WskCreateTlsSocketContext(
     credentials.cTlsParameters = ARRAYSIZE(tlsParameters);  /* Number of tls parameters. */
     credentials.pTlsParameters = tlsParameters;             /* TlsParameters. */
 
+    legacyCredentials.dwVersion = SCHANNEL_CRED_VERSION;
+    legacyCredentials.grbitEnabledProtocols = SP_PROT_TLS1_2;        /* Disallow newer TLS versions - might not have KBs. */
+    legacyCredentials.dwFlags = SCH_USE_STRONG_CRYPTO |              /* Disable known weak cryptographic algorithms*/
+                                SCH_CRED_AUTO_CRED_VALIDATION |      /* Client only. Less work for us :D */
+                                SCH_CRED_NO_DEFAULT_CREDS;           /* Client only. Don't supply certificate chain. */
+
+    /* By default we prefer the newer variant of credentials. */
+    usedCredentials = &credentials;
+    tlsContext->UsesOlderTls = false;
+
+    /* On older os'es we need to use legacy variant of representing credentials. */
+    version.dwOSVersionInfoSize = sizeof(version);
+    status = ::RtlGetVersion(&version);
+    if (!NT_SUCCESS(status) || version.dwMajorVersion < 10)
+    {
+        usedCredentials = &legacyCredentials;
+        tlsContext->UsesOlderTls = true;
+    }
+
     securityStatus = XpfSecAcquireCredentialsHandle(SocketApiProvider,
                                                     NULL,                           /* We're using Schannel - must be NULL  */                      // NOLINT(*)
                                                     &schannelName,                  /* Kernel mode callers must specify SCHANNEL_NAME. */           // NOLINT(*)
                                                     SECPKG_CRED_OUTBOUND,           /* Local client preparing outgoing token. */                    // NOLINT(*)
                                                     NULL,                           /* When using Schannel SSP this must be NULL. */                // NOLINT(*)
-                                                    &credentials,                   /* Package-specific data SCH_CREDENTIALS */                     // NOLINT(*)
+                                                    usedCredentials,                /* Package-specific data SCH_CREDENTIALS */                     // NOLINT(*)
                                                     NULL,                           /* This parameter is not used and should be set to NULL. */     // NOLINT(*)
                                                     NULL,                           /* This parameter is not used and should be set to NULL. */     // NOLINT(*)
                                                     &tlsContext->CredentialsHandle, /* Receive the credential handle. */                            // NOLINT(*)
@@ -2033,7 +2093,7 @@ xpf::WskCreateTlsSocketContext(
     //
     // And allocate a large enough buffer to hold the data.
     //
-    status = tlsContext->TlsBuffer.Resize(PAGE_SIZE);
+    status = tlsContext->TlsBuffer.Resize(PAGE_SIZE * 5);
     if (!NT_SUCCESS(status))
     {
         goto CleanUp;
@@ -2335,7 +2395,7 @@ xpf::WskTlsSocketHandshake(
             if (receivedSize >= TlsContext->TlsBuffer.GetSize())
             {
                 size_t finalSize = 0;
-                if (!xpf::ApiNumbersSafeAdd(TlsContext->TlsBuffer.GetSize(), static_cast<size_t>(PAGE_SIZE), &finalSize))
+                if (!xpf::ApiNumbersSafeAdd(TlsContext->TlsBuffer.GetSize(), static_cast<size_t>(PAGE_SIZE * 5), &finalSize))
                 {
                     status = STATUS_INTEGER_OVERFLOW;
                     break;

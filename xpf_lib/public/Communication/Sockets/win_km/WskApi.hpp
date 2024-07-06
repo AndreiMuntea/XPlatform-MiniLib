@@ -59,6 +59,7 @@ struct WskSocketTlsContext
     CtxtHandle ContextHandle = { 0 };
     SecPkgContext_StreamSizes StreamSizes = { 0 };
     xpf::Buffer TlsBuffer{ XPF_WSK_API_ALLOCATOR };
+    bool UsesOlderTls = false;
 
     //
     // These are used when doing receive operations.
