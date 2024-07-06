@@ -49,8 +49,56 @@ RtlWalkFrameChain(
 typedef enum _XPF_SYSTEM_INFORMATION_CLASS
 {
     XpfSystemBasicInformation = 0x0,
+    XpfSystemProcessInformation = 0x05,     // XPF_SYSTEM_PROCESS_INFORMATION
+    XpfSystemModuleInformation = 0x0B,      // XPF_RTL_PROCESS_MODULES
     XpfSystemRegisterFirmwareTableInformationHandler = 0x4B,
 } XPF_SYSTEM_INFORMATION_CLASS;
+
+typedef struct _XPF_RTL_PROCESS_MODULE_INFORMATION
+{
+    PVOID  Section;
+    PVOID  MappedBase;
+    PVOID  ImageBase;
+    UINT32 ImageSize;
+    UINT32 Flags;
+    UINT16 LoadOrderIndex;
+    UINT16 InitOrderIndex;
+    UINT16 LoadCount;
+    UINT16 OffsetToFileName;
+    CHAR   FullPathName[256];
+} XPF_RTL_PROCESS_MODULE_INFORMATION;
+
+typedef struct _XPF_RTL_PROCESS_MODULES
+{
+    UINT32 NumberOfModules;
+    XPF_RTL_PROCESS_MODULE_INFORMATION Modules[1];
+} XPF_RTL_PROCESS_MODULES;
+
+typedef struct _XPF_SYSTEM_PROCESS_INFORMATION {
+    UINT32 NextEntryOffset;
+    UINT32 NumberOfThreads;
+    UINT8 Reserved1[48];
+    UNICODE_STRING ImageName;
+    KPRIORITY BasePriority;
+    HANDLE UniqueProcessId;
+    PVOID  Reserved2;
+    UINT32 HandleCount;
+    UINT32 SessionId;
+    PVOID  Reserved3;
+    SIZE_T PeakVirtualSize;
+    SIZE_T VirtualSize;
+    UINT32 Reserved4;
+    SIZE_T PeakWorkingSetSize;
+    SIZE_T WorkingSetSize;
+    PVOID  Reserved5;
+    SIZE_T QuotaPagedPoolUsage;
+    PVOID  Reserved6;
+    SIZE_T QuotaNonPagedPoolUsage;
+    SIZE_T PagefileUsage;
+    SIZE_T PeakPagefileUsage;
+    SIZE_T PrivatePageCount;
+    LARGE_INTEGER Reserved7[6];
+} XPF_SYSTEM_PROCESS_INFORMATION;
 
 NTSYSAPI NTSTATUS NTAPI
 ZwSetSystemInformation(
@@ -59,6 +107,31 @@ ZwSetSystemInformation(
     _In_ ULONG SystemInformationLength
 );
 
+NTSYSAPI NTSTATUS NTAPI
+ZwQuerySystemInformation(
+    _In_ XPF_SYSTEM_INFORMATION_CLASS SystemInformationClass,
+    _Inout_ PVOID SystemInformation,
+    _In_ ULONG SystemInformationLength,
+    _Out_opt_ PULONG ReturnLength
+);
+
+//
+// -------------------------------------------------------------------------------------------------------------------
+// | ****************************************************************************************************************|
+// |                         Process Information                                                                     |
+// | ****************************************************************************************************************|
+// -------------------------------------------------------------------------------------------------------------------
+//
+
+
+NTSYSAPI NTSTATUS NTAPI
+ZwQueryInformationProcess(
+    _In_ HANDLE ProcessHandle,
+    _In_ PROCESSINFOCLASS ProcessInformationClass,
+    _Out_writes_bytes_(ProcessInformationLength) PVOID ProcessInformation,
+    _In_ ULONG ProcessInformationLength,
+    _Out_opt_ PULONG ReturnLength
+);
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -385,6 +458,20 @@ RtlImageDirectoryEntryToData(
     _In_ BOOLEAN MappedAsImage,
     _In_ USHORT DirectoryEntry,
     _Out_ PULONG Size
+);
+
+
+//
+// -------------------------------------------------------------------------------------------------------------------
+// | ****************************************************************************************************************|
+// |                         PsGetProcessImageFileName                                                               |
+// | ****************************************************************************************************************|
+// -------------------------------------------------------------------------------------------------------------------
+//
+
+NTSYSAPI PCHAR NTAPI
+PsGetProcessImageFileName(
+    _In_ PEPROCESS Process
 );
 
 #endif  // XPF_PLATFORM_WIN_KM

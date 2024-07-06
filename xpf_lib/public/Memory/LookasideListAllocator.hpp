@@ -69,11 +69,11 @@ LookasideListAllocator(
 
     //
     // Now let's see how many elements we can store. Compute this based on element size.
-    // We don't want to exceed approximatively 1 mb in one allocator.
+    // We don't want to exceed approximatively 10 mb in one allocator.
     // If the allocation is somehow bigger than this limit, we'll store 5 elements in our lookaside list.
     // These numbers can be changed if we notice we have a problem.
     //
-    const size_t maxElements = size_t{ 1048576 } / this->m_ElementSize;
+    const size_t maxElements = size_t{ 1048576 * 10 } / this->m_ElementSize;
     this->m_MaxElements = (maxElements < 5) ? 5
                                             : maxElements;
     this->m_CurrentElements = 0;
