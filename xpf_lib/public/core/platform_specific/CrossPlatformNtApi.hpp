@@ -392,9 +392,9 @@ typedef enum _KAPC_ENVIRONMENT
 } KAPC_ENVIRONMENT;
 
 typedef VOID (NTAPI* PKNORMAL_ROUTINE)(
-    _In_ PVOID NormalContext,
-    _In_ PVOID SystemArgument1,
-    _In_ PVOID SystemArgument2
+    _In_opt_ PVOID NormalContext,
+    _In_opt_ PVOID SystemArgument1,
+    _In_opt_ PVOID SystemArgument2
 );
 
 typedef VOID (NTAPI* PKKERNEL_ROUTINE)(
