@@ -40,6 +40,7 @@ struct SocketInternal
 {
     bool IsListeningSocket = false;
     bool IsTlsSocket = false;
+    bool IsTlsSocketValidationSkipped = false;
 
     #if defined XPF_PLATFORM_WIN_UM
         SOCKET Socket = INVALID_SOCKET;
@@ -292,6 +293,7 @@ xpf::BerkeleySocket::CreateSocket(
     _In_ int Protocol,
     _In_ bool IsListeningSocket,
     _In_ bool IsTlsSocket,
+    _In_ bool TlsSocketSkipValidation,
     _Out_ xpf::BerkeleySocket::Socket* CreatedSocket
 ) noexcept(true)
 {
@@ -326,6 +328,7 @@ xpf::BerkeleySocket::CreateSocket(
     //
     newSocket->IsListeningSocket = IsListeningSocket;
     newSocket->IsTlsSocket = IsTlsSocket;
+    newSocket->IsTlsSocketValidationSkipped = TlsSocketSkipValidation;
 
     //
     // And finally create the socket
@@ -351,6 +354,7 @@ xpf::BerkeleySocket::CreateSocket(
         if (NT_SUCCESS(status) && newSocket->IsTlsSocket)
         {
             status = xpf::WskCreateTlsSocketContext(&apiProvider->WskProvider,
+                                                    newSocket->IsTlsSocketValidationSkipped,
                                                     &newSocket->TlsSocketContext);
             if (!NT_SUCCESS(status))
             {

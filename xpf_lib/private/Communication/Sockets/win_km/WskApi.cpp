@@ -390,7 +390,7 @@ xpf::WskInitializeCompletionContext(
     // And set the completion routine.
     //
     ::IoSetCompletionRoutine(Context->Irp,
-                             XpfWskCompletionRoutine,
+                             (PIO_COMPLETION_ROUTINE)XpfWskCompletionRoutine,
                              &Context->CompletionEvent,
                              TRUE,
                              TRUE,
@@ -1555,6 +1555,7 @@ typedef struct _SCHANNEL_CRED {
 #define SEC_E_TARGET_UNKNOWN            ((HRESULT)(0x80090303L))
 #define SEC_E_INCOMPLETE_MESSAGE        ((HRESULT)(0x80090318L))
 #define SEC_I_CONTINUE_NEEDED           ((HRESULT)(0x00090312L))
+#define SEC_I_CONTEXT_EXPIRED           ((HRESULT)(0x00090317L))
 #define SEC_I_INCOMPLETE_CREDENTIALS    ((HRESULT)(0x00090320L))
 
 #define SP_PROT_TLS1_1_SERVER           0x00000100
@@ -1989,6 +1990,7 @@ _Must_inspect_result_
 NTSTATUS XPF_API
 xpf::WskCreateTlsSocketContext(
     _In_ WskSocketProvider* SocketApiProvider,
+    _In_ bool TlsSkipCertificateValidation,
     _Out_ WskSocketTlsContext** TlsContext
 ) noexcept(true)
 {
@@ -2048,7 +2050,7 @@ xpf::WskCreateTlsSocketContext(
     credentials.cMappers = 0;                               /* Reserved. */
     credentials.aphMappers = NULL;                          /* Reserved. */
     credentials.dwSessionLifespan = 0;                      /* Default cache lifespan (10 hours). */
-    credentials.dwFlags = SCH_USE_STRONG_CRYPTO |           /* Disable known weak cryptographic algorithms*/
+    credentials.dwFlags = SCH_USE_STRONG_CRYPTO |            /* Disable known weak cryptographic algorithms*/
                           SCH_CRED_AUTO_CRED_VALIDATION |   /* Client only. Less work for us :D */
                           SCH_CRED_NO_DEFAULT_CREDS |       /* Client only. Don't supply certificate chain. */
                           SCH_CRED_REVOCATION_CHECK_CHAIN;  /* Check all certificates if they were revoked.*/
@@ -2060,6 +2062,13 @@ xpf::WskCreateTlsSocketContext(
     legacyCredentials.dwFlags = SCH_USE_STRONG_CRYPTO |              /* Disable known weak cryptographic algorithms*/
                                 SCH_CRED_AUTO_CRED_VALIDATION |      /* Client only. Less work for us :D */
                                 SCH_CRED_NO_DEFAULT_CREDS;           /* Client only. Don't supply certificate chain. */
+
+    /* If we need to skip the certificate validation, we elminate the flags. */
+    if (TlsSkipCertificateValidation)
+    {
+        credentials.dwFlags = SCH_USE_STRONG_CRYPTO;
+        legacyCredentials.dwFlags = SCH_USE_STRONG_CRYPTO;
+    }
 
     /* By default we prefer the newer variant of credentials. */
     usedCredentials = &credentials;

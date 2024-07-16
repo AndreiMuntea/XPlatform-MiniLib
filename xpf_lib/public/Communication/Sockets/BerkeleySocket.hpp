@@ -159,6 +159,9 @@ using Socket = void*;
  * @param[in] IsTlsSocket       - true if the socket should use TLS,
  *                                false otherwise.
  *
+ * @param[in] TlsSocketSkipValidation - true if the tls socket validation should be skipped,
+ *                                      false otherwise.
+ *
  * @param[out] CreatedSocket    - The newly created socket.
  *
  * @return a proper NTSTATUS error code.
@@ -174,6 +177,7 @@ CreateSocket(
     _In_ int Protocol,
     _In_ bool IsListeningSocket,
     _In_ bool IsTlsSocket,
+    _In_ bool TlsSocketSkipValidation,
     _Out_ xpf::BerkeleySocket::Socket* CreatedSocket
 ) noexcept(true);
 

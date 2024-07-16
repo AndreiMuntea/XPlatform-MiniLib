@@ -26,6 +26,7 @@ struct ClientSocketData
 {
     bool IsConnected = false;
     bool IsTlsSocket = false;
+    bool ShouldSkipTlsSocketValidation = false;
 
     xpf::String<char> Ip;
     xpf::String<char> Port;
@@ -42,7 +43,8 @@ XPF_API
 xpf::ClientSocket::CreateClientSocketData(
     _In_ _Const_ const xpf::StringView<char>& Ip,
     _In_ _Const_ const xpf::StringView<char>& Port,
-    _In_ bool IsTlsSocket
+    _In_ bool IsTlsSocket,
+    _In_ bool SkipTlsSocketValidation
 ) noexcept(true)
 {
     XPF_MAX_PASSIVE_LEVEL();
@@ -62,6 +64,7 @@ xpf::ClientSocket::CreateClientSocketData(
     xpf::MemoryAllocator::Construct(data);
     data->IsConnected = false;
     data->IsTlsSocket = IsTlsSocket;
+    data->ShouldSkipTlsSocketValidation = SkipTlsSocketValidation;
 
     //
     // Store data about the connection.
@@ -221,6 +224,7 @@ xpf::ClientSocket::Connect(
                                                             crt->ai_protocol,
                                                             false,
                                                             data->IsTlsSocket,
+                                                            data->ShouldSkipTlsSocketValidation,
                                                             &data->ServerSocket);
         if (!NT_SUCCESS(status))
         {

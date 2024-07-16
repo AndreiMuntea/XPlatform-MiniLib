@@ -146,7 +146,7 @@ Allocate(
     else
     {
         block = (this->m_IsCriticalAllocator) ? xpf::CriticalMemoryAllocator::AllocateMemory(requiredBytes)
-                                                : xpf::MemoryAllocator::AllocateMemory(requiredBytes);
+                                              : xpf::MemoryAllocator::AllocateMemory(requiredBytes);
     }
 
     /* Prepend the header. */

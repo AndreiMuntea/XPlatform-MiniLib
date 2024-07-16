@@ -540,7 +540,17 @@ xpf::http::InitiateHttpDownload(
 
     /* Start with the provided URL. Will change if redirects are required. */
     xpf::StringView<char> url = Url;
-    xpf::http::UrlInfo urlInfo;
+    xpf::http::UrlInfo urlInfo
+    {
+        .Url{ ParsedResponse->ResponseBuffer.GetAllocator() },
+        .Scheme{ ParsedResponse->ResponseBuffer.GetAllocator() },
+        .Authority{ ParsedResponse->ResponseBuffer.GetAllocator() },
+        .Domain{ ParsedResponse->ResponseBuffer.GetAllocator() },
+        .Port{ ParsedResponse->ResponseBuffer.GetAllocator() },
+        .Path{ ParsedResponse->ResponseBuffer.GetAllocator() },
+        .Parameters{ ParsedResponse->ResponseBuffer.GetAllocator() },
+        .Anchor{ ParsedResponse->ResponseBuffer.GetAllocator() },
+    };
 
     /* The client socket we get during the connection. */
     xpf::SharedPointer<xpf::ClientSocket> clientSocket;
@@ -578,7 +588,7 @@ xpf::http::InitiateHttpDownload(
         }
 
         /* Now build the http request. */
-        xpf::String<char> request;
+        xpf::String<char> request{ ParsedResponse->ResponseBuffer.GetAllocator() };
         status = xpf::http::BuildHttpRequest(urlInfo.Domain.View(),
                                              "GET",
                                              urlInfo.Path.View(),

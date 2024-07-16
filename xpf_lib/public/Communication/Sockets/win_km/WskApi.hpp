@@ -240,6 +240,7 @@ NTSTATUS
 XPF_API
 WskCreateTlsSocketContext(
     _In_ WskSocketProvider* SocketApiProvider,
+    _In_ bool TlsSkipCertificateValidation,
     _Out_ WskSocketTlsContext** TlsContext
 ) noexcept(true);
 

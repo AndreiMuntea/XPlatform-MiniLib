@@ -377,7 +377,7 @@ xpf::ApiCurrentTime(
 
         return static_cast<uint64_t>(largeInteger.QuadPart);
     #elif defined XPF_PLATFORM_WIN_UM
-    
+
         LARGE_INTEGER largeInteger;
         xpf::ApiZeroMemory(&largeInteger, sizeof(largeInteger));
 
@@ -460,7 +460,7 @@ xpf::ApiCharToLower(
         return static_cast<wchar_t>(towlower(static_cast<wint_t>(Character)));
     #else
         #error Unknown Platform
-    #endif 
+    #endif
 }
 
 wchar_t
@@ -496,8 +496,7 @@ xpf::ApiCharToUpper(
         return static_cast<wchar_t>(towupper(static_cast<wint_t>(Character)));
     #else
         #error Unknown Platform
-    #endif 
-
+    #endif
 }
 
 bool
@@ -544,15 +543,15 @@ xpf::ApiRandomUuid(
         newUuid.Data2 = LOWORD(::RtlRandomEx(&seed32));
         newUuid.Data3 = LOWORD(::RtlRandomEx(&seed32));
 
-        newUuid.Data4[0] = LOBYTE(::RtlRandomEx(&seed32));
-        newUuid.Data4[1] = LOBYTE(::RtlRandomEx(&seed32));
-        newUuid.Data4[2] = LOBYTE(::RtlRandomEx(&seed32));
-        newUuid.Data4[3] = LOBYTE(::RtlRandomEx(&seed32));
+        newUuid.Data4[0] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
+        newUuid.Data4[1] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
+        newUuid.Data4[2] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
+        newUuid.Data4[3] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
 
-        newUuid.Data4[4] = LOBYTE(::RtlRandomEx(&seed32));
-        newUuid.Data4[5] = LOBYTE(::RtlRandomEx(&seed32));
-        newUuid.Data4[6] = LOBYTE(::RtlRandomEx(&seed32));
-        newUuid.Data4[7] = LOBYTE(::RtlRandomEx(&seed32));
+        newUuid.Data4[4] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
+        newUuid.Data4[5] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
+        newUuid.Data4[6] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
+        newUuid.Data4[7] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
 
         status = STATUS_SUCCESS;
 
@@ -569,15 +568,17 @@ xpf::ApiRandomUuid(
             newUuid.Data2 = LOWORD(::RtlRandomEx(&seed32));
             newUuid.Data3 = LOWORD(::RtlRandomEx(&seed32));
 
-            newUuid.Data4[0] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
-            newUuid.Data4[1] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
-            newUuid.Data4[2] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
-            newUuid.Data4[3] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
+            newUuid.Data4[0] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
+            newUuid.Data4[1] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
+            newUuid.Data4[2] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
+            newUuid.Data4[3] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
 
-            newUuid.Data4[4] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
-            newUuid.Data4[5] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
-            newUuid.Data4[6] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
-            newUuid.Data4[7] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
+            newUuid.Data4[4] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
+            newUuid.Data4[5] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
+            newUuid.Data4[6] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
+            newUuid.Data4[7] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
+
+            status = STATUS_SUCCESS;
         }
     #elif defined XPF_PLATFORM_LINUX_UM
         uuid_generate_random(newUuid);
@@ -611,7 +612,7 @@ xpf::ApiRandomUuid(
                 ++i;
             }
 
-            /* Allowo some time. */
+            /* Allow some time. */
             xpf::ApiYieldProcesor();
             xpf::ApiCompilerBarrier();
         }

@@ -55,16 +55,23 @@ XPF_CLASS_COPY_MOVE_BEHAVIOR(ClientSocket, delete);
  *
  * @param[in] IsTlsSocket - true if the socket should use TLS,
  *                          false otherwise.
+ *
+ * @param[in] SkipTlsSocketValidation - true if the tls socket validation should
+ *                                      be skipped, false otherwise.
  */
 ClientSocket(
     _In_ _Const_ const xpf::StringView<char>& Ip,
     _In_ _Const_ const xpf::StringView<char>& Port,
-    _In_ bool IsTlsSocket = false
+    _In_ bool IsTlsSocket = false,
+    _In_ bool SkipTlsSocketValidation = false
 ) noexcept(true) : xpf::IClient()
 {
     if (NT_SUCCESS(xpf::ReadWriteLock::Create(&this->m_ClientLock)))
     {
-        this->m_ClientSocketData = this->CreateClientSocketData(Ip, Port, IsTlsSocket);
+        this->m_ClientSocketData = this->CreateClientSocketData(Ip,
+                                                                Port,
+                                                                IsTlsSocket,
+                                                                SkipTlsSocketValidation);
     }
 }
 
@@ -156,6 +163,9 @@ ReceiveData(
  * @param[in] IsTlsSocket - true if the socket should use TLS,
  *                          false otherwise.
  *
+ * @param[in] SkipTlsSocketValidation - true if the tls socket validation should
+ *                                      be skipped, false otherwise.
+ *
  * @return The client Socket Data, or nullptr on failure.
  */
 void*
@@ -163,7 +173,8 @@ XPF_API
 CreateClientSocketData(
     _In_ _Const_ const xpf::StringView<char>& Ip,
     _In_ _Const_ const xpf::StringView<char>& Port,
-    _In_ bool IsTlsSocket
+    _In_ bool IsTlsSocket,
+    _In_ bool SkipTlsSocketValidation
 ) noexcept(true);
 
 /**
