@@ -41,6 +41,193 @@ RtlWalkFrameChain(
 //
 // -------------------------------------------------------------------------------------------------------------------
 // | ****************************************************************************************************************|
+// |                         PEB Information                                                                         |
+// | ****************************************************************************************************************|
+// -------------------------------------------------------------------------------------------------------------------
+//
+
+//
+// Pointer size is 32 bits for wow
+//
+#define XPF_WOW64_POINTER(Type)             ULONG
+
+//
+// Required for WoW
+//
+typedef struct _XPF_UNICODE_STRING32
+{
+    USHORT   Length;
+    USHORT   MaximumLength;
+    ULONG    Buffer;
+} XPF_UNICODE_STRING32;
+
+//
+// Required for WoW
+//
+typedef struct _XPF_LIST_ENTRY32
+{
+    ULONG Flink;
+    ULONG Blink;
+} XPF_LIST_ENTRY32;
+
+//
+// ntdll!_LDR_DATA_TABLE_ENTRY
+//      +0x000 InLoadOrderLinks             : _LIST_ENTRY
+//      +0x010 InMemoryOrderLinks           : _LIST_ENTRY
+//      +0x020 InInitializationOrderLinks   : _LIST_ENTRY
+//      +0x030 DllBase                      : Ptr64 Void
+//      +0x038 EntryPoint                   : Ptr64 Void
+//      +0x040 SizeOfImage                  : Uint4B
+//      +0x048 FullDllName                  : _UNICODE_STRING
+//      <...> SNIP <...>
+//
+typedef struct _XPF_LDR_DATA_TABLE_ENTRY_NATIVE
+{
+    /* 0x000 */   LIST_ENTRY      InLoadOrderLinks;
+    /* 0x010 */   LIST_ENTRY      InMemoryOrderLinks;
+    /* 0x020 */   LIST_ENTRY      InInitializationOrderLinks;
+    /* 0x030 */   PVOID           DllBase;
+    /* 0x038 */   PVOID           EntryPoint;
+    /* 0x040 */   ULONG           SizeOfImage;
+    /* 0x048 */   UNICODE_STRING  FullDllName;
+} XPF_LDR_DATA_TABLE_ENTRY_NATIVE;
+
+//
+// ntdll!_LDR_DATA_TABLE_ENTRY
+//      +0x000 InLoadOrderLinks                 : _LIST_ENTRY
+//      +0x008 InMemoryOrderLinks               : _LIST_ENTRY
+//      +0x010 InInitializationOrderLinks       : _LIST_ENTRY
+//      +0x018 DllBase                          : Ptr32 Void
+//      +0x01c EntryPoint                       : Ptr32 Void
+//      +0x020 SizeOfImage                      : Uint4B
+//      +0x024 FullDllName                      : _UNICODE_STRING
+//      <...> SNIP <...>
+//
+typedef struct _XPF_LDR_DATA_TABLE_ENTRY32
+{
+    /* 0x000 */   XPF_LIST_ENTRY32                   InLoadOrderLinks;
+    /* 0x008 */   XPF_LIST_ENTRY32                   InMemoryOrderLinks;
+    /* 0x010 */   XPF_LIST_ENTRY32                   InInitializationOrderLinks;
+    /* 0x018 */   XPF_WOW64_POINTER(PVOID)           DllBase;
+    /* 0x01c */   XPF_WOW64_POINTER(PVOID)           EntryPoint;
+    /* 0x020 */   ULONG                              SizeOfImage;
+    /* 0x024 */   XPF_UNICODE_STRING32               FullDllName;
+} XPF_LDR_DATA_TABLE_ENTRY32;
+
+//
+// ntdll!_PEB_LDR_DATA
+//      +0x000 Length                               : Uint4B
+//      +0x004 Initialized                          : UChar
+//      +0x008 SsHandle                             : Ptr64 Void
+//      +0x010 InLoadOrderModuleList                : _LIST_ENTRY
+//      +0x020 InMemoryOrderModuleList              : _LIST_ENTRY
+//      +0x030 InInitializationOrderModuleList      : _LIST_ENTRY
+//      +0x040 EntryInProgress                      : Ptr64 Void
+//      +0x048 ShutdownInProgress                   : UChar
+//      +0x050 ShutdownThreadId                     : Ptr64 Void
+//
+typedef struct _XPF_PEB_LDR_DATA_NATIVE
+{
+    /* 0x000 */   ULONG           Length;
+    /* 0x004 */   BOOLEAN         Initialized;
+    /* 0x008 */   HANDLE          SsHandle;
+    /* 0x010 */   LIST_ENTRY      InLoadOrderModuleList;
+    /* 0x020 */   LIST_ENTRY      InMemoryOrderModuleList;
+    /* 0x030 */   LIST_ENTRY      InInitializationOrderModuleList;
+    /* 0x040 */   PVOID           EntryInProgress;
+    /* 0x048 */   BOOLEAN         ShutdownInProgress;
+    /* 0x050 */   HANDLE          ShutdownThreadId;
+} XPF_PEB_LDR_DATA_NATIVE;
+
+//
+// dt ntdll!_PEB_LDR_DATA
+//         +0x000 Length                            : Uint4B
+//         +0x004 Initialized                       : UChar
+//         +0x008 SsHandle                          : Ptr32 Void
+//         +0x00c InLoadOrderModuleList             : _LIST_ENTRY
+//         +0x014 InMemoryOrderModuleList           : _LIST_ENTRY
+//         +0x01c InInitializationOrderModuleList   : _LIST_ENTRY
+//         +0x024 EntryInProgress                   : Ptr32 Void
+//         +0x028 ShutdownInProgress                : UChar
+//         +0x02c ShutdownThreadId                  : Ptr32 Void
+//
+typedef struct _XPF_PEB_LDR_DATA32
+{
+    /* 0x000 */   ULONG                         Length;
+    /* 0x004 */   BOOLEAN                       Initialized;
+    /* 0x008 */   XPF_WOW64_POINTER(HANDLE)     SsHandle;
+    /* 0x00C */   XPF_LIST_ENTRY32              InLoadOrderModuleList;
+    /* 0x014 */   XPF_LIST_ENTRY32              InMemoryOrderModuleList;
+    /* 0x01C */   XPF_LIST_ENTRY32              InInitializationOrderModuleList;
+    /* 0x024 */   XPF_WOW64_POINTER(PVOID)      EntryInProgress;
+    /* 0x028 */   BOOLEAN                       ShutdownInProgress;
+    /* 0x02C */   XPF_WOW64_POINTER(HANDLE)     ShutdownThreadId;
+} XPF_PEB_LDR_DATA32;
+
+//
+// dt ntdll!_PEB
+//         +0x000 InheritedAddressSpace          : UChar
+//         +0x001 ReadImageFileExecOptions       : UChar
+//         +0x002 BeingDebugged                  : UChar
+//         +0x003 BitField                       : UChar
+//         +0x003 ImageUsesLargePages            : Pos 0, 1 Bit
+//         +0x003 IsProtectedProcess             : Pos 1, 1 Bit
+//         +0x003 IsImageDynamicallyRelocated    : Pos 2, 1 Bit
+//         +0x003 SkipPatchingUser32Forwarders   : Pos 3, 1 Bit
+//         +0x003 IsPackagedProcess              : Pos 4, 1 Bit
+//         +0x003 IsAppContainer                 : Pos 5, 1 Bit
+//         +0x003 IsProtectedProcessLight        : Pos 6, 1 Bit
+//         +0x003 IsLongPathAwareProcess         : Pos 7, 1 Bit
+//         +0x004 Padding0                       : [4] UChar
+//         +0x008 Mutant                         : Ptr64 Void
+//         +0x010 ImageBaseAddress               : Ptr64 Void
+//         +0x018 Ldr                            : Ptr64 _PEB_LDR_DATA
+//         <...> SNIP <...>
+//
+typedef struct _XPF_PEB_NATIVE
+{
+    /* 0x000 */   BOOLEAN                       InheritedAddressSpace;
+    /* 0x001 */   BOOLEAN                       ReadImageFileExecOptions;
+    /* 0x002 */   BOOLEAN                       BeingDebugged;
+    /* 0x003 */   BOOLEAN                       BitField;
+    /* 0x008 */   HANDLE                        Mutant;
+    /* 0x010 */   PVOID                         ImageBaseAddress;
+    /* 0x018 */   XPF_PEB_LDR_DATA_NATIVE*      Ldr;
+} XPF_PEB_NATIVE;
+
+//
+// dt ntdll!_PEB
+//         +0x000 InheritedAddressSpace : UChar
+//         +0x001 ReadImageFileExecOptions : UChar
+//         +0x002 BeingDebugged    : UChar
+//         +0x003 BitField         : UChar
+//         +0x003 ImageUsesLargePages : Pos 0, 1 Bit
+//         +0x003 IsProtectedProcess : Pos 1, 1 Bit
+//         +0x003 IsImageDynamicallyRelocated : Pos 2, 1 Bit
+//         +0x003 SkipPatchingUser32Forwarders : Pos 3, 1 Bit
+//         +0x003 IsPackagedProcess : Pos 4, 1 Bit
+//         +0x003 IsAppContainer   : Pos 5, 1 Bit
+//         +0x003 IsProtectedProcessLight : Pos 6, 1 Bit
+//         +0x003 IsLongPathAwareProcess : Pos 7, 1 Bit
+//         +0x004 Mutant           : Ptr32 Void
+//         +0x008 ImageBaseAddress : Ptr32 Void
+//         +0x00c Ldr              : Ptr32 _PEB_LDR_DATA
+//         <...> SNIP <...>
+//
+typedef struct _XPF_PEB32
+{
+    /* 0x000 */   BOOLEAN                                InheritedAddressSpace;
+    /* 0x001 */   BOOLEAN                                ReadImageFileExecOptions;
+    /* 0x002 */   BOOLEAN                                BeingDebugged;
+    /* 0x003 */   BOOLEAN                                BitField;
+    /* 0x004 */   XPF_WOW64_POINTER(HANDLE)              Mutant;
+    /* 0x008 */   XPF_WOW64_POINTER(PVOID)               ImageBaseAddress;
+    /* 0x00c */   XPF_WOW64_POINTER(XPF_PEB_LDR_DATA32*) Ldr;
+} XPF_PEB32;
+
+//
+// -------------------------------------------------------------------------------------------------------------------
+// | ****************************************************************************************************************|
 // |                         System Information                                                                      |
 // | ****************************************************************************************************************|
 // -------------------------------------------------------------------------------------------------------------------
@@ -409,27 +596,6 @@ typedef VOID (NTAPI* PKRUNDOWN_ROUTINE) (
     _In_ PKAPC Apc
 );
 
-NTSYSAPI VOID NTAPI
-KeInitializeApc(
-    _Out_ PRKAPC Apc,
-    _In_ PRKTHREAD Thread,
-    _In_ KAPC_ENVIRONMENT Environment,
-    _In_ PKKERNEL_ROUTINE KernelRoutine,
-    _In_opt_ PKRUNDOWN_ROUTINE RundownRoutine,
-    _In_opt_ PKNORMAL_ROUTINE NormalRoutine,
-    _In_ KPROCESSOR_MODE Mode,
-    _In_opt_ PVOID NormalContext
-);
-
-NTSYSAPI BOOLEAN NTAPI
-KeInsertQueueApc(
-    _Inout_ PRKAPC Apc,
-    _In_opt_ PVOID SystemArgument1,
-    _In_opt_ PVOID SystemArgument2,
-    _In_ KPRIORITY Increment
-);
-
-
 //
 // -------------------------------------------------------------------------------------------------------------------
 // | ****************************************************************************************************************|
@@ -471,6 +637,20 @@ RtlImageDirectoryEntryToData(
 
 NTSYSAPI PCHAR NTAPI
 PsGetProcessImageFileName(
+    _In_ PEPROCESS Process
+);
+
+
+//
+// -------------------------------------------------------------------------------------------------------------------
+// | ****************************************************************************************************************|
+// |                         PsGetProcessPeb                                                                         |
+// | ****************************************************************************************************************|
+// -------------------------------------------------------------------------------------------------------------------
+//
+
+NTSYSAPI PVOID NTAPI
+PsGetProcessPeb(
     _In_ PEPROCESS Process
 );
 
