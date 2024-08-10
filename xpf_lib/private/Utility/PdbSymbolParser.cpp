@@ -1345,7 +1345,9 @@ ParseSymbolInformation(
     /* Read symbol size and symbol type. These are uint16_t - so both are uint32_t */
     if (StreamSize < sizeof(uint32_t) || currentOffset > StreamSize - sizeof(uint32_t))
     {
-        return STATUS_DATA_ERROR;
+        /* We reached the end. */
+        *CurrentOffset = StreamSize;
+        return STATUS_SUCCESS;
     }
     const uint16_t symbolSize = *static_cast<const uint16_t*>(xpf::AlgoAddToPointer(Stream,
                                                                                     currentOffset));
