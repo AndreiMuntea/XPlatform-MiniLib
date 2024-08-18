@@ -130,6 +130,18 @@ WriteBytes(
     _In_ size_t NumberOfBytes,
     _In_ _Const_ const uint8_t* Bytes
 ) noexcept(true) = 0;
+
+/**
+ * @brief   Retrieves the number of bytes serialized so far.
+ *
+ * @return  A number indicating how many bytes have been serialized so far.
+ */
+virtual size_t
+XPF_API
+StreamSize(
+    void
+) const noexcept(true) = 0;
+
 };  // IStreamWriter
 
 //
@@ -397,6 +409,20 @@ WriteBytes(
     this->m_Cursor = cursorFinalPosition;
 
     return true;
+}
+
+/**
+ * @brief   Retrieves the number of bytes serialized so far.
+ *
+ * @return  A number indicating how many bytes have been serialized so far.
+ */
+size_t
+XPF_API
+StreamSize(
+    void
+) const noexcept(true) override
+{
+    return this->m_Cursor;
 }
 
  private:
