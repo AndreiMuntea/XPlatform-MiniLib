@@ -147,7 +147,7 @@ virtual ~IEventListener(
 virtual void
 XPF_API
 OnEvent(
-    _Inout_ IEvent* Event,
+    _Inout_ xpf::SharedPointer<IEvent>& Event,
     _Inout_ xpf::EventBus* Bus
 ) noexcept(true) = 0;
 };  // class IEventListener;
@@ -266,7 +266,7 @@ _Must_inspect_result_
 NTSTATUS
 XPF_API
 Dispatch(
-    _Inout_ IEvent* Event
+    _Inout_ xpf::SharedPointer<IEvent>& Event
 ) noexcept(true);
 
  private:
@@ -279,7 +279,7 @@ Dispatch(
 void
 XPF_API
 NotifyListeners(
-    _Inout_ IEvent* Event
+    _Inout_ xpf::SharedPointer<IEvent>& Event
 ) noexcept(true);
 
 /**

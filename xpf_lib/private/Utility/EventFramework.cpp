@@ -24,7 +24,7 @@ _Must_inspect_result_
 NTSTATUS
 XPF_API
 xpf::EventBus::Dispatch(
-    _Inout_ IEvent* Event
+    _Inout_ xpf::SharedPointer<IEvent>& Event
 ) noexcept(true)
 {
     XPF_MAX_DISPATCH_LEVEL();
@@ -45,7 +45,7 @@ xpf::EventBus::Dispatch(
 void
 XPF_API
 xpf::EventBus::NotifyListeners(
-    _Inout_ IEvent* Event
+    _Inout_ xpf::SharedPointer<IEvent>& Event
 ) noexcept(true)
 {
     XPF_MAX_DISPATCH_LEVEL();

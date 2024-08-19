@@ -146,7 +146,7 @@ virtual ~MockEventListener(
 void
 XPF_API
 OnEvent(
-    _Inout_ xpf::IEvent* Event,
+    _Inout_ xpf::SharedPointer<IEvent>& Event,
     _Inout_ xpf::EventBus* Bus
 ) noexcept(true) override
 {
@@ -154,7 +154,7 @@ OnEvent(
 
     if ((*Event).EventId() == this->m_EventId)
     {
-        auto mockEvent = static_cast<xpf::mocks::MockEvent*>(Event);
+        auto mockEvent = static_cast<xpf::mocks::MockEvent*>(Event.Get());
         for (uint32_t i = 0; i < (*mockEvent).Value(); ++i)
         {
             xpf::ApiAtomicIncrement(&this->m_IncrementedValue);

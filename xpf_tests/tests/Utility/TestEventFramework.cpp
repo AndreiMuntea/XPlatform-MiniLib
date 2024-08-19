@@ -41,7 +41,13 @@ XpfTesEventDispatchHelper(
         return  STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    return EventBus->Dispatch(mockEvent.Get());
+    auto iEvent = xpf::DynamicSharedPointerCast<xpf::IEvent, xpf::mocks::MockEvent>(mockEvent);
+    if (iEvent.IsEmpty())
+    {
+        return  STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    return EventBus->Dispatch(iEvent);
 }
 
 
