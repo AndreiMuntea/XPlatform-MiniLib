@@ -287,6 +287,17 @@ typedef struct _XPF_SYSTEM_PROCESS_INFORMATION {
     LARGE_INTEGER Reserved7[6];
 } XPF_SYSTEM_PROCESS_INFORMATION;
 
+typedef struct _XPF_THREAD_BASIC_INFORMATION
+{
+    NTSTATUS ExitStatus;
+    PVOID TebBaseAddress;
+    CLIENT_ID ClientId;
+    KAFFINITY AffinityMask;
+    KPRIORITY Priority;
+    KPRIORITY BasePriority;
+} XPF_THREAD_BASIC_INFORMATION;
+
+
 NTSYSAPI NTSTATUS NTAPI
 ZwSetSystemInformation(
     _In_ XPF_SYSTEM_INFORMATION_CLASS SystemInformationClass,

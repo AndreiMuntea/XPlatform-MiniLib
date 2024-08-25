@@ -65,11 +65,24 @@ XpfWskGetCompletionStatus(
 
     if (STATUS_PENDING == ReturnedStatus)
     {
+        LARGE_INTEGER socketWaitTimeout = { 0 };
+        socketWaitTimeout.QuadPart = -10000ll * 5 * 1000;
+
         NTSTATUS status = ::KeWaitForSingleObject(&Context->CompletionEvent,
                                                   KWAIT_REASON::Executive,
                                                   KernelMode,
                                                   FALSE,
-                                                  NULL);
+                                                  &socketWaitTimeout);
+        if (status == STATUS_TIMEOUT)
+        {
+            ::IoCancelIrp(Context->Irp);
+            ::KeWaitForSingleObject(&Context->CompletionEvent,
+                                    KWAIT_REASON::Executive,
+                                    KernelMode,
+                                    FALSE,
+                                    NULL);
+        }
+
         return NT_SUCCESS(status) ? Context->Irp->IoStatus.Status
                                   : status;
     }
