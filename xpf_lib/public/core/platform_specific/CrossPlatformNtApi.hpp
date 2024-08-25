@@ -305,7 +305,7 @@ ZwQuerySystemInformation(
 //
 // -------------------------------------------------------------------------------------------------------------------
 // | ****************************************************************************************************************|
-// |                         Process Information                                                                     |
+// |                         Process and Thread Information                                                          |
 // | ****************************************************************************************************************|
 // -------------------------------------------------------------------------------------------------------------------
 //
@@ -317,6 +317,15 @@ ZwQueryInformationProcess(
     _In_ PROCESSINFOCLASS ProcessInformationClass,
     _Out_writes_bytes_(ProcessInformationLength) PVOID ProcessInformation,
     _In_ ULONG ProcessInformationLength,
+    _Out_opt_ PULONG ReturnLength
+);
+
+NTSYSAPI NTSTATUS NTAPI
+ZwQueryInformationThread(
+    _In_ HANDLE ThreadHandle,
+    _In_ THREADINFOCLASS ThreadInformationClass,
+    _Out_writes_bytes_(ThreadInformationLength) PVOID ThreadInformation,
+    _In_ ULONG ThreadInformationLength,
     _Out_opt_ PULONG ReturnLength
 );
 
