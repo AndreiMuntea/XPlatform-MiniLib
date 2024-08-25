@@ -107,6 +107,22 @@ AlgoAlignValueUp(
 }
 
 /**
+ * @brief Reinterprets a value to a pointer.
+ *
+ * @param[in] Value - Value to be converted.
+ *
+ * @return Value as a pointer type.
+ *
+ */
+inline void*
+AlgoValueToPointer(
+    _In_ _Const_ const uint64_t& Value
+) noexcept(true)
+{
+    return reinterpret_cast<void*>(static_cast<size_t>(Value));
+}
+
+/**
  * @brief Converts a pointer to its value.
  * 
  * @param[in] Pointer - Pointer to be converted.
