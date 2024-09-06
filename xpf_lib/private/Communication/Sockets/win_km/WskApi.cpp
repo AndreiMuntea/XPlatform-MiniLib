@@ -2063,7 +2063,7 @@ xpf::WskCreateTlsSocketContext(
     credentials.cMappers = 0;                               /* Reserved. */
     credentials.aphMappers = NULL;                          /* Reserved. */
     credentials.dwSessionLifespan = 0;                      /* Default cache lifespan (10 hours). */
-    credentials.dwFlags = SCH_USE_STRONG_CRYPTO |            /* Disable known weak cryptographic algorithms*/
+    credentials.dwFlags = SCH_USE_STRONG_CRYPTO |           /* Disable known weak cryptographic algorithms*/
                           SCH_CRED_AUTO_CRED_VALIDATION |   /* Client only. Less work for us :D */
                           SCH_CRED_NO_DEFAULT_CREDS |       /* Client only. Don't supply certificate chain. */
                           SCH_CRED_REVOCATION_CHECK_CHAIN;  /* Check all certificates if they were revoked.*/
@@ -2079,8 +2079,14 @@ xpf::WskCreateTlsSocketContext(
     /* If we need to skip the certificate validation, we elminate the flags. */
     if (TlsSkipCertificateValidation)
     {
-        credentials.dwFlags = SCH_USE_STRONG_CRYPTO;
-        legacyCredentials.dwFlags = SCH_USE_STRONG_CRYPTO;
+        credentials.dwFlags = SCH_USE_STRONG_CRYPTO                     |
+                              SCH_CRED_MANUAL_CRED_VALIDATION           |
+                              SCH_CRED_NO_SERVERNAME_CHECK              |
+                              SCH_CRED_NO_DEFAULT_CREDS;
+        legacyCredentials.dwFlags = SCH_USE_STRONG_CRYPTO               |
+                                    SCH_CRED_MANUAL_CRED_VALIDATION     |
+                                    SCH_CRED_NO_SERVERNAME_CHECK        |
+                                    SCH_CRED_NO_DEFAULT_CREDS;
     }
 
     /* By default we prefer the newer variant of credentials. */
@@ -2283,8 +2289,8 @@ xpf::WskTlsSocketHandshake(
                                                                         // for the client automatically.
                                        ISC_REQ_REPLAY_DETECT        |   // Detect replayed messages that have been encoded by
                                                                         // using the EncryptMessage or MakeSignature functions.
-                                       ISC_REQ_INTEGRITY            |   // Sign messagesand verify signatures by using the
-                                                                        // EncryptMessageand MakeSignature functions.
+                                       ISC_REQ_INTEGRITY            |   // Sign messages and verify signatures by using the
+                                                                        // EncryptMessage and MakeSignature functions.
                                        ISC_REQ_SEQUENCE_DETECT      |   // Detect messages received out of sequence.
                                        ISC_REQ_EXTENDED_ERROR       |   // When errors occur, the remote party will be notified.
                                        ISC_REQ_STREAM;                  // Support a stream-oriented connection.
