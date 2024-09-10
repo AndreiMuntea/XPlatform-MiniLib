@@ -94,7 +94,7 @@ xpf::Protobuf::SerializeBinaryBlob(
     //
 
     const uint64_t numberOfBytes = Buffer.BufferSize();
-    if ((numberOfBytes == 0) || (numberOfBytes > xpf::NumericLimits<uint32_t>::MaxValue()))
+    if (numberOfBytes > xpf::NumericLimits<uint32_t>::MaxValue())
     {
         return false;
     }
