@@ -100,6 +100,21 @@ xpf::LookasideListAllocator::AllocateMemory(
     }
 
     //
+    // On windows KM we'll also raise the IRQL to DISPATCH_LEVEL to speedup the list lookup.
+    // This can be done only for critical (non paged) allocations.
+    //
+    #if defined XPF_PLATFORM_WIN_KM
+        bool isIrqlChanged = false;
+        KIRQL oldIrql = { 0 };
+
+        if (this->m_IsCriticalAllocator && ::KeGetCurrentIrql() < DISPATCH_LEVEL)
+        {
+            KeRaiseIrql(DISPATCH_LEVEL, &oldIrql);
+            isIrqlChanged = true;
+        }
+    #endif  // XPF_PLATFORM_WIN_KM
+
+    //
     // If we have a memory block in list, we return it.
     //
     memoryBlock = xpf::TlqPop(this->m_TwoLockQueue);
@@ -116,6 +131,17 @@ xpf::LookasideListAllocator::AllocateMemory(
         xpf::ApiZeroMemory(memoryBlock, this->m_ElementSize);
         xpf::ApiAtomicDecrement(&this->m_CurrentElements);
     }
+
+    //
+    // Now restore the IRQL if necessary.
+    //
+    #if defined XPF_PLATFORM_WIN_KM
+        if (isIrqlChanged)
+        {
+            KeLowerIrql(oldIrql);
+            isIrqlChanged = false;
+        }
+    #endif  // XPF_PLATFORM_WIN_KM
 
     return memoryBlock;
 }
@@ -143,6 +169,21 @@ xpf::LookasideListAllocator::FreeMemory(
     newEntry->Next = nullptr;
 
     //
+    // On windows KM we'll also raise the IRQL to DISPATCH_LEVEL to speedup the list lookup.
+    // This can be done only for critical (non paged) allocations.
+    //
+    #if defined XPF_PLATFORM_WIN_KM
+        bool isIrqlChanged = false;
+        KIRQL oldIrql = { 0 };
+
+        if (this->m_IsCriticalAllocator && ::KeGetCurrentIrql() < DISPATCH_LEVEL)
+        {
+            oldIrql = ::KeRaiseIrqlToDpcLevel();
+            isIrqlChanged = true;
+        }
+    #endif  // XPF_PLATFORM_WIN_KM
+
+    //
     // We might not want to store it into the list if we have too many elements.
     // In such cases we free the memory directly. We don't care if we might race.
     // This value is a best effort to not store too much memory at once.
@@ -158,4 +199,15 @@ xpf::LookasideListAllocator::FreeMemory(
         xpf::TlqPush(this->m_TwoLockQueue, newEntry);
         xpf::ApiAtomicIncrement(&this->m_CurrentElements);
     }
+
+    //
+    // Now restore the IRQL if necessary.
+    //
+    #if defined XPF_PLATFORM_WIN_KM
+        if (isIrqlChanged)
+        {
+            KeLowerIrql(oldIrql);
+            isIrqlChanged = false;
+        }
+    #endif  // XPF_PLATFORM_WIN_KM
 }
