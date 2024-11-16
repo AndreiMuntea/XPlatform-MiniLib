@@ -29,7 +29,6 @@
 #include "public/Memory/SharedPointer.hpp"
 #include "public/Memory/Optional.hpp"
 #include "public/Memory/LookasideListAllocator.hpp"
-#include "public/Memory/SplitAllocator.hpp"
 
 #include "public/Containers/TwoLockQueue.hpp"
 #include "public/Containers/String.hpp"

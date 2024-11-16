@@ -340,6 +340,11 @@
 
      using uuid_t  = UUID;
 
+     namespace std
+     {
+         enum class align_val_t : size_t {};
+     }
+
 #elif defined XPF_PLATFORM_WIN_UM
 
     /**
@@ -394,6 +399,11 @@
      using int64_t = INT64;
 
      using uuid_t = GUID;
+
+     namespace std
+     {
+         enum class align_val_t : size_t {};
+     }
 
 #elif defined XPF_PLATFORM_LINUX_UM
     /**
@@ -535,6 +545,30 @@ operator delete(
     size_t Size
 ) noexcept(true);
 
+
+/**
+ *
+ * @brief Placement delete aligned declaration  - required for cpp support.
+ *
+ * @param[in] Pointer - Unused.
+ *
+ * @param[in] Size - Unused.
+ *
+ * @param[in] Alignment - Unused.
+ *
+ * @return void.
+ *
+ * @note It is the caller responsibility to provide an implementation
+ *       for this API. If "new" header is available, it can be included,
+ *       otherwise, a simple implementation can be provided.
+ */
+void
+XPF_PLATFORM_CONVENTION
+operator delete(
+    void* Pointer,
+    size_t Size,
+    std::align_val_t Alignment
+) noexcept(true);
 
 /**
  * @brief Asserts for data types to have a known fixed size.

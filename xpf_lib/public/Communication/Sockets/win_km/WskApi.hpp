@@ -31,8 +31,8 @@ namespace xpf
  * @brief   The allocations performed by the wsk api can fragment the memory quite a bit.
  *          We define a separated allocator which will point to the special split memory allocator.
  */
-#define XPF_WSK_API_ALLOCATOR  xpf::PolymorphicAllocator{ .AllocFunction = &xpf::SplitAllocator::AllocateMemory,     \
-                                                          .FreeFunction  = &xpf::SplitAllocator::FreeMemory }
+#define XPF_WSK_API_ALLOCATOR  xpf::PolymorphicAllocator{ .AllocFunction = &xpf::MemoryAllocator::AllocateMemory,     \
+                                                          .FreeFunction  = &xpf::MemoryAllocator::FreeMemory }
 struct WskCompletionContext
 {
     KEVENT CompletionEvent = { 0 };

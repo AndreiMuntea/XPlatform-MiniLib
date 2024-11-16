@@ -54,6 +54,19 @@ operator delete(
 }
 
 void
+XPF_PLATFORM_CONVENTION
+operator delete(
+    void* Pointer,
+    size_t Size,
+    std::align_val_t Alignment
+) noexcept(true)
+{
+    XPF_DEATH_ON_FAILURE(nullptr != Pointer);
+    XPF_DEATH_ON_FAILURE(0 != Size);
+    XPF_DEATH_ON_FAILURE(std::align_val_t{ 0 } != Alignment);
+}
+
+void
 XPF_API
 xpf::ApiPanic(
     _In_ NTSTATUS Status
@@ -241,9 +254,12 @@ xpf::ApiAllocateMemory(
             // Trick him to think we are below dispatch level.
             //
             _Analysis_assume_(DISPATCH_LEVEL > ::KeGetCurrentIrql());
+            #pragma warning(push)
+            #pragma warning(disable:4996)
             block = ::ExAllocatePoolWithTag(pool,
                                             BlockSize,
                                             'nmS+');
+            #pragma warning(pop)
         #elif defined XPF_PLATFORM_WIN_UM
         PVOID heapHandle = NULL;
         ::RtlGetProcessHeaps(1, &heapHandle);
