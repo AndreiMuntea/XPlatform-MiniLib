@@ -236,8 +236,9 @@ typedef struct _XPF_PEB32
 typedef enum _XPF_SYSTEM_INFORMATION_CLASS
 {
     XpfSystemBasicInformation = 0x0,
-    XpfSystemProcessInformation = 0x05,     // XPF_SYSTEM_PROCESS_INFORMATION
-    XpfSystemModuleInformation = 0x0B,      // XPF_RTL_PROCESS_MODULES
+    XpfSystemProcessInformation = 0x05,       // XPF_SYSTEM_PROCESS_INFORMATION
+    XpfSystemModuleInformation = 0x0B,        // XPF_RTL_PROCESS_MODULES
+    XpfSystemSingleModuleInformation = 0xA7,  // XPF_SYSTEM_SINGLE_MODULE_INFORMATION
     XpfSystemRegisterFirmwareTableInformationHandler = 0x4B,
 } XPF_SYSTEM_INFORMATION_CLASS;
 
@@ -297,6 +298,20 @@ typedef struct _XPF_THREAD_BASIC_INFORMATION
     KPRIORITY BasePriority;
 } XPF_THREAD_BASIC_INFORMATION;
 
+typedef struct _XPF_RTL_PROCESS_MODULE_INFORMATION_EX
+{
+    USHORT NextOffset;
+    XPF_RTL_PROCESS_MODULE_INFORMATION BaseInfo;
+    ULONG ImageChecksum;
+    ULONG TimeDateStamp;
+    PVOID DefaultBase;
+} XPF_RTL_PROCESS_MODULE_INFORMATION_EX;
+
+typedef struct _XPF_SYSTEM_SINGLE_MODULE_INFORMATION
+{
+    PVOID TargetModuleAddress;
+    XPF_RTL_PROCESS_MODULE_INFORMATION_EX ExInfo;
+} XPF_SYSTEM_SINGLE_MODULE_INFORMATION;
 
 NTSYSAPI NTSTATUS NTAPI
 ZwSetSystemInformation(
