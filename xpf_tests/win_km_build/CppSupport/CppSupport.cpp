@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_tests/win_km_build/CppSupport/CppSupport.cpp
  *
  * @brief       Source file with routines to control cpp support in km.
@@ -10,7 +10,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright � Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.

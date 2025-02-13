@@ -7,7 +7,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright Â© Andrei-Marius MUNTEA 2020-2023.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -176,7 +176,7 @@ DeserializeBinaryBlob(
  *
  *          Positive integers p are encoded as 2 * p (the even numbers),
  *          while negative integers n are encoded as 2 * |n| - 1 (the odd numbers).
- *          The encoding thus “zig-zags” between positive and negative numbers. For example:
+ *          The encoding thus ï¿½zig-zagsï¿½ between positive and negative numbers. For example:
  *
  *          | Signed Original | Encoded As |
  *             0                 0
