@@ -1,5 +1,5 @@
 /**
- * @file        xpf_lib/private/utility/ProtobufSerializer.cpp
+ * @file        xpf_lib/private/Utility/ProtobufSerializer.cpp
  *
  * @brief       In here you'll find a minimalistic implementation of protocol buffer.
  *              It respects the documentation and it's simplistic enough as will
@@ -7,7 +7,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright ï¿½ Andrei-Marius MUNTEA 2020-2023.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.

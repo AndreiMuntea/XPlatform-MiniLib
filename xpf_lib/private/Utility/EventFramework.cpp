@@ -1,5 +1,5 @@
 /**
- * @file        xpf_lib/private/utility/EventFramework.cpp
+ * @file        xpf_lib/private/Utility/EventFramework.cpp
  *
  * @brief       This implements a simple and fast event framework.
  *              It can have multiple listeners registered.
@@ -7,7 +7,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright ï¿½ Andrei-Marius MUNTEA 2020-2023.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.

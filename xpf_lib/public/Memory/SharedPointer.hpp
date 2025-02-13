@@ -7,7 +7,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright ï¿½ Andrei-Marius MUNTEA 2020-2023.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -653,69 +653,75 @@ DynamicSharedPointerCast(
 }
 };  // namespace xpf
 
-#define XPF_MAKE_SHARED_WITH_ALLOCATOR(Pointer, Type, Allocator, ...)                                                   \
-{                                                                                                                       \
-    /*                                                                                    */                            \
-    /* We can't allocate object with size 0 and an alignment bigger than the default one. */                            \
-    /* For our needs this is ok, we can come back to this later. Safety assert here.      */                            \
-    /*                                                                                    */                            \
-    static_assert((sizeof(Type) > 0) && (alignof(Type) <= XPF_DEFAULT_ALIGNMENT),                                       \
-                  "Invalid object properties!");                                                                        \
-    XPF_DEATH_ON_FAILURE(Pointer.IsEmpty());                                                                            \
-                                                                                                                        \
-    /*                                                                                   */                             \
-    /* Grab a reference from compressed pair. It makes the code more easier to read.     */                             \
-    /* On release it will be optimized away - as these will be inline calls.             */                             \
-    /*                                                                                   */                             \
-    auto& _allocator    = Pointer.GetAllocator();                                                                       \
-    auto& _memoryBlock  = Pointer.GetMemoryBlock();                                                                     \
-                                                                                                                        \
-    /*                                                                                   */                             \
-    /* Try to allocate memory and construct an object of type U.                         */                             \
-    /*                                                                                   */                             \
-    _memoryBlock.ReferenceCounter = static_cast<int32_t*>(_allocator.AllocFunction(Pointer.FULL_OBJECT_SIZE));          \
-    if (nullptr != _memoryBlock.ReferenceCounter)                                                                       \
-    {                                                                                                                   \
-        /*                                                                               */                             \
-        /* Ensure there is no garbage left.                                              */                             \
-        /*                                                                               */                             \
-        xpf::ApiZeroMemory(_memoryBlock.ReferenceCounter, Pointer.FULL_OBJECT_SIZE);                                    \
-                                                                                                                        \
-        /*                                                                               */                             \
-        /* First construct the reference counter - we have the first reference.          */                             \
-        /*                                                                               */                             \
-        xpf::MemoryAllocator::Construct(_memoryBlock.ReferenceCounter,                                                  \
-                                        int32_t{1});                                                                    \
-        /*                                                                               */                             \
-        /* Now construct the raw pointer. We need to move the pointer.                   */                             \
-        /*                                                                               */                             \
-        _memoryBlock.ObjectBase = static_cast<Type*>(xpf::AlgoAddToPointer(_memoryBlock.ReferenceCounter,               \
-                                                                            Pointer.REFERENCE_COUNTER_SIZE));           \
-        xpf::MemoryAllocator::Construct(_memoryBlock.ObjectBase,                                                        \
-                                        __VA_ARGS__);                                                                   \
-    }                                                                                                                   \
-};
+/* Doxygen does not play nice with macros. */
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+    #define XPF_MAKE_SHARED_WITH_ALLOCATOR(Pointer, Type, Allocator, ...)                                                   \
+    {                                                                                                                       \
+        /*                                                                                    */                            \
+        /* We can't allocate object with size 0 and an alignment bigger than the default one. */                            \
+        /* For our needs this is ok, we can come back to this later. Safety assert here.      */                            \
+        /*                                                                                    */                            \
+        static_assert((sizeof(Type) > 0) && (alignof(Type) <= XPF_DEFAULT_ALIGNMENT),                                       \
+                    "Invalid object properties!");                                                                          \
+        XPF_DEATH_ON_FAILURE(Pointer.IsEmpty());                                                                            \
+                                                                                                                            \
+        /*                                                                                   */                             \
+        /* Grab a reference from compressed pair. It makes the code more easier to read.     */                             \
+        /* On release it will be optimized away - as these will be inline calls.             */                             \
+        /*                                                                                   */                             \
+        auto& _allocator    = Pointer.GetAllocator();                                                                       \
+        auto& _memoryBlock  = Pointer.GetMemoryBlock();                                                                     \
+                                                                                                                            \
+        /*                                                                                   */                             \
+        /* Try to allocate memory and construct an object of type U.                         */                             \
+        /*                                                                                   */                             \
+        _memoryBlock.ReferenceCounter = static_cast<int32_t*>(_allocator.AllocFunction(Pointer.FULL_OBJECT_SIZE));          \
+        if (nullptr != _memoryBlock.ReferenceCounter)                                                                       \
+        {                                                                                                                   \
+            /*                                                                               */                             \
+            /* Ensure there is no garbage left.                                              */                             \
+            /*                                                                               */                             \
+            xpf::ApiZeroMemory(_memoryBlock.ReferenceCounter, Pointer.FULL_OBJECT_SIZE);                                    \
+                                                                                                                            \
+            /*                                                                               */                             \
+            /* First construct the reference counter - we have the first reference.          */                             \
+            /*                                                                               */                             \
+            xpf::MemoryAllocator::Construct(_memoryBlock.ReferenceCounter,                                                  \
+                                            int32_t{1});                                                                    \
+            /*                                                                               */                             \
+            /* Now construct the raw pointer. We need to move the pointer.                   */                             \
+            /*                                                                               */                             \
+            _memoryBlock.ObjectBase = static_cast<Type*>(xpf::AlgoAddToPointer(_memoryBlock.ReferenceCounter,               \
+                                                                                Pointer.REFERENCE_COUNTER_SIZE));           \
+            xpf::MemoryAllocator::Construct(_memoryBlock.ObjectBase,                                                        \
+                                            __VA_ARGS__);                                                                   \
+        }                                                                                                                   \
+    };
+#endif  // DOXYGEN_SHOULD_SKIP_THIS
 
-#define XPF_DYNAMIC_SHARED_POINTER_CAST(CastedType, InitialType, OldPointer, NewPointer)                                \
-{                                                                                                                       \
-    static_assert(xpf::IsSameType<CastedType, InitialType>      ||                                                      \
-                  xpf::IsTypeBaseOf<CastedType, InitialType>()  ||                                                      \
-                  xpf::IsTypeBaseOf<InitialType, CastedType>(),                                                         \
-                  "Invalid Conversion!");                                                                               \
-    XPF_DEATH_ON_FAILURE(NewPointer.IsEmpty());                                                                         \
-                                                                                                                        \
-    xpf::SharedPointer<InitialType> _copy = OldPointer;                                                                 \
-                                                                                                                        \
-    auto& _allocator = NewPointer.GetAllocator();                                                                       \
-    auto& _memoryBlock = NewPointer.GetMemoryBlock();                                                                   \
-                                                                                                                        \
-    auto& _otherAllocator = _copy.GetAllocator();                                                                       \
-    auto& _otherMemoryBlock = _copy.GetMemoryBlock();                                                                   \
-                                                                                                                        \
-    _memoryBlock.ReferenceCounter = _otherMemoryBlock.ReferenceCounter;                                                 \
-    _memoryBlock.ObjectBase = static_cast<CastedType*>(_otherMemoryBlock.ObjectBase);                                   \
-    _allocator = _otherAllocator;                                                                                       \
-                                                                                                                        \
-    _otherMemoryBlock.ReferenceCounter = nullptr;                                                                       \
-    _otherMemoryBlock.ObjectBase = nullptr;                                                                             \
-}
+/* Doxygen does not play nice with macros. */
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+    #define XPF_DYNAMIC_SHARED_POINTER_CAST(CastedType, InitialType, OldPointer, NewPointer)                                \
+    {                                                                                                                       \
+        static_assert(xpf::IsSameType<CastedType, InitialType>      ||                                                      \
+                    xpf::IsTypeBaseOf<CastedType, InitialType>()  ||                                                        \
+                    xpf::IsTypeBaseOf<InitialType, CastedType>(),                                                           \
+                    "Invalid Conversion!");                                                                                 \
+        XPF_DEATH_ON_FAILURE(NewPointer.IsEmpty());                                                                         \
+                                                                                                                            \
+        xpf::SharedPointer<InitialType> _copy = OldPointer;                                                                 \
+                                                                                                                            \
+        auto& _allocator = NewPointer.GetAllocator();                                                                       \
+        auto& _memoryBlock = NewPointer.GetMemoryBlock();                                                                   \
+                                                                                                                            \
+        auto& _otherAllocator = _copy.GetAllocator();                                                                       \
+        auto& _otherMemoryBlock = _copy.GetMemoryBlock();                                                                   \
+                                                                                                                            \
+        _memoryBlock.ReferenceCounter = _otherMemoryBlock.ReferenceCounter;                                                 \
+        _memoryBlock.ObjectBase = static_cast<CastedType*>(_otherMemoryBlock.ObjectBase);                                   \
+        _allocator = _otherAllocator;                                                                                       \
+                                                                                                                            \
+        _otherMemoryBlock.ReferenceCounter = nullptr;                                                                       \
+        _otherMemoryBlock.ObjectBase = nullptr;                                                                             \
+    }
+#endif  // DOXYGEN_SHOULD_SKIP_THIS

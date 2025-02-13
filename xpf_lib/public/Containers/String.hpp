@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright ï¿½ Andrei-Marius MUNTEA 2020-2023.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -226,6 +226,8 @@ Buffer(
 
 /**
  * @brief Resets the underlying object to nullptr.
+ *
+ * @return Nothing.
  */
 constexpr inline void
 Reset(
@@ -240,6 +242,8 @@ Reset(
  * @brief Assings the Other to the current string view.
  *
  * @param[in] Other - the string view to be assigned to this.
+ *
+ * @return Nothing.
  */
 constexpr inline void
 Assign(
@@ -461,6 +465,8 @@ Substring(
  *
  * @param[in] CharactersCount - The number of characters to be removed
  *                              from the beginning of the string.
+ *
+ * @return Nothing.
  * 
  * @note The complexity of this operation is O(1).
  *       If there are not enough characters to be removed, the view will become empty.
@@ -489,6 +495,8 @@ RemovePrefix(
  *
  * @param[in] CharactersCount - The number of characters to be removed
  *                              from the end of the string.
+ *
+ * @return Nothing.
  * 
  * @note The complexity of this operation is O(1).
  *       If there are not enough characters to be removed, the view will become empty.

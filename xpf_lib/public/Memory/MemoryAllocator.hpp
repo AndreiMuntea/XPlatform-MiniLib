@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright ï¿½ Andrei-Marius MUNTEA 2020-2023.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -79,6 +79,7 @@ AllocateMemory(
  * 
  * @param[in,out] MemoryBlock - To be freed.
  * 
+ * @return Nothing.
  */
 static inline void
 FreeMemory(
@@ -95,6 +96,8 @@ FreeMemory(
  * @param[in,out] Object - A pointer where the object will be constructed.
  * 
  * @param[in,out] ConstructorArguments - To be provided to the object.
+ *
+ * @return Nothing.
  * 
  * @note No need to reimplement Construct method when defining your own allocator.
  *       This is the one that is used anyway. Try to keep this logic in one place
@@ -118,6 +121,8 @@ Construct(
  *        This doesn't free the memory.
  * 
  * @param[in,out] Object - A pointer where the object will be destroyed.
+ *
+ * @return Nothing.
  *
  * @note No need to reimplement Destruct method when defining your own allocator.
  *       This is the one that is used anyway. Try to keep this logic in one place
@@ -191,6 +196,7 @@ AllocateMemory(
  * 
  * @param[in,out] MemoryBlock - To be freed.
  * 
+ * @return Nothing.
  */
 static inline void
 FreeMemory(

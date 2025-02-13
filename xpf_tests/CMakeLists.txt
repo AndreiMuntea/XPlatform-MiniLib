@@ -45,7 +45,7 @@ add_test( NAME    XPF_LIB_Tests
 
 # Run the linter on tests - can be enabled when needed.
 # add_custom_command(TARGET XPF_Tests
-#                    POST_BUILD
-#                    COMMAND py -m cpplint --counting=detailed --linelength=130 --filter=-legal/copyright,-whitespace/braces,-whitespace/newline --recursive ${CMAKE_CURRENT_LIST_DIR}
-#                    RESULT_VARIABLE lint_result)
+#                   POST_BUILD
+#                   COMMAND py -m cpplint --counting=detailed --linelength=130 --filter=-legal/copyright,-whitespace/braces,-whitespace/newline --recursive ${CMAKE_CURRENT_LIST_DIR}
+#                   RESULT_VARIABLE lint_result)
 # message($lint_result)

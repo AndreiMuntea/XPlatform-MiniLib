@@ -441,6 +441,10 @@
      */
     #define XPF_PLATFORM_CONVENTION
 
+    namespace std
+    {
+        enum class align_val_t : size_t {};
+    }
 #else
     #error Unsupported Platform
 

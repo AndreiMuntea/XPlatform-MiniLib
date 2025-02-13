@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright ï¿½ Andrei-Marius MUNTEA 2020-2023.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -472,7 +472,7 @@ xpf::ApiCharToLower(
 
     #if defined XPF_PLATFORM_WIN_KM || defined XPF_PLATFORM_WIN_UM
         return static_cast<wchar_t>(::RtlDowncaseUnicodeChar(static_cast<wint_t>(Character)));
-    #elif defined XPF_PLATFORM_LIN_UM
+    #elif defined XPF_PLATFORM_LINUX_UM
         return static_cast<wchar_t>(towlower(static_cast<wint_t>(Character)));
     #else
         #error Unknown Platform
@@ -508,7 +508,7 @@ xpf::ApiCharToUpper(
 
     #if defined XPF_PLATFORM_WIN_KM || defined XPF_PLATFORM_WIN_UM
         return static_cast<wchar_t>(::RtlUpcaseUnicodeChar(static_cast<wint_t>(Character)));
-    #elif defined XPF_PLATFORM_LIN_UM
+    #elif defined XPF_PLATFORM_LINUX_UM
         return static_cast<wchar_t>(towupper(static_cast<wint_t>(Character)));
     #else
         #error Unknown Platform

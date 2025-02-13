@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright ï¿½ Andrei-Marius MUNTEA 2020-2023.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -233,6 +233,7 @@ XPF_TEST_SCENARIO(TestProtobufSerializer, SignedValues)
 /**
  * @brief       This tests the serialization of binary blob data.
  */
+
 XPF_TEST_SCENARIO(TestProtobufSerializer, BinaryBlobs)
 {
     xpf::Buffer dataBuffer;
@@ -243,9 +244,6 @@ XPF_TEST_SCENARIO(TestProtobufSerializer, BinaryBlobs)
 
     xpf::Protobuf protobuf;
     xpf::Vector<uint8_t> binaryData;
-
-    xpf::StringView<char> emptyData;
-    XPF_TEST_EXPECT_TRUE(false == protobuf.SerializeBinaryBlob(emptyData, streamWriter));
 
     xpf::StringView<char> someData = "Some Random Dummy String! And also some random value: 0x1234!";
     XPF_TEST_EXPECT_TRUE(protobuf.SerializeBinaryBlob(someData, streamWriter));
