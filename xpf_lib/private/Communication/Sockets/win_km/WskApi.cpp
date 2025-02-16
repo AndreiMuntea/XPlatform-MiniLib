@@ -2018,7 +2018,6 @@ xpf::WskCreateTlsSocketContext(
     SECURITY_STATUS securityStatus = SEC_E_OK;
     bool isAttached = false;
     KAPC_STATE state = { 0 };
-    RTL_OSVERSIONINFOW version = { 0 };
 
     UNICODE_STRING schannelName = RTL_CONSTANT_STRING(SCHANNEL_NAME_W);
     WskSocketTlsContext* tlsContext = nullptr;
@@ -2089,18 +2088,10 @@ xpf::WskCreateTlsSocketContext(
                                     SCH_CRED_NO_DEFAULT_CREDS;
     }
 
-    /* By default we prefer the newer variant of credentials. */
-    usedCredentials = &credentials;
-    tlsContext->UsesOlderTls = false;
-
     /* On older os'es we need to use legacy variant of representing credentials. */
-    version.dwOSVersionInfoSize = sizeof(version);
-    status = ::RtlGetVersion(&version);
-    if (!NT_SUCCESS(status) || version.dwMajorVersion < 10)
-    {
-        usedCredentials = &legacyCredentials;
-        tlsContext->UsesOlderTls = true;
-    }
+    /* So we default to them - however keep the code for w10 - w11*/
+    usedCredentials = &legacyCredentials;
+    tlsContext->UsesOlderTls = true;
 
     securityStatus = XpfSecAcquireCredentialsHandle(SocketApiProvider,
                                                     NULL,                           /* We're using Schannel - must be NULL  */                      // NOLINT(*)
