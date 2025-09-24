@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/private/Utility/PdbSymbolParser.cpp
  *
  * @brief       In here you'll find functionality for parsing program database (pdb) files.
@@ -85,7 +85,7 @@ XPF_PACK(struct MsfHeader
     uint32_t    Reserved = 0;
 
     /*
-     * @brief   The index of a block within the MSF file. At this block is an array of ulittle32_t�s
+     * @brief   The index of a block within the MSF file. At this block is an array of ulittle32_tï¿½s
      *          listing the blocks that the stream directory resides on. For large MSF files, the stream directory
      *          (which describes the block layout of each stream) may not fit entirely on a single block.
      *          As a result, this extra layer of indirection is introduced, whereby this block contains the
@@ -274,7 +274,7 @@ XPF_PACK(struct DebugInformationHeader
     /*
      * Immediately after the fixed-size DBI Stream header are 7 variable-length substreams.
      * The following 7 fields of the DBI Stream header specify the number of bytes of the corresponding substream.
-     * Each substream�s contents will be described in detail below. The length of the entire DBI Stream should equal 64
+     * Each substreamï¿½s contents will be described in detail below. The length of the entire DBI Stream should equal 64
      * (the length of the header above) plus the value of each of the following 7 fields.
      *
      *    () ModInfoSize               - The length of the Module Info Substream.
@@ -396,7 +396,7 @@ XPF_PACK(struct DebugInformationModuleInfoEntry
     uint32_t SourceFileNameIndex = 0;
 
     /*
-     * @brief    The offset in the names buffer of the PDB file containing this module�s symbol information. 
+     * @brief    The offset in the names buffer of the PDB file containing this moduleï¿½s symbol information. 
      */
     uint32_t PdbFilePathNameIndex = 0;
 
@@ -407,11 +407,11 @@ XPF_PACK(struct DebugInformationModuleInfoEntry
 /**
  * @brief   "Begins at offset 0 immediately after the EC Substream ends, and consumes
  *           Header->OptionalDbgHeaderSize bytes. This field is an array of stream indices
- *           (e.g. uint16_t�s), each of which identifies a stream index in the larger MSF
+ *           (e.g. uint16_tï¿½s), each of which identifies a stream index in the larger MSF
  *           file which contains some additional debug information. Each position of this
  *           array has a special meaning, allowing one to determine what kind of debug
  *           information is at the referenced stream. 11 indices are currently understood,
- *           although it�s possible there may be more. The layout of each stream generally
+ *           although itï¿½s possible there may be more. The layout of each stream generally
  *           corresponds exactly to a particular type of debug data directory from the PE/COFF
  *           file. The format of these fields can be found in the Microsoft PE/COFF Specification.
  *           If any of these fields is -1, it means the corresponding type of debug info is not

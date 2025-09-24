@@ -1,4 +1,4 @@
-/**
+﻿/**
   * @file        xpf_tests/tests/Memory/TestOptional.cpp
   *
   * @brief       This contains tests for Optional.

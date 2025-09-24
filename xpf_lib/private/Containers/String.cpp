@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/private/Containers/String.cpp
  *
  * @brief       In this file there are the platform specific APIs for

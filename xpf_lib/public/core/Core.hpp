@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/public/core/Core.hpp
  *
  * @brief       This contains the core definitions for xpf.

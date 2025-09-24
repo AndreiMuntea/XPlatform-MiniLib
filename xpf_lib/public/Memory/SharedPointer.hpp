@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/public/Memory/SharedPointer.hpp
  *
  * @brief       This is the class to mimic std::shared_ptr.

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/public/Containers/String.hpp
  *
  * @brief       C++ -like string view and string classes.

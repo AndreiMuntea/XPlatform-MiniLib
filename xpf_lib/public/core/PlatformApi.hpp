@@ -1,4 +1,4 @@
-/**
+﻿/**
   * @file        xpf_lib/public/core/PlatformApi.hpp
   *
   * @brief       This contains platform-specific APIs that should be used.

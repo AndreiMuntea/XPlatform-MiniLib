@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/public/Utility/EventFramework.hpp
  *
  * @brief       This implements a simple and fast event framework.

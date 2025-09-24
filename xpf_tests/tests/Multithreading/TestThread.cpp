@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_tests/tests/Multithreading/TestThread.cpp
  *
  * @brief       This contains tests for thread.

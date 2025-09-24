@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/public/Containers/Vector.hpp
  *
  * @brief       C++ -like vector implementation.
@@ -799,9 +799,9 @@ Erase(
  *                                 true if left should appear before right in the sorted array.
  *
  * @note        Please see the following rerefence:
- *              " Knuth, Donald (1997). "�5.2.3, Sorting by Selection".
+ *              " Knuth, Donald (1997). "ï¿½5.2.3, Sorting by Selection".
  *                The Art of Computer Programming. Vol. 3: Sorting and Searching (3rd ed.).
- *                Addison-Wesley. pp. 144�155. ISBN 978-0-201-89685-5. "
+ *                Addison-Wesley. pp. 144ï¿½155. ISBN 978-0-201-89685-5. "
  */
 template <class Predicate>
 inline void

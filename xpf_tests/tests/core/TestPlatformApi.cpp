@@ -1,4 +1,4 @@
-/**
+﻿/**
   * @file        xpf_tests/tests/core/TestPlatformApi.cpp
   *
   * @brief       This contains tests for platform API set.

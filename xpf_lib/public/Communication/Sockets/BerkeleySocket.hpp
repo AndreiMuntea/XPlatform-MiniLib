@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/public/Communication/Sockets/BerkeleySocket.hpp
  *
  * @brief       This contains the interface for berkeley socket.
@@ -90,7 +90,7 @@ DeInitializeSocketApiProvider(
  *                       a dotted-decimal IPv4 address or an IPv6 hex address.
  *
  * @param[in] ServiceName - A service name is a string alias for a port number.
- *                          For example, �http� is an alias for port 80 defined by the Internet Engineering Task Force (IETF)
+ *                          For example, ï¿½httpï¿½ is an alias for port 80 defined by the Internet Engineering Task Force (IETF)
  *                          as the default port used by web servers for the HTTP protocol.
  *                          Possible values for the pServiceName parameter when a port number is not specified
  *                          are listed in the following file: %WINDIR%/system32/drivers/etc/services

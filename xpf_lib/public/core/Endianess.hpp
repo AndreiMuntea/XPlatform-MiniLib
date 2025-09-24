@@ -1,4 +1,4 @@
-/**
+﻿/**
   * @file        xpf_lib/public/core/Endianess.hpp
   *
   * @brief       This contains helper methods to convert from-and-to supported endians.

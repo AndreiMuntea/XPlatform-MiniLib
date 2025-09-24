@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/private/Communication/Sockets/BerkeleySocket.cpp
  *
  * @brief       Platform-Specific implementation of berkeley.

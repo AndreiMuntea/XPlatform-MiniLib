@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/public/Multithreading/Thread.hpp
  *
  * @brief       This is the class to mimic std::thread.

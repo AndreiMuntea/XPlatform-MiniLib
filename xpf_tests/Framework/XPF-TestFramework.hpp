@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_tests/Framework/XPF-TestFramework.hpp
  *
  * @brief       This file contains the definitions for the testing framework.

@@ -1,4 +1,4 @@
-//
+﻿//
 // @file        xpf_lib/public/core/platform_specific/CrossPlatformSal.hpp
 //
 // @brief       This file helps by including cross platform definition for

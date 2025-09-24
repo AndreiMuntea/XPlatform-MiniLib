@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_tests/tests/Memory/TestCompressedPair.cpp
  *
  * @brief       This contains tests for CompressedPair.

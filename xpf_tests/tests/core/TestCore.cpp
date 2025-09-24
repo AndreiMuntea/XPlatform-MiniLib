@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_tests/tests/core/TestCore.cpp
  *
  * @brief       This contains tests for core definitions.

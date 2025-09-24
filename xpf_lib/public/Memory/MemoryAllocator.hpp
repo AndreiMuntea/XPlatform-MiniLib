@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/public/Memory/MemoryAllocator.hpp
  *
  * @brief       C++ -like memory allocator.

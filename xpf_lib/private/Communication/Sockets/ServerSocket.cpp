@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/private/Communication/Sockets/ServerSocket.cpp
  *
  * @brief       Server-Side implementation using sockets.

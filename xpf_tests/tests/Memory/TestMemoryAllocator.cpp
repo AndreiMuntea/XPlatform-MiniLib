@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_tests/tests/Memory/TestMemoryAllocator.cpp
  *
  * @brief       This contains tests for memory allocator object.

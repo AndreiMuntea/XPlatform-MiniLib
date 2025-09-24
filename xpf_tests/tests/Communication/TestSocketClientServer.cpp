@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_tests/tests/Communication/TestSocketClientServer.cpp
  *
  * @brief       This contains tests for client-server implementation using sockets.

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/private/Communication/Sockets/ClientSocket.cpp
  *
  * @brief       Client-Side implementation using sockets.

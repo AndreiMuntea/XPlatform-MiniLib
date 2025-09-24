@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_tests/tests/Containers/TestString.cpp
  *
  * @brief       This contains tests for string view and for string.

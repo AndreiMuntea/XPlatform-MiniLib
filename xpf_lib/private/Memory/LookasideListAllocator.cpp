@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/private/Memory/LookasideListAllocator.cpp
  *
  * @brief       C++ -like memory allocator. This will use a list to provide quick access

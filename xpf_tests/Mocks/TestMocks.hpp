@@ -1,4 +1,4 @@
-/**
+﻿/**
   * @file        xpf_tests/Mocks/TestMocks.hpp
   *
   * @brief       This contains mocks definitions for tests.

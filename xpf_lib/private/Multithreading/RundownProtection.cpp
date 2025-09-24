@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/private/Multithreading/RundownProtection.cpp
  *
  * @brief       This implements a rundown protection object.

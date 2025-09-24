@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/private/Containers/TwoLockQueue.cpp
  *
  * @brief       C-like struct which provides functionality for an atomic container.

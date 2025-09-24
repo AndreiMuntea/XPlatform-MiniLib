@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_tests/tests/Utility/TestProtobufSerializer.cpp
  *
  * @brief       This contains tests for protobuf serialization

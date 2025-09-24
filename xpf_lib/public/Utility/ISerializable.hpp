@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/public/Utility/ISerializable.hpp
  *
  * @brief       This provides the interface for a class that needs to be

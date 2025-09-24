@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/public/core/platform_specific/CrossPlatformStatus.hpp
  *
  * @brief       This file with the status definition throughout the project.

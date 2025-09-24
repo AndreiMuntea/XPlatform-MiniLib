@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/private/Multithreading/ThreadPool.cpp
  *
  * @brief       This is the class to provide basic threadpool functionality.

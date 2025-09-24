@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_tests/XPF-TestIncludes.hpp
  *
  * @brief       This file contains the includes for test project.

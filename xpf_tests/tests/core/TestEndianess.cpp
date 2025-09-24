@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_tests/tests/core/TestEndianess.cpp
  *
  * @brief       This contains tests for endianess APIs.

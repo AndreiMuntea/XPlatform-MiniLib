@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_tests/XPF-Tests.cpp
  *
  * @brief       This file contains the entry point for xpf tests.

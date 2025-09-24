@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/public/core/TypeTraits.hpp
  *
  * @brief       C++ - like type traits header

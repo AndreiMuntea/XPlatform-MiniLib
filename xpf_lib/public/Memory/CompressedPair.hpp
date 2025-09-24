@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/public/Memory/CompressedPair.hpp
  *
  * @brief       This is the class to mimic std::_Compressed_pair.

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/public/Communication/Sockets/win_km/WskApi.hpp
  *
  * @brief       This contains the windows - kernel mode header to abstract away

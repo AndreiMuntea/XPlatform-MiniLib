@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_tests/tests/Locks/TestBusyLock.cpp
  *
  * @brief       This contains tests for Busy Lock.

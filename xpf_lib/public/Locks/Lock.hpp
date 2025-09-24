@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/public/Locks/Lock.hpp
  *
  * @brief       Generic lock and lockguards.

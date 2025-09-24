@@ -1,4 +1,4 @@
-/**
+﻿/**
   * @file        xpf_tests/Mocks/TestMockEvents.hpp
   *
   * @brief       This contains mocks eventsdefinitions for tests.

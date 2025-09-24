@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_tests/tests/Memory/TestUniquePointer.cpp
  *
  * @brief       This contains tests for unique pointer.

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_tests/tests/Multithreading/TestRundownProtection.cpp
  *
  * @brief       This contains tests for rundown protection.

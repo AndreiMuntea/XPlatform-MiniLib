@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/public/Memory/UniquePointer.hpp
  *
  * @brief       This is the class to mimic std::unique_ptr.

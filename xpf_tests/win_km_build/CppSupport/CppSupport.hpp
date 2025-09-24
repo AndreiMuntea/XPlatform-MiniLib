@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_tests/win_km_build/CppSupport/CppSupport.hpp
  *
  * @brief       Header file with routines to control cpp support in km.

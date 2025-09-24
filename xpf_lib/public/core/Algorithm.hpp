@@ -1,4 +1,4 @@
-/**
+﻿/**
   * @file        xpf_lib/public/core/Algorithm.hpp
   *
   * @brief       Basic header-only algorithms.

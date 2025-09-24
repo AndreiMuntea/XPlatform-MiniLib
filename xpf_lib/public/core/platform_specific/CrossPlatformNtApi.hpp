@@ -1,4 +1,4 @@
-//
+﻿//
 // @file        xpf_lib/public/core/platform_specific/CrossPlatformNtApi.hpp
 //
 // @brief       This file fills nt api which are exported but not documented.

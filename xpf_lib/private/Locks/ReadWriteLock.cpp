@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/private/Locks/ReadWriteLock.cpp
  *
  * @brief       The default read write lock that uses platform-specific APIs.

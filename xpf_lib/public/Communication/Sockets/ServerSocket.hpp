@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/public/Communication/Sockets/ServerSocket.hpp
  *
  * @brief       This contains the server implementation using sockets.

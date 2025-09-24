@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/public/Containers/Stream.hpp
  *
  * @brief       This contains an implementation of StreamReader and StreamWriter

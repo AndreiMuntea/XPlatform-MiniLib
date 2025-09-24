@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/public/Memory/Optional.hpp
  *
  * @brief       C++ -like optional class.

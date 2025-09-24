@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/public/Communication/Sockets/ClientSocket.hpp
  *
  * @brief       This contains the client implementation using sockets.

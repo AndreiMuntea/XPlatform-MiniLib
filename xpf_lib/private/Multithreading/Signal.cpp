@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/private/Multithreading/Signal.cpp
  *
  * @brief       This is a wrapper class over a signal.

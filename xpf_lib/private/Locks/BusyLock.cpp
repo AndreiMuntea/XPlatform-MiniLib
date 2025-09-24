@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/private/Locks/BusyLock.cpp
  *
  * @brief       This is a custom simple spinlock implementation

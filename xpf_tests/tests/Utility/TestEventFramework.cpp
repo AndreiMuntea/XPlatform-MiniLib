@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_tests/tests/Utility/TestEventFramework.cpp
  *
  * @brief       This contains tests for event framework.

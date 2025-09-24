@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/private/Utility/ProtobufSerializer.cpp
  *
  * @brief       In here you'll find a minimalistic implementation of protocol buffer.

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/public/Communication/IServerClient.hpp
  *
  * @brief       This contains the server client interface.

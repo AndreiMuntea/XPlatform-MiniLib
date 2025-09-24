@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/private/Communication/http.cpp
  *
  * @brief       This contains a mini http parser implementation.

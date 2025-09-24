@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/public/Utility/PdbSymbolParser.hpp
  *
  * @brief       In here you'll find functionality for parsing program database (pdb) files.

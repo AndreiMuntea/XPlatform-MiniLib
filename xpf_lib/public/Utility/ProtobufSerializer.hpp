@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file        xpf_lib/public/Utility/ProtobufSerializer.hpp
  *
  * @brief       In here you'll find a minimalistic implementation of protocol buffer.
@@ -176,7 +176,7 @@ DeserializeBinaryBlob(
  *
  *          Positive integers p are encoded as 2 * p (the even numbers),
  *          while negative integers n are encoded as 2 * |n| - 1 (the odd numbers).
- *          The encoding thus �zig-zags� between positive and negative numbers. For example:
+ *          The encoding thus ï¿½zig-zagsï¿½ between positive and negative numbers. For example:
  *
  *          | Signed Original | Encoded As |
  *             0                 0
