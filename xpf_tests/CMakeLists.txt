@@ -36,6 +36,7 @@ add_executable( "XPF_Tests" "XPF-Tests.cpp"
                             "tests/Multithreading/TestThreadPool.cpp"
                             "tests/Utility/TestEventFramework.cpp"
                             "tests/Utility/TestProtobufSerializer.cpp"
+                            "tests/Utility/TestPdbSymbolParser.cpp"
                             "tests/Communication/TestSocketClientServer.cpp"
                             "tests/Communication/TestHttp.cpp")
 
