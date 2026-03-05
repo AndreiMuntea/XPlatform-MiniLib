@@ -297,7 +297,7 @@ ReadBytes(
 //
 
 /**
- * @brief   This is a stream reader class which allows easy writing into a data buffer.
+ * @brief   This is a stream writer class which allows easy writing into a data buffer.
  *          Espeacially useful for serializing data.
  */
 class StreamWriter final : public virtual xpf::IStreamWriter

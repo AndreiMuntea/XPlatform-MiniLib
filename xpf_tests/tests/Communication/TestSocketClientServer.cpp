@@ -184,7 +184,7 @@ MockClientCallback(
 /**
  * @brief       This tests the default constructor of client and server.
  */
-XPF_TEST_SCENARIO(TestSocketClientServeir, DefaultConstructorDestructor)
+XPF_TEST_SCENARIO(TestSocketClientServer, DefaultConstructorDestructor)
 {
     xpf::ServerSocket server("localhost", "27015");
     xpf::ClientSocket client("localhost", "27015");
@@ -194,7 +194,7 @@ XPF_TEST_SCENARIO(TestSocketClientServeir, DefaultConstructorDestructor)
  * @brief       This tests the accept client and connect.
  *              Will send a dummy buffer from both client and server.
  */
-XPF_TEST_SCENARIO(TestSocketClientServeir, SendReceive)
+XPF_TEST_SCENARIO(TestSocketClientServer, SendReceive)
 {
     xpf::thread::Thread serverThread;
     xpf::thread::Thread clientThread;
@@ -216,7 +216,7 @@ XPF_TEST_SCENARIO(TestSocketClientServeir, SendReceive)
 
     clientContext.Client = xpf::DynamicSharedPointerCast<xpf::IClient>(
                                             xpf::MakeShared<xpf::ClientSocket>("localhost", "27015"));
-    XPF_TEST_EXPECT_TRUE(!serverContext.Server.IsEmpty());
+    XPF_TEST_EXPECT_TRUE(!clientContext.Client.IsEmpty());
 
     /* Spawn server thread. */
     status = serverThread.Run(MockServerCallback, &serverContext);
@@ -239,7 +239,7 @@ XPF_TEST_SCENARIO(TestSocketClientServeir, SendReceive)
 /**
  * @brief       This tests the connection to httpbin. An actual site.
  */
-XPF_TEST_SCENARIO(TestSocketClientServeir, HttpBinRequest)
+XPF_TEST_SCENARIO(TestSocketClientServer, HttpBinRequest)
 {
     //
     // Use https://httpbin.org/#/HTTP_Methods/get_get to connect to a real site.

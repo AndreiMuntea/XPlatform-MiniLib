@@ -16,7 +16,7 @@
 #include "xpf_tests/Mocks/TestMocks.hpp"
 
  /**
-  * @brief       This is a context used in busy lock tests.
+  * @brief       This is a context used in read-write lock tests.
   */
 struct MockTestReadWriteLockContext
 {
@@ -175,7 +175,7 @@ XPF_TEST_SCENARIO(TestReadwriteLock, AcquireExclusiveTwice)
     (*context.Lock).UnLockExclusive();
 
     //
-    // Wait until spinlock is taken then wait for the thread to finish.
+    // Wait until lock is taken then wait for the thread to finish.
     //
     while (!context.IsLockTaken)
     {
@@ -183,7 +183,7 @@ XPF_TEST_SCENARIO(TestReadwriteLock, AcquireExclusiveTwice)
     }
 
     //
-    // And now wait for thread to finish - the spinlock should be released.
+    // And now wait for thread to finish - the lock should be released.
     //
     thread.Join();
 }
@@ -227,7 +227,7 @@ XPF_TEST_SCENARIO(TestReadwriteLock, AcquireExclusiveBlocksShared)
     (*context.Lock).UnLockExclusive();
 
     //
-    // Wait until spinlock is taken then wait for the thread to finish.
+    // Wait until lock is taken then wait for the thread to finish.
     //
     while (!context.IsLockTaken)
     {
@@ -235,7 +235,7 @@ XPF_TEST_SCENARIO(TestReadwriteLock, AcquireExclusiveBlocksShared)
     }
 
     //
-    // And now wait for thread to finish - the spinlock should be released.
+    // And now wait for thread to finish - the lock should be released.
     //
     thread.Join();
 }
@@ -284,7 +284,7 @@ XPF_TEST_SCENARIO(TestReadwriteLock, AcquireExclusiveWaitsUntilSharedIsReleased)
 
 
     //
-    // Wait until spinlock is taken then wait for the thread to finish.
+    // Wait until lock is taken then wait for the thread to finish.
     //
     while (!context.IsLockTaken)
     {
@@ -292,7 +292,7 @@ XPF_TEST_SCENARIO(TestReadwriteLock, AcquireExclusiveWaitsUntilSharedIsReleased)
     }
 
     //
-    // And now wait for thread to finish - the spinlock should be released.
+    // And now wait for thread to finish - the lock should be released.
     //
     thread.Join();
 }

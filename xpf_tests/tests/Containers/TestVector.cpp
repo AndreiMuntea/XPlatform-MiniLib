@@ -93,7 +93,7 @@ XPF_TEST_SCENARIO(TestVector, MoveAssignment)
     XPF_TEST_EXPECT_TRUE(!vector1.IsEmpty());
     XPF_TEST_EXPECT_TRUE(size_t{ 4 } == vector1.Size());
 
-    XPF_TEST_EXPECT_TRUE(vector2.IsEmpty());;
+    XPF_TEST_EXPECT_TRUE(vector2.IsEmpty());
     XPF_TEST_EXPECT_TRUE(size_t{ 0 } == vector2.Size());
 
     XPF_TEST_EXPECT_TRUE('1' == vector1[0]);
@@ -102,7 +102,7 @@ XPF_TEST_SCENARIO(TestVector, MoveAssignment)
     XPF_TEST_EXPECT_TRUE('4' == vector1[3]);
 
     //
-    // Now move empty string.
+    // Now move empty vector.
     //
     vector1 = xpf::Move(vector2);
 
@@ -298,4 +298,43 @@ XPF_TEST_SCENARIO(TestVector, TestSort)
     {
         XPF_TEST_EXPECT_TRUE(vector[i - 1] >= vector[i]);
     }
+}
+
+/**
+ * @brief       This tests the Reserve method.
+ */
+XPF_TEST_SCENARIO(TestVector, Reserve)
+{
+    xpf::Vector<uint64_t> vector;
+
+    //
+    // Reserve 5 elements with value 42.
+    //
+    NTSTATUS status = vector.Reserve(5, uint64_t{ 42 });
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(vector.Size() == 5);
+
+    for (size_t i = 0; i < vector.Size(); ++i)
+    {
+        XPF_TEST_EXPECT_TRUE(vector[i] == uint64_t{ 42 });
+    }
+
+    //
+    // Reserve again with a different value - old elements should be replaced.
+    //
+    status = vector.Reserve(3, uint64_t{ 100 });
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(vector.Size() == 3);
+
+    for (size_t i = 0; i < vector.Size(); ++i)
+    {
+        XPF_TEST_EXPECT_TRUE(vector[i] == uint64_t{ 100 });
+    }
+
+    //
+    // Reserve 0 elements - should result in empty vector.
+    //
+    status = vector.Reserve(0, uint64_t{ 0 });
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(vector.Size() == 0);
 }

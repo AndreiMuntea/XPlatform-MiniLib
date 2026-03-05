@@ -35,7 +35,7 @@ namespace xpf
 struct SignalHandle
 {
     /**
-     * @brief This stores details whether this is a manual rest
+     * @brief This stores details whether this is a manual reset
      *        signal or not.
      */
     bool IsManualResetEvent = false;
@@ -222,7 +222,7 @@ Destroy(
      *          On windows kernel mode this is the KEVENT object.
      *          See the structure for other platforms.
      * 
-     *          Getter for this method is available in the event class
+     *          Getter for this method is available in the Signal class
      *          If the caller wants to do some operations with it.
      */
      xpf::SignalHandle m_SignalHandle;
@@ -235,5 +235,5 @@ Destroy(
      */
 
      friend class xpf::MemoryAllocator;
-};  // class Event
+};  // class Signal
 };  // namespace xpf

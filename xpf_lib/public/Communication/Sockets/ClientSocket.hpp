@@ -180,7 +180,7 @@ CreateClientSocketData(
 /**
  * @brief Destroys a previously created server socket data
  *
- * @param[in,out] ClientSocketData - Socket data created by CreateServerSocketData.
+ * @param[in,out] ClientSocketData - Socket data created by CreateClientSocketData.
  *
  * @return void
  */

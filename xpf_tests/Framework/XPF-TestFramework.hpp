@@ -52,7 +52,7 @@ RunAllTests(
 ) noexcept(true);
 
 /**
- * @brief This rotuine is used to log to the default console.
+ * @brief This routine is used to log to the default console.
  *        It is platform dependant.
  *
  * @param[in] Format - The format specifier - see printf doc for this.
@@ -232,7 +232,7 @@ const xpf_test::TestScenarioCallback* gXpfEndMarker = nullptr;
      * @brief       This is the signal handler registered for death tests.
      *              We'll listen for signal signals. and set a global boolean.
      * 
-     * @param[in]    SingalNumber - The identifier of the signal that has been emmited.
+     * @param[in]    SignalNumber - The identifier of the signal that has been emitted.
      *
      * @return void.
      */

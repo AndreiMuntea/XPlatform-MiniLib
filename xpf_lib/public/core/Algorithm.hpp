@@ -165,7 +165,7 @@ AlgoPointerToValue(
 /**
  * @brief Adds an offset to a pointer
  *
- * @param[in] Pointer - Pointer to be addred to.
+ * @param[in] Pointer - Pointer to be added to.
  *
  * @param[in] Offset - Offset to be added to pointer
  * 
@@ -187,7 +187,7 @@ AlgoAddToPointer(
 /**
  * @brief Adds an offset to a pointer - const variant.
  *
- * @param[in] Pointer - Pointer to be addred to.
+ * @param[in] Pointer - Pointer to be added to.
  *
  * @param[in] Offset - Offset to be added to pointer
  *

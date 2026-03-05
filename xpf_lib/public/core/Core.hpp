@@ -68,7 +68,7 @@
 #elif defined (__linux__)
 
     /**
-     * @brief We are on Linuxs user mode.
+     * @brief We are on Linux user mode.
      */
     #define XPF_PLATFORM_LINUX_UM
 

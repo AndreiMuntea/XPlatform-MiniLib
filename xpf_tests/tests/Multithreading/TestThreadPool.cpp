@@ -137,7 +137,7 @@ XPF_TEST_SCENARIO(TestThreadPool, EnqueueRundown)
 /**
  * @brief       This tests the threadpool under stress.
  *              It will enqueue 10 work items that each
- *              will enqueue 1000 work items => 1000 work items.
+ *              will enqueue 1000 work items => 10000 work items.
  *              Each work item will do 10000 increments => 100 000 000 operations.
  */
 XPF_TEST_SCENARIO(TestThreadPool, Stress)

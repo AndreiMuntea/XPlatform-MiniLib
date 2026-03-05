@@ -250,7 +250,7 @@ xpf::ApiAllocateMemory(
 
             //
             // The function is poorly annotated. It actually supports
-            // being called at DISPATCH_LEVEL - but the SAL complies about this.
+            // being called at DISPATCH_LEVEL - but the SAL complains about this.
             // Trick him to think we are below dispatch level.
             //
             _Analysis_assume_(DISPATCH_LEVEL > ::KeGetCurrentIrql());
@@ -496,7 +496,7 @@ xpf::ApiCharToUpper(
         //
         if (::KeGetCurrentIrql() != PASSIVE_LEVEL)
         {
-            if (Character >= L'A' && Character <= L'Z')
+            if (Character >= L'a' && Character <= L'z')
             {
                 Character = Character ^ 0x20;
             }
@@ -559,15 +559,15 @@ xpf::ApiRandomUuid(
         newUuid.Data2 = LOWORD(::RtlRandomEx(&seed32));
         newUuid.Data3 = LOWORD(::RtlRandomEx(&seed32));
 
-        newUuid.Data4[0] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
-        newUuid.Data4[1] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
-        newUuid.Data4[2] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
-        newUuid.Data4[3] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
+        newUuid.Data4[0] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
+        newUuid.Data4[1] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
+        newUuid.Data4[2] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
+        newUuid.Data4[3] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
 
-        newUuid.Data4[4] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
-        newUuid.Data4[5] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
-        newUuid.Data4[6] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
-        newUuid.Data4[7] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
+        newUuid.Data4[4] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
+        newUuid.Data4[5] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
+        newUuid.Data4[6] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
+        newUuid.Data4[7] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
 
         status = STATUS_SUCCESS;
 
@@ -584,15 +584,15 @@ xpf::ApiRandomUuid(
             newUuid.Data2 = LOWORD(::RtlRandomEx(&seed32));
             newUuid.Data3 = LOWORD(::RtlRandomEx(&seed32));
 
-            newUuid.Data4[0] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
-            newUuid.Data4[1] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
-            newUuid.Data4[2] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
-            newUuid.Data4[3] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
+            newUuid.Data4[0] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
+            newUuid.Data4[1] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
+            newUuid.Data4[2] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
+            newUuid.Data4[3] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
 
-            newUuid.Data4[4] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
-            newUuid.Data4[5] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
-            newUuid.Data4[6] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
-            newUuid.Data4[7] = LOWORD(::RtlRandomEx(&seed32)) % 0xFF;
+            newUuid.Data4[4] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
+            newUuid.Data4[5] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
+            newUuid.Data4[6] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
+            newUuid.Data4[7] = LOWORD(::RtlRandomEx(&seed32)) & 0xFF;
 
             status = STATUS_SUCCESS;
         }
@@ -611,7 +611,7 @@ xpf::ApiRandomUuid(
         for (size_t i = 0; i < sizeof(newUuid); )
         {
             const uint64_t currentTime = xpf::ApiCurrentTime();
-            const uint8_t lastByte = currentTime % 0xFF;
+            const uint8_t lastByte = currentTime & 0xFF;
 
             if (xpf::ApiIsHexDigit(lastByte))
             {
@@ -686,7 +686,7 @@ xpf::ApiCaptureStackBacktrace(
 
     /* Preinit output. */
     *CapturedFrames = 0;
-    xpf::ApiZeroMemory(*Frames,
+    xpf::ApiZeroMemory(Frames,
                        Count * sizeof(void*));
 
     NTSTATUS status = STATUS_UNSUCCESSFUL;
@@ -740,7 +740,7 @@ xpf::ApiCaptureStackBacktrace(
     if (!NT_SUCCESS(status))
     {
         *CapturedFrames = 0;
-        xpf::ApiZeroMemory(*Frames,
+        xpf::ApiZeroMemory(Frames,
                            Count * sizeof(void*));
     }
     /* Propagate the status.*/

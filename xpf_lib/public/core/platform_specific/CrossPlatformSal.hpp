@@ -35,7 +35,7 @@
     #define _Out_
 
     #if defined _Inout_
-        #undef _Inout
+        #undef _Inout_
     #endif  // _Inout_
     #define _Inout_
 

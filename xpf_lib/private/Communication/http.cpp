@@ -247,11 +247,11 @@ HttpParseStatusLine(
         }
     }
 
-    /* Now the tesxt error. This is the leftover. */
+    /* Now the text error. This is the leftover. */
     HttpTrimWhitespaces(line);
     ParsedResponse.HttpStatusMessage = line;
 
-    return STATUS_SUCCESS;
+    return status;
 }
 
 /**

@@ -483,7 +483,7 @@ xpf::WskInitializeWskBuffer(
     //
     // Preinit output.
     //
-    Buffer->WskBuf.Length = 0;;
+    Buffer->WskBuf.Length = 0;
     Buffer->WskBuf.Mdl = NULL;
     Buffer->WskBuf.Offset = 0;
     Buffer->ArePagesResident = FALSE;
@@ -1278,7 +1278,7 @@ xpf::WskReceive(
     }
 
     //
-    // Now send data.
+    // Now receive data.
     //
     status = TargetSocket->DispatchTable.ConnectionDispatch->WskReceive(TargetSocket->Socket,
                                                                         &wskBuffer.WskBuf,
@@ -1705,7 +1705,7 @@ XpfSecInitializeSecurityContextW(
     //
     if ((nullptr == SocketApiProvider) ||
         (nullptr == SocketApiProvider->WskSecurityFunctionTable) ||
-        (nullptr == SocketApiProvider->WskSecurityFunctionTable->FreeCredentialsHandle))
+        (nullptr == SocketApiProvider->WskSecurityFunctionTable->InitializeSecurityContextW))
     {
         return SEC_E_TARGET_UNKNOWN;
     }

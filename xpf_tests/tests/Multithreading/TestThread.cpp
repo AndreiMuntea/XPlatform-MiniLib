@@ -73,7 +73,7 @@ XPF_TEST_SCENARIO(TestThread, OneCallbackRun)
 }
 
 /**
- * @brief       This tests that join is automatically calleed when thread is destroyed.
+ * @brief       This tests that join is automatically called when thread is destroyed.
  */
 XPF_TEST_SCENARIO(TestThread, JoinOnDestroy)
 {

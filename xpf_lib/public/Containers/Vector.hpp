@@ -710,7 +710,6 @@ Emplace(
  * @note If the operation fails, the vector remains intact.
  *       If the operations succeeds, the current elements are destroyed.
  */
-template <typename... Arguments>
 _Must_inspect_result_
 inline NTSTATUS
 Reserve(
@@ -718,8 +717,7 @@ Reserve(
     _In_ _Const_ const Type& Value
 ) noexcept(true)
 {
-    xpf::Vector<Type> clone(this->m_Buffer.GetAllocator().First(),
-                            this->m_Buffer.GetAllocator().Second());
+    xpf::Vector<Type> clone(this->m_Buffer.GetAllocator());
     NTSTATUS status = STATUS_UNSUCCESSFUL;
 
     for (size_t i = 0; i < N; ++i)

@@ -215,5 +215,5 @@ DeleteMemoryBlock(
     size_t m_ElementSize = 0;
     size_t m_MaxElements = 0;
     alignas(uint32_t) volatile uint32_t m_CurrentElements = 0;
-};  // class CriticalMemoryAllocator
+};  // class LookasideListAllocator
 };  // namespace xpf

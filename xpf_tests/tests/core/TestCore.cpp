@@ -16,7 +16,7 @@
 
 
 /**
- * @brief       This tests that asserts does inded dies on debug.
+ * @brief       This tests that asserts does indeed dies on debug.
  *
  */
 XPF_TEST_SCENARIO(TestCore, AssertDeathOnDebug)
@@ -26,7 +26,7 @@ XPF_TEST_SCENARIO(TestCore, AssertDeathOnDebug)
 
 
 /**
- * @brief       This tests that verify does inded dies on debug.
+ * @brief       This tests that verify does indeed dies on debug.
  *
  */
 XPF_TEST_SCENARIO(TestCore, VerifyDeathOnDebug)

@@ -77,7 +77,7 @@ XPF_TEST_SCENARIO(TestOptional, CopyConstructor)
 /**
  * @brief       This tests the copy assignment.
  */
-XPF_TEST_SCENARIO(TestOptional, CopyAssingment)
+XPF_TEST_SCENARIO(TestOptional, CopyAssignment)
 {
     xpf::Optional<uint64_t> optional1;
     optional1.Emplace(100);
@@ -100,6 +100,7 @@ XPF_TEST_SCENARIO(TestOptional, CopyAssingment)
         #pragma clang diagnostic ignored "-Wself-assign-overloaded"
     #endif  // XPF_COMPILER_CLANG
 
+        optional2 = optional2;
         XPF_TEST_EXPECT_TRUE(optional2.HasValue());
         XPF_TEST_EXPECT_TRUE(uint64_t{ 200 } == *optional2);
 

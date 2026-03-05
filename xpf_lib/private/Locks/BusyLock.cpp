@@ -52,7 +52,7 @@ xpf::BusyLock::LockExclusive(
         }
 
         //
-        // We successfully acquired the lock shared, so now we simply wait until all readers are done.
+        // We successfully set the writer bit, so now we simply wait until all readers are done.
         // Then we will be the only one with access. Setting the writer bit will prevent any other
         // reader or writer to acquire the lock in the meantime.
         //

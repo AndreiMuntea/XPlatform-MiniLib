@@ -395,7 +395,7 @@ MakeUnique(
  * @note This should be used with caution! It does not guard against invalid type conversions!
  *       As in Windows KM we don't have RTTI. So we just do a best effort with a static-assert.
  */
-template<class CastedType, class InitialType, class AllocatorTypeU>
+template<class CastedType, class InitialType>
 friend UniquePointer<CastedType>
 DynamicUniquePointerCast(
     _Inout_ UniquePointer<InitialType>& Pointer

@@ -448,7 +448,7 @@ XPF_TEST_SCENARIO(TestPlatformApi, NumbersSafeAdd)
     constexpr uint64_t u64value2 = 10;
     uint64_t u64result = 0;
     XPF_TEST_EXPECT_TRUE(true == xpf::ApiNumbersSafeAdd(u64value1, u64value2, &u64result));
-    XPF_TEST_EXPECT_TRUE(u32result == 20);
+    XPF_TEST_EXPECT_TRUE(u64result == 20);
 
     constexpr uint64_t u64ovfValue1 = xpf::NumericLimits<uint64_t>::MaxValue();
     constexpr uint64_t u64ovfValue2 = 10;
@@ -567,7 +567,7 @@ XPF_TEST_SCENARIO(TestPlatformApi, NumbersSafeSub)
     constexpr uint64_t u64value2 = 10;
     uint64_t u64result = 0;
     XPF_TEST_EXPECT_TRUE(true == xpf::ApiNumbersSafeSub(u64value1, u64value2, &u64result));
-    XPF_TEST_EXPECT_TRUE(u32result == 0);
+    XPF_TEST_EXPECT_TRUE(u64result == 0);
 
     constexpr uint64_t u64ovfValue1 = xpf::NumericLimits<uint64_t>::MinValue();
     constexpr uint64_t u64ovfValue2 = 10;
@@ -686,7 +686,7 @@ XPF_TEST_SCENARIO(TestPlatformApi, NumbersSafeMul)
     constexpr uint64_t u64value2 = 10;
     uint64_t u64result = 0;
     XPF_TEST_EXPECT_TRUE(true == xpf::ApiNumbersSafeMul(u64value1, u64value2, &u64result));
-    XPF_TEST_EXPECT_TRUE(u32result == 100);
+    XPF_TEST_EXPECT_TRUE(u64result == 100);
 
     constexpr uint64_t u64ovfValue1 = xpf::NumericLimits<uint64_t>::MaxValue();
     constexpr uint64_t u64ovfValue2 = 10;
@@ -792,4 +792,88 @@ XPF_TEST_SCENARIO(TestPlatformApi, StackBacktraceCapture)
         }
     }
     XPF_TEST_EXPECT_TRUE(foundReturnAddressOnStack);
+}
+
+/**
+ * @brief       This tests that ToUpper and ToLower are consistent
+ *              across a-z, A-Z, and 0-9 ranges.
+ */
+XPF_TEST_SCENARIO(TestPlatformApi, CharToUpperLowerConsistency)
+{
+    //
+    // For lowercase letters, ToUpper should produce the uppercase variant,
+    // and roundtripping ToLower(ToUpper(ch)) should yield ToLower(ch).
+    //
+    for (wchar_t ch = L'a'; ch <= L'z'; ++ch)
+    {
+        wchar_t upper = xpf::ApiCharToUpper(ch);
+        wchar_t lower = xpf::ApiCharToLower(ch);
+
+        XPF_TEST_EXPECT_TRUE(upper >= L'A' && upper <= L'Z');
+        XPF_TEST_EXPECT_TRUE(lower == ch);
+        XPF_TEST_EXPECT_TRUE(xpf::ApiCharToLower(upper) == lower);
+    }
+
+    //
+    // For uppercase letters, ToLower should produce the lowercase variant,
+    // and roundtripping ToUpper(ToLower(ch)) should yield ToUpper(ch).
+    //
+    for (wchar_t ch = L'A'; ch <= L'Z'; ++ch)
+    {
+        wchar_t upper = xpf::ApiCharToUpper(ch);
+        wchar_t lower = xpf::ApiCharToLower(ch);
+
+        XPF_TEST_EXPECT_TRUE(lower >= L'a' && lower <= L'z');
+        XPF_TEST_EXPECT_TRUE(upper == ch);
+        XPF_TEST_EXPECT_TRUE(xpf::ApiCharToUpper(lower) == upper);
+    }
+
+    //
+    // Digits should be unaffected by case conversion.
+    //
+    for (wchar_t ch = L'0'; ch <= L'9'; ++ch)
+    {
+        XPF_TEST_EXPECT_TRUE(xpf::ApiCharToUpper(ch) == ch);
+        XPF_TEST_EXPECT_TRUE(xpf::ApiCharToLower(ch) == ch);
+    }
+}
+
+/**
+ * @brief       This tests that ApiCaptureStackBacktrace properly
+ *              zeroes the frames array before capturing.
+ */
+XPF_TEST_SCENARIO(TestPlatformApi, StackBacktracePreFilled)
+{
+    void* frames[32] = { 0 };
+    const uint32_t framesCount = XPF_ARRAYSIZE(frames);
+    uint32_t capturedFramesCount = 0;
+
+    //
+    // Pre-fill with sentinel values to verify the function zeros them.
+    //
+    for (uint32_t i = 0; i < framesCount; ++i)
+    {
+        frames[i] = reinterpret_cast<void*>(static_cast<uintptr_t>(0xDEADBEEF));
+    }
+
+    NTSTATUS status = xpf::ApiCaptureStackBacktrace(frames, framesCount, &capturedFramesCount);
+    XPF_TEST_EXPECT_TRUE(NT_SUCCESS(status));
+    XPF_TEST_EXPECT_TRUE(capturedFramesCount > 0);
+
+    //
+    // Captured frames should be valid (non-sentinel) pointers.
+    //
+    for (uint32_t i = 0; i < capturedFramesCount; ++i)
+    {
+        XPF_TEST_EXPECT_TRUE(frames[i] != nullptr);
+        XPF_TEST_EXPECT_TRUE(frames[i] != reinterpret_cast<void*>(static_cast<uintptr_t>(0xDEADBEEF)));
+    }
+
+    //
+    // Frames beyond the captured count should be zeroed.
+    //
+    for (uint32_t i = capturedFramesCount; i < framesCount; ++i)
+    {
+        XPF_TEST_EXPECT_TRUE(frames[i] == nullptr);
+    }
 }

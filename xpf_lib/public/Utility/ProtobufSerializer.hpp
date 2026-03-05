@@ -204,5 +204,5 @@ XPF_API
 ZigZagDecode(
     _In_ _Const_ const uint64_t& Value
 ) noexcept(true);
-};  // namespace Protobuf
+};  // class Protobuf
 };  // namespace xpf

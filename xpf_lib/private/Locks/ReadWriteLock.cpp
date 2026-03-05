@@ -194,7 +194,7 @@ xpf::ReadWriteLock::Destroy(
         ::RtlDeleteResource(&lock->RwLock);
     #elif defined XPF_PLATFORM_WIN_KM
         //
-        // On windows KM we destroy the ERESOURCE. This should never faile
+        // On windows KM we destroy the ERESOURCE. This should never fail
         // as the resource was properly initialized.
         //
         const NTSTATUS status = ::ExDeleteResourceLite(&lock->RwLock);
@@ -358,7 +358,7 @@ xpf::ReadWriteLock::LockShared(
         ::KeEnterCriticalRegion();
 
         //
-        // Now acquire the resource exclusively.
+        // Now acquire the resource in shared mode.
         // This shouldn't fail as per documentation.
         //
         // ExAcquireResourceSharedLite returns TRUE if the resource is acquired.

@@ -49,7 +49,7 @@ IClientCookie(
 ) noexcept(true) = default;
 
 /**
- * @brief IServer destructor - default.
+ * @brief IClientCookie destructor - default.
  */
 virtual ~IClientCookie(
     void

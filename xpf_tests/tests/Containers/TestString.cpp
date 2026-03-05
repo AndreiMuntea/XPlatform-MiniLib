@@ -716,7 +716,7 @@ XPF_TEST_SCENARIO(TestString, MoveAssignment)
     XPF_TEST_EXPECT_TRUE(!string1.IsEmpty());
     XPF_TEST_EXPECT_TRUE(size_t{ 2 } == string1.BufferSize());
 
-    XPF_TEST_EXPECT_TRUE(string2.IsEmpty());;
+    XPF_TEST_EXPECT_TRUE(string2.IsEmpty());
     XPF_TEST_EXPECT_TRUE(size_t{ 0 } == string2.BufferSize());
 
     //

@@ -28,7 +28,7 @@
 
 /**
  * @brief   By default all code in here goes into paged section.
- *          We shouldn't attempt serialization at higher IRQLs
+ *          We shouldn't attempt PDB parsing at higher IRQLs
  */
 XPF_SECTION_PAGED;
 
@@ -757,7 +757,7 @@ static constexpr const char MSFHEADER_SIGNATURE[] = "Microsoft C/C++ MSF 7.00\r\
  *
  * @param[in]   Size            - The size we want to convert in number of blocks.
  * @param[in]   BlockSize       - Size of a single block.
- * @parma[out]  NumberOfBlocks  - On output will store the number of blocks of size BlockSize required to store
+ * @param[out]  NumberOfBlocks  - On output will store the number of blocks of size BlockSize required to store
  *                                the given Size.
  *
  * @return      A proper NTSTATUS error code.
@@ -973,7 +973,7 @@ DefragmentDirectoryStream(
  * @param[in]   PdbHeader       - The beginning of the pdb file.
  * @param[in]   PdbSize         - The size of the pdb file.
  * @param[in]   DirectoryStream - The defragmented directorys stream.
- * @parma[in]   StreamIndex     - Index of the stream to be defragmented.
+ * @param[in]   StreamIndex     - Index of the stream to be defragmented.
  * @param[out]  Stream          - On output will store the continuous defragmented stream.
  *
  * @return      A proper NTSTATUS error code.

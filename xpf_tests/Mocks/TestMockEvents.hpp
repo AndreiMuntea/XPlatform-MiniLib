@@ -1,7 +1,7 @@
 ﻿/**
   * @file        xpf_tests/Mocks/TestMockEvents.hpp
   *
-  * @brief       This contains mocks eventsdefinitions for tests.
+  * @brief       This contains mocks event definitions for tests.
   *
   * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
   *

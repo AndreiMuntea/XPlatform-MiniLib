@@ -202,7 +202,7 @@ ApiYieldProcesor(
 ) noexcept(true);
 
 /**
- * @brief Limits the compiler optimizations that can reorder memory accesses across the point of the call..
+ * @brief Limits the compiler optimizations that can reorder memory accesses across the point of the call.
  *
  * @return None.
  */
@@ -389,11 +389,11 @@ ApiAtomicDecrement(
  * 
  * @param[in] Exchange - The exchange value.
  * 
- * @param[in] Comperand The value to compare to Destination.
+ * @param[in] Comperand - The value to compare to Destination.
  * 
  * @return The function returns the initial value of the Destination parameter.
- * 
- * @note The Number must be properly aligned to pointer size, otherwise it will lead to undefined behavior.
+ *
+ * @note The Destination must be properly aligned to pointer size, otherwise it will lead to undefined behavior.
  */
 template <class Type>
 inline Type
@@ -477,7 +477,7 @@ ApiAtomicCompareExchange(
  * 
  * @param[in] Exchange - The exchange value.
  * 
- * @param[in] Comperand The value to compare to Destination.
+ * @param[in] Comperand - The value to compare to Destination.
  * 
  * @return The function returns the initial value of the Destination parameter.
  * 
@@ -708,7 +708,7 @@ ApiNumbersSafeSub(
             }
             else if constexpr (xpf::IsSameType<Type, int8_t>)
             {
-                return NT_SUCCESS(RtlInt8Sub(Minuend, Subtrahend, Result));;
+                return NT_SUCCESS(RtlInt8Sub(Minuend, Subtrahend, Result));
             }
             else if constexpr (xpf::IsSameType<Type, int16_t>)
             {
@@ -921,7 +921,7 @@ ApiEqualCharacters(
 /**
  * @brief Generates a random 128-bit unique identifier.
  * 
- * @param NewUuid - The Newly Generated uuid.
+ * @param[out] NewUuid - The Newly Generated uuid.
  *
  * @return void.
  */

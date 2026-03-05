@@ -406,7 +406,7 @@ xpf::ClientSocket::ReceiveData(
         }
 
         //
-        // Now send the data over the connection.
+        // Now receive the data over the connection.
         // If the network was busy, we will retry.
         //
         status = xpf::BerkeleySocket::Receive(data->ApiProvider,
