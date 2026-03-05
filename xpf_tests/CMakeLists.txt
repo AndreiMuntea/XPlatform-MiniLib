@@ -17,11 +17,13 @@ add_executable( "XPF_Tests" "XPF-Tests.cpp"
                             "tests/core/TestCore.cpp"
                             "tests/core/TestPlatformApi.cpp"
                             "tests/core/TestEndianess.cpp"
+                            "tests/core/TestAlgorithm.cpp"
                             "tests/Memory/TestMemoryAllocator.cpp"
                             "tests/Memory/TestCompressedPair.cpp"
                             "tests/Memory/TestSharedPointer.cpp"
                             "tests/Memory/TestUniquePointer.cpp"
                             "tests/Memory/TestOptional.cpp"
+                            "tests/Memory/TestLookasideListAllocator.cpp"
                             "tests/Containers/TestTwoLockQueue.cpp"
                             "tests/Containers/TestVector.cpp"
                             "tests/Containers/TestString.cpp"
@@ -34,7 +36,8 @@ add_executable( "XPF_Tests" "XPF-Tests.cpp"
                             "tests/Multithreading/TestThreadPool.cpp"
                             "tests/Utility/TestEventFramework.cpp"
                             "tests/Utility/TestProtobufSerializer.cpp"
-                            "tests/Communication/TestSocketClientServer.cpp")
+                            "tests/Communication/TestSocketClientServer.cpp"
+                            "tests/Communication/TestHttp.cpp")
 
 # Link test executable against xpf-lib
 target_link_libraries( XPF_Tests xpf_lib )
