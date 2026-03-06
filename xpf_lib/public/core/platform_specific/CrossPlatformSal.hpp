@@ -84,6 +84,11 @@
     #endif  // _In_reads_bytes_
     #define _In_reads_bytes_(Unused)
 
+    #if defined _In_reads_opt_
+        #undef _In_reads_opt_
+    #endif  // _In_reads_opt_
+    #define _In_reads_opt_(Unused)
+
     #if defined _Analysis_assume_
         #undef _Analysis_assume_
     #endif  // _Analysis_assume_

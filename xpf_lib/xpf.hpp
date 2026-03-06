@@ -51,6 +51,8 @@
 #include "public/Utility/ProtobufSerializer.hpp"
 #include "public/Utility/PdbSymbolParser.hpp"
 
+#include "public/Filesystem/FileObject.hpp"
+
 #include "public/Communication/IServerClient.hpp"
 #include "public/Communication/Sockets/BerkeleySocket.hpp"
 #include "public/Communication/Sockets/ServerSocket.hpp"

@@ -27,7 +27,8 @@ ADD_LIBRARY( "xpf_lib" STATIC "xpf.hpp"
                               "private/Communication/Sockets/ClientSocket.cpp"
                               "private/Communication/Sockets/BerkeleySocket.cpp"
                               "private/Communication/Sockets/win_km/WskApi.cpp"
-                              "private/Communication/http.cpp")
+                              "private/Communication/http.cpp"
+                              "private/Filesystem/FileObject.cpp")
 
 
 # Run the linter on lib - can be enabled when needed.
