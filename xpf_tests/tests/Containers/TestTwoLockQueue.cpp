@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -43,7 +43,7 @@ MockTlqStressCallback(
     _In_opt_ xpf::thread::CallbackArgument Context
 ) noexcept(true)
 {
-    auto mockContext = static_cast<xpf::TwoLockQueue*>(Context);
+    xpf::TwoLockQueue* mockContext = static_cast<xpf::TwoLockQueue*>(Context);
     if (nullptr != mockContext)
     {
         for (size_t i = 0; i < 10000; ++i)
@@ -57,11 +57,11 @@ MockTlqStressCallback(
 
             xpf::TlqPush(*mockContext, &element->ListEntry);
 
-            auto popElement = xpf::TlqPop(*mockContext);
+            xpf::XPF_SINGLE_LIST_ENTRY* popElement = xpf::TlqPop(*mockContext);
             _Analysis_assume_(nullptr != popElement);
             XPF_DEATH_ON_FAILURE(nullptr != popElement);
 
-            auto crtElement = XPF_CONTAINING_RECORD(popElement, MockTestTlqElement, ListEntry);
+            MockTestTlqElement* crtElement = XPF_CONTAINING_RECORD(popElement, MockTestTlqElement, ListEntry);
 
             xpf::MemoryAllocator::Destruct(crtElement);
             xpf::MemoryAllocator::FreeMemory(crtElement);
@@ -207,15 +207,15 @@ XPF_TEST_SCENARIO(TestTwoLockQueue, PushPopOrdering)
     //
     // Pop should return elements in FIFO order.
     //
-    auto* pop1 = xpf::TlqPop(tlq);
+    xpf::XPF_SINGLE_LIST_ENTRY* pop1 = xpf::TlqPop(tlq);
     XPF_TEST_EXPECT_TRUE(pop1 != nullptr);
     XPF_TEST_EXPECT_TRUE(int8_t{ 10 } == XPF_CONTAINING_RECORD(pop1, MockTestTlqElement, ListEntry)->DummyValue);
 
-    auto* pop2 = xpf::TlqPop(tlq);
+    xpf::XPF_SINGLE_LIST_ENTRY* pop2 = xpf::TlqPop(tlq);
     XPF_TEST_EXPECT_TRUE(pop2 != nullptr);
     XPF_TEST_EXPECT_TRUE(int8_t{ 20 } == XPF_CONTAINING_RECORD(pop2, MockTestTlqElement, ListEntry)->DummyValue);
 
-    auto* pop3 = xpf::TlqPop(tlq);
+    xpf::XPF_SINGLE_LIST_ENTRY* pop3 = xpf::TlqPop(tlq);
     XPF_TEST_EXPECT_TRUE(pop3 != nullptr);
     XPF_TEST_EXPECT_TRUE(int8_t{ 30 } == XPF_CONTAINING_RECORD(pop3, MockTestTlqElement, ListEntry)->DummyValue);
 }
@@ -232,7 +232,7 @@ XPF_TEST_SCENARIO(TestTwoLockQueue, PushPopSingleElement)
 
     xpf::TlqPush(tlq, &elem.ListEntry);
 
-    auto* popped = xpf::TlqPop(tlq);
+    xpf::XPF_SINGLE_LIST_ENTRY* popped = xpf::TlqPop(tlq);
     XPF_TEST_EXPECT_TRUE(popped != nullptr);
     XPF_TEST_EXPECT_TRUE(int8_t{ 42 } == XPF_CONTAINING_RECORD(popped, MockTestTlqElement, ListEntry)->DummyValue);
 
@@ -308,7 +308,7 @@ XPF_TEST_SCENARIO(TestTwoLockQueue, InterleavedPushPop)
     xpf::TlqPush(tlq, &elemA.ListEntry);
     xpf::TlqPush(tlq, &elemB.ListEntry);
 
-    auto* popped = xpf::TlqPop(tlq);
+    xpf::XPF_SINGLE_LIST_ENTRY* popped = xpf::TlqPop(tlq);
     XPF_TEST_EXPECT_TRUE(popped != nullptr);
     XPF_TEST_EXPECT_TRUE(int8_t{ 'A' } == XPF_CONTAINING_RECORD(popped, MockTestTlqElement, ListEntry)->DummyValue);
 

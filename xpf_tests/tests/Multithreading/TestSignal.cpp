@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -42,7 +42,7 @@ MockSignalCallback(
     _In_opt_ xpf::thread::CallbackArgument Context
 ) noexcept(true)
 {
-    auto mockContext = static_cast<MockTestSignalContext*>(Context);
+    MockTestSignalContext* mockContext = static_cast<MockTestSignalContext*>(Context);
 
     if (nullptr != mockContext)
     {

@@ -7,7 +7,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -402,7 +402,7 @@ WriteBytes(
     //
     // Copy the buffer into destination.
     //
-    auto buffer = static_cast<uint8_t*>(this->m_Buffer.GetBuffer());
+    uint8_t* buffer = static_cast<uint8_t*>(this->m_Buffer.GetBuffer());
     xpf::ApiCopyMemory(&buffer[this->m_Cursor],
                        Bytes,
                        NumberOfBytes);

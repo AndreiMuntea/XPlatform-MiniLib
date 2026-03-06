@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -319,7 +319,7 @@ xpf::ServerSocket::EstablishClientConnection(
     // First we get to the underlying data.
     // Cast the ClientCookie to the ServerSocketClientData.
     //
-    auto clientCookie = xpf::DynamicSharedPointerCast<xpf::ServerSocketClientData>(ClientConnection);
+    xpf::SharedPointer<xpf::ServerSocketClientData> clientCookie = xpf::DynamicSharedPointerCast<xpf::ServerSocketClientData>(ClientConnection);
     if (clientCookie.IsEmpty() || (nullptr == serverSocketData))
     {
         return STATUS_INVALID_CONNECTION;
@@ -347,7 +347,7 @@ xpf::ServerSocket::CloseClientConnection(
     //
     // First we get to the underlying data.
     //
-    auto clientCookie = xpf::DynamicSharedPointerCast<xpf::ServerSocketClientData>(ClientConnection);
+    xpf::SharedPointer<xpf::ServerSocketClientData> clientCookie = xpf::DynamicSharedPointerCast<xpf::ServerSocketClientData>(ClientConnection);
     if (clientCookie.IsEmpty())
     {
         return;
@@ -400,7 +400,7 @@ xpf::ServerSocket::AcceptClient(
     //
     // Allocate memory for ServerSocketClientData.
     //
-    auto clientCookie = xpf::DynamicSharedPointerCast<xpf::IClientCookie>(xpf::MakeShared<xpf::ServerSocketClientData>());
+    xpf::SharedPointer<xpf::IClientCookie> clientCookie = xpf::DynamicSharedPointerCast<xpf::IClientCookie>(xpf::MakeShared<xpf::ServerSocketClientData>());
     if (clientCookie.IsEmpty())
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -461,7 +461,7 @@ xpf::ServerSocket::DisconnectClient(
     //
     // First we get to the underlying data.
     //
-    auto clientCookie = xpf::DynamicSharedPointerCast<xpf::ServerSocketClientData>(ClientCookie);
+    xpf::SharedPointer<xpf::ServerSocketClientData> clientCookie = xpf::DynamicSharedPointerCast<xpf::ServerSocketClientData>(ClientCookie);
     if (clientCookie.IsEmpty())
     {
         return STATUS_NOT_SUPPORTED;
@@ -475,7 +475,7 @@ xpf::ServerSocket::DisconnectClient(
         //
         // Check if this client has the same UUID as the one we are searching.
         //
-        const auto& client = xpf::DynamicSharedPointerCast<xpf::ServerSocketClientData>(this->m_Clients[i]);
+        const xpf::SharedPointer<xpf::ServerSocketClientData> client = xpf::DynamicSharedPointerCast<xpf::ServerSocketClientData>(this->m_Clients[i]);
         if (client.IsEmpty() || !xpf::ApiAreUuidsEqual((*clientCookie).UniqueId, (*client).UniqueId))
         {
             continue;
@@ -509,7 +509,7 @@ xpf::ServerSocket::SendData(
     //
     // We get to the underlying data.
     //
-    auto connection = xpf::DynamicSharedPointerCast<xpf::ServerSocketClientData>(ClientCookie);
+    xpf::SharedPointer<xpf::ServerSocketClientData> connection = xpf::DynamicSharedPointerCast<xpf::ServerSocketClientData>(ClientCookie);
     if (connection.IsEmpty())
     {
         return STATUS_INVALID_PARAMETER;
@@ -568,7 +568,7 @@ xpf::ServerSocket::ReceiveData(
     //
     // We get to the underlying data.
     //
-    auto connection = xpf::DynamicSharedPointerCast<xpf::ServerSocketClientData>(ClientCookie);
+    xpf::SharedPointer<xpf::ServerSocketClientData> connection = xpf::DynamicSharedPointerCast<xpf::ServerSocketClientData>(ClientCookie);
     if (connection.IsEmpty())
     {
         return STATUS_INVALID_PARAMETER;

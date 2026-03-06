@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -91,11 +91,11 @@ Buffer(
     // Grab a reference from compressed pair. It makes the code more easier to read.
     // On release it will be optimized away - as these will be inline calls.
     //
-    auto& allocator = this->GetAllocator();
-    auto& buffer = this->GetBuffer();
+    xpf::PolymorphicAllocator& allocator = this->GetAllocator();
+    void*& buffer = this->GetBuffer();
 
-    auto& otherAllocator = Other.GetAllocator();
-    auto& otherBuffer = Other.GetBuffer();
+    xpf::PolymorphicAllocator& otherAllocator = Other.GetAllocator();
+    void*& otherBuffer = Other.GetBuffer();
 
     //
     // Move from other to this.
@@ -114,9 +114,9 @@ Buffer(
 
 /**
  * @brief Copy assignment - deleted.
- * 
+ *
  * @param[in] Other - The other object to construct from.
- * 
+ *
  * @return A reference to *this object after copy.
  */
 Buffer&
@@ -126,10 +126,10 @@ operator=(
 
 /**
  * @brief Move assignment.
- * 
+ *
  * @param[in,out] Other - The other object to construct from.
  *                        Will be invalidated after this call.
- * 
+ *
  * @return A reference to *this object after move.
  */
 Buffer&
@@ -148,11 +148,11 @@ operator=(
         // Grab a reference from compressed pair. It makes the code more easier to read.
         // On release it will be optimized away - as these will be inline calls.
         //
-        auto& allocator = this->GetAllocator();
-        auto& buffer = this->GetBuffer();
+        xpf::PolymorphicAllocator& allocator = this->GetAllocator();
+        void*& buffer = this->GetBuffer();
 
-        auto& otherAllocator = Other.GetAllocator();
-        auto& otherBuffer = Other.GetBuffer();
+        xpf::PolymorphicAllocator& otherAllocator = Other.GetAllocator();
+        void*& otherBuffer = Other.GetBuffer();
 
         //
         // Move from other to this.
@@ -179,8 +179,8 @@ Clear(
     void
 ) noexcept(true)
 {
-    auto& buffer = this->GetBuffer();
-    auto& allocator = this->GetAllocator();
+    void*& buffer = this->GetBuffer();
+    xpf::PolymorphicAllocator& allocator = this->GetAllocator();
 
     if (nullptr != buffer)
     {

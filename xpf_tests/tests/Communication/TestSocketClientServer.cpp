@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -42,7 +42,7 @@ MockServerCallback(
     _In_opt_ xpf::thread::CallbackArgument Context
 ) noexcept(true)
 {
-    auto mockContext = static_cast<MockServerThreadContext*>(Context);
+    MockServerThreadContext* mockContext = static_cast<MockServerThreadContext*>(Context);
     if (nullptr == mockContext)
     {
         XPF_ASSERT(false);
@@ -123,7 +123,7 @@ MockClientCallback(
     _In_opt_ xpf::thread::CallbackArgument Context
 ) noexcept(true)
 {
-    auto mockContext = static_cast<MockClientThreadContext*>(Context);
+    MockClientThreadContext* mockContext = static_cast<MockClientThreadContext*>(Context);
     if (nullptr == mockContext)
     {
         XPF_ASSERT(false);

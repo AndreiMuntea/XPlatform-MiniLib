@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -129,7 +129,7 @@ XPF_TEST_SCENARIO(TestVector, IndexOperator)
     vector1[2] = L'z';
     vector1[3] = L'7';
 
-    const auto& constVector1 = vector1;
+    const xpf::Vector<char>& constVector1 = vector1;
     XPF_TEST_EXPECT_TRUE(constVector1[0] == L'X');
     XPF_TEST_EXPECT_TRUE(constVector1[1] == L'Y');
     XPF_TEST_EXPECT_TRUE(constVector1[2] == L'z');

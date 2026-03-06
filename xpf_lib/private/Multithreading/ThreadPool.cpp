@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -136,7 +136,7 @@ xpf::ThreadPool::Enqueue(
     // So we go into our round-robin algorithm. Don't guard access to m_RoundRobinIndex
     // as the only guarantee we need is to be a valid thread.
     //
-    auto currentRoundRobinIndex = this->m_RoundRobinIndex;
+    size_t currentRoundRobinIndex = this->m_RoundRobinIndex;
     if (currentRoundRobinIndex >= this->m_Threads.Size())
     {
         currentRoundRobinIndex = 0;

@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -23,7 +23,7 @@ XPF_TEST_SCENARIO(TestUniquePointer, DefaultConstructorDestructor)
     xpf::UniquePointer<int> ptr;
     XPF_TEST_EXPECT_TRUE(ptr.IsEmpty());
 
-    auto ptrSize = 4 * sizeof(void*);           // compressed_pair(allocator, buffer)
+    size_t ptrSize = 4 * sizeof(void*);           // compressed_pair(allocator, buffer)
     XPF_TEST_EXPECT_TRUE(sizeof(ptr) == ptrSize);
 }
 
@@ -32,11 +32,11 @@ XPF_TEST_SCENARIO(TestUniquePointer, DefaultConstructorDestructor)
  */
 XPF_TEST_SCENARIO(TestUniquePointer, MakeUniqueMethod)
 {
-    const auto ptr1 = xpf::MakeUnique<int>(100);
+    const xpf::UniquePointer<int> ptr1 = xpf::MakeUnique<int>(100);
     XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
     XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
 
-    auto ptr2 = xpf::MakeUnique<int>(50);
+    xpf::UniquePointer<int> ptr2 = xpf::MakeUnique<int>(50);
     XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
     XPF_TEST_EXPECT_TRUE(50 == (*ptr2));
 }
@@ -46,7 +46,7 @@ XPF_TEST_SCENARIO(TestUniquePointer, MakeUniqueMethod)
  */
 XPF_TEST_SCENARIO(TestUniquePointer, ResetMethod)
 {
-    auto ptr1 = xpf::MakeUnique<int>(100);
+    xpf::UniquePointer<int> ptr1 = xpf::MakeUnique<int>(100);
     XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
     XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
 
@@ -62,11 +62,11 @@ XPF_TEST_SCENARIO(TestUniquePointer, ResetMethod)
  */
 XPF_TEST_SCENARIO(TestUniquePointer, MoveConstructor)
 {
-    auto ptr1 = xpf::MakeUnique<int>(100);
+    xpf::UniquePointer<int> ptr1 = xpf::MakeUnique<int>(100);
     XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
     XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
 
-    const auto ptr2{ xpf::Move(ptr1) };
+    const xpf::UniquePointer<int> ptr2{ xpf::Move(ptr1) };
     XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
     XPF_TEST_EXPECT_TRUE(100 == (*ptr2));
 
@@ -78,11 +78,11 @@ XPF_TEST_SCENARIO(TestUniquePointer, MoveConstructor)
  */
 XPF_TEST_SCENARIO(TestUniquePointer, MoveAssignment)
 {
-    auto ptr1 = xpf::MakeUnique<int>(100);
+    xpf::UniquePointer<int> ptr1 = xpf::MakeUnique<int>(100);
     XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
     XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
 
-    auto ptr2 = xpf::MakeUnique<int>(50);
+    xpf::UniquePointer<int> ptr2 = xpf::MakeUnique<int>(50);
     XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
     XPF_TEST_EXPECT_TRUE(50 == (*ptr2));
 
@@ -103,11 +103,11 @@ XPF_TEST_SCENARIO(TestUniquePointer, MoveAssignment)
  */
 XPF_TEST_SCENARIO(TestUniquePointer, DynamicUniquePointerCastSameType)
 {
-    auto ptr1 = xpf::MakeUnique<int>(100);
+    xpf::UniquePointer<int> ptr1 = xpf::MakeUnique<int>(100);
     XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
     XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
 
-    auto ptr2 = xpf::DynamicUniquePointerCast<int>(ptr1);
+    xpf::UniquePointer<int> ptr2 = xpf::DynamicUniquePointerCast<int>(ptr1);
     XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
     XPF_TEST_EXPECT_TRUE(100 == (*ptr2));
     XPF_TEST_EXPECT_TRUE(ptr1.IsEmpty());
@@ -118,13 +118,13 @@ XPF_TEST_SCENARIO(TestUniquePointer, DynamicUniquePointerCastSameType)
  */
 XPF_TEST_SCENARIO(TestUniquePointer, DynamicUniquePointerCastDifferentType)
 {
-    auto ptr1 = xpf::MakeUnique<xpf::mocks::Derived>(100);
+    xpf::UniquePointer<xpf::mocks::Derived> ptr1 = xpf::MakeUnique<xpf::mocks::Derived>(100);
     XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
 
-    auto ptr2 = xpf::DynamicUniquePointerCast<xpf::mocks::Base>(ptr1);
+    xpf::UniquePointer<xpf::mocks::Base> ptr2 = xpf::DynamicUniquePointerCast<xpf::mocks::Base>(ptr1);
     XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
 
-    auto ptr3 = xpf::DynamicUniquePointerCast<xpf::mocks::Derived>(ptr2);
+    xpf::UniquePointer<xpf::mocks::Derived> ptr3 = xpf::DynamicUniquePointerCast<xpf::mocks::Derived>(ptr2);
     XPF_TEST_EXPECT_TRUE(!ptr3.IsEmpty());
     XPF_TEST_EXPECT_TRUE(ptr2.IsEmpty());
 }
@@ -140,10 +140,10 @@ XPF_TEST_SCENARIO(TestUniquePointer, DynamicUniquePointerCastVirtualInheritance)
 
     XPF_TEST_EXPECT_TRUE(xpf::AlgoPointerToValue(xpf::AddressOf(object)) != xpf::AlgoPointerToValue(objectBase))
 
-    auto ptr1 = xpf::MakeUnique<xpf::mocks::VirtualInheritanceDerived>(100);
+    xpf::UniquePointer<xpf::mocks::VirtualInheritanceDerived> ptr1 = xpf::MakeUnique<xpf::mocks::VirtualInheritanceDerived>(100);
     XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
 
-    auto ptr2 = xpf::DynamicUniquePointerCast<xpf::mocks::Base>(ptr1);
+    xpf::UniquePointer<xpf::mocks::Base> ptr2 = xpf::DynamicUniquePointerCast<xpf::mocks::Base>(ptr1);
     XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
     XPF_TEST_EXPECT_TRUE(ptr1.IsEmpty());
 }

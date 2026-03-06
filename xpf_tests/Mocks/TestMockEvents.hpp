@@ -5,7 +5,7 @@
   *
   * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
   *
-  * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+  * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
   *              All rights reserved.
   *
   * @license     See top-level directory LICENSE file.
@@ -154,7 +154,7 @@ OnEvent(
 
     if ((*Event).EventId() == this->m_EventId)
     {
-        auto mockEvent = static_cast<xpf::mocks::MockEvent*>(Event.Get());
+        xpf::mocks::MockEvent* mockEvent = static_cast<xpf::mocks::MockEvent*>(Event.Get());
         for (uint32_t i = 0; i < (*mockEvent).Value(); ++i)
         {
             xpf::ApiAtomicIncrement(&this->m_IncrementedValue);

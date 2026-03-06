@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -24,7 +24,7 @@ XPF_TEST_SCENARIO(TestSharedPointer, DefaultConstructorDestructor)
     xpf::SharedPointer<int> ptr;
     XPF_TEST_EXPECT_TRUE(ptr.IsEmpty());
 
-    auto ptrSize = 4 * sizeof(void*);           // reference counter
+    size_t ptrSize = 4 * sizeof(void*);           // reference counter
     XPF_TEST_EXPECT_TRUE(sizeof(ptr) == ptrSize);
 }
 
@@ -33,11 +33,11 @@ XPF_TEST_SCENARIO(TestSharedPointer, DefaultConstructorDestructor)
  */
 XPF_TEST_SCENARIO(TestSharedPointer, MakeShared)
 {
-    const auto ptr1 = xpf::MakeShared<int>(100);
+    const xpf::SharedPointer<int> ptr1 = xpf::MakeShared<int>(100);
     XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
     XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
 
-    auto ptr2 = xpf::MakeShared<int>(50);
+    xpf::SharedPointer<int> ptr2 = xpf::MakeShared<int>(50);
     XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
     XPF_TEST_EXPECT_TRUE(50 == (*ptr2));
 }
@@ -47,7 +47,7 @@ XPF_TEST_SCENARIO(TestSharedPointer, MakeShared)
  */
 XPF_TEST_SCENARIO(TestSharedPointer, Reset)
 {
-    auto ptr1 = xpf::MakeShared<int>(100);
+    xpf::SharedPointer<int> ptr1 = xpf::MakeShared<int>(100);
     XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
     XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
 
@@ -63,11 +63,11 @@ XPF_TEST_SCENARIO(TestSharedPointer, Reset)
  */
 XPF_TEST_SCENARIO(TestSharedPointer, MoveConstructor)
 {
-    auto ptr1 = xpf::MakeShared<int>(100);
+    xpf::SharedPointer<int> ptr1 = xpf::MakeShared<int>(100);
     XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
     XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
 
-    const auto ptr2{ xpf::Move(ptr1) };
+    const xpf::SharedPointer<int> ptr2{ xpf::Move(ptr1) };
     XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
     XPF_TEST_EXPECT_TRUE(100 == (*ptr2));
 
@@ -79,11 +79,11 @@ XPF_TEST_SCENARIO(TestSharedPointer, MoveConstructor)
  */
 XPF_TEST_SCENARIO(TestSharedPointer, MoveAssignment)
 {
-    auto ptr1 = xpf::MakeShared<int>(100);
+    xpf::SharedPointer<int> ptr1 = xpf::MakeShared<int>(100);
     XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
     XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
 
-    auto ptr2 = xpf::MakeShared<int>(50);
+    xpf::SharedPointer<int> ptr2 = xpf::MakeShared<int>(50);
     XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
     XPF_TEST_EXPECT_TRUE(50 == (*ptr2));
 
@@ -103,11 +103,11 @@ XPF_TEST_SCENARIO(TestSharedPointer, MoveAssignment)
  */
 XPF_TEST_SCENARIO(TestSharedPointer, CopyConstructor)
 {
-    auto ptr1 = xpf::MakeShared<int>(100);
+    xpf::SharedPointer<int> ptr1 = xpf::MakeShared<int>(100);
     XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
     XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
 
-    auto ptr2{ ptr1 };
+    xpf::SharedPointer<int> ptr2{ ptr1 };
     XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
     XPF_TEST_EXPECT_TRUE(100 == (*ptr2));
 
@@ -127,11 +127,11 @@ XPF_TEST_SCENARIO(TestSharedPointer, CopyConstructor)
  */
 XPF_TEST_SCENARIO(TestSharedPointer, CopyAssignment)
 {
-    auto ptr1 = xpf::MakeShared<int>(100);
+    xpf::SharedPointer<int> ptr1 = xpf::MakeShared<int>(100);
     XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
     XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
 
-    auto ptr2 = xpf::MakeShared<int>(50);
+    xpf::SharedPointer<int> ptr2 = xpf::MakeShared<int>(50);
     XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
     XPF_TEST_EXPECT_TRUE(50 == (*ptr2));
 
@@ -175,11 +175,11 @@ XPF_TEST_SCENARIO(TestSharedPointer, CopyAssignment)
  */
 XPF_TEST_SCENARIO(TestSharedPointer, DynamicSharedPointerCastSameType)
 {
-    auto ptr1 = xpf::MakeShared<int>(100);
+    xpf::SharedPointer<int> ptr1 = xpf::MakeShared<int>(100);
     XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
     XPF_TEST_EXPECT_TRUE(100 == (*ptr1));
 
-    auto ptr2 = xpf::DynamicSharedPointerCast<int>(ptr1);
+    xpf::SharedPointer<int> ptr2 = xpf::DynamicSharedPointerCast<int>(ptr1);
     XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
     XPF_TEST_EXPECT_TRUE(100 == (*ptr2));
 
@@ -192,14 +192,14 @@ XPF_TEST_SCENARIO(TestSharedPointer, DynamicSharedPointerCastSameType)
  */
 XPF_TEST_SCENARIO(TestSharedPointer, DynamicSharedPointerCastDifferentType)
 {
-    auto ptr1 = xpf::MakeShared<xpf::mocks::Derived>(100);
+    xpf::SharedPointer<xpf::mocks::Derived> ptr1 = xpf::MakeShared<xpf::mocks::Derived>(100);
     XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
 
-    auto ptr2 = xpf::DynamicSharedPointerCast<xpf::mocks::Base>(ptr1);
+    xpf::SharedPointer<xpf::mocks::Base> ptr2 = xpf::DynamicSharedPointerCast<xpf::mocks::Base>(ptr1);
     XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
     XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
 
-    auto ptr3 = xpf::DynamicSharedPointerCast<xpf::mocks::Derived>(ptr2);
+    xpf::SharedPointer<xpf::mocks::Derived> ptr3 = xpf::DynamicSharedPointerCast<xpf::mocks::Derived>(ptr2);
     XPF_TEST_EXPECT_TRUE(!ptr3.IsEmpty());
     XPF_TEST_EXPECT_TRUE(!ptr2.IsEmpty());
 }
@@ -215,7 +215,7 @@ XPF_TEST_SCENARIO(TestSharedPointer, DynamicSharedPointerCastVirtualInheritance)
 
     XPF_TEST_EXPECT_TRUE(xpf::AlgoPointerToValue(xpf::AddressOf(object)) != xpf::AlgoPointerToValue(objectBase))
 
-    auto ptr1 = xpf::MakeShared<xpf::mocks::VirtualInheritanceDerived>(100);
+    xpf::SharedPointer<xpf::mocks::VirtualInheritanceDerived> ptr1 = xpf::MakeShared<xpf::mocks::VirtualInheritanceDerived>(100);
     XPF_TEST_EXPECT_TRUE(!ptr1.IsEmpty());
 
     xpf::SharedPointer<xpf::mocks::Base> ptr2 = xpf::DynamicSharedPointerCast<xpf::mocks::Base>(ptr1);

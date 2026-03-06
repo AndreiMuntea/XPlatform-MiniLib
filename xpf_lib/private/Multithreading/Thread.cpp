@@ -7,7 +7,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -41,7 +41,7 @@ XpfInternalThreadRunCallback(
 {
     XPF_MAX_PASSIVE_LEVEL();
 
-    auto context = static_cast<xpf::thread::InternalContext*>(Parameter);
+    xpf::thread::InternalContext* context = static_cast<xpf::thread::InternalContext*>(Parameter);
     if (nullptr != context)
     {
         if (context->UserCallback)
@@ -66,7 +66,7 @@ XpfInternalThreadRunCallback(
 {
     XPF_MAX_PASSIVE_LEVEL();
 
-    auto context = static_cast<xpf::thread::InternalContext*>(Parameter);
+    xpf::thread::InternalContext* context = static_cast<xpf::thread::InternalContext*>(Parameter);
     if (nullptr == context)
     {
         return;
@@ -108,7 +108,7 @@ XpfInternalThreadRunCallback(
     _In_ void* Parameter
 ) noexcept(true)
 {
-    auto context = static_cast<xpf::thread::InternalContext*>(Parameter);
+    xpf::thread::InternalContext* context = static_cast<xpf::thread::InternalContext*>(Parameter);
     if (nullptr != context)
     {
         if (context->UserCallback)

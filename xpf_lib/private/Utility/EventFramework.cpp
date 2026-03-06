@@ -7,7 +7,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -178,7 +178,7 @@ xpf::EventBus::RegisterListener(
     //
     // Now we create the event data listener structure.
     //
-    auto listenerDataSharedPtr = xpf::MakeSharedWithAllocator<xpf::EventListenerData>(this->m_Listeners.GetAllocator());
+    xpf::SharedPointer<xpf::EventListenerData> listenerDataSharedPtr = xpf::MakeSharedWithAllocator<xpf::EventListenerData>(this->m_Listeners.GetAllocator());
     if (listenerDataSharedPtr.IsEmpty())
     {
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -351,7 +351,7 @@ xpf::EventBus::CloneListeners(
         //
         // If any allocation is failing, we return an empty list.
         //
-        auto newListenerSharedPtr = xpf::MakeSharedWithAllocator<xpf::EventListenerData>(this->m_Listeners.GetAllocator());
+        xpf::SharedPointer<xpf::EventListenerData> newListenerSharedPtr = xpf::MakeSharedWithAllocator<xpf::EventListenerData>(this->m_Listeners.GetAllocator());
         if (newListenerSharedPtr.IsEmpty())
         {
             clone.Reset();
@@ -368,7 +368,7 @@ xpf::EventBus::CloneListeners(
         //
         // And finally insert to the clone.
         //
-        auto status = (*clone).Emplace(newListenerSharedPtr);
+        NTSTATUS status = (*clone).Emplace(newListenerSharedPtr);
         if (!NT_SUCCESS(status))
         {
             clone.Reset();

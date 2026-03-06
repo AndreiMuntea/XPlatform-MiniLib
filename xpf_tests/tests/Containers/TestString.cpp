@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -744,7 +744,7 @@ XPF_TEST_SCENARIO(TestString, IndexOperator)
     string1[2] = L'z';
     string1[3] = L'7';
 
-    const auto& constString1 = string1;
+    const xpf::String<wchar_t>& constString1 = string1;
     XPF_TEST_EXPECT_TRUE(constString1[0] == L'X');
     XPF_TEST_EXPECT_TRUE(constString1[1] == L'Y');
     XPF_TEST_EXPECT_TRUE(constString1[2] == L'z');

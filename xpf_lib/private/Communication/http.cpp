@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -216,7 +216,7 @@ HttpParseStatusLine(
     /* First the http version. */
     HttpTrimWhitespaces(line);
     status = STATUS_NOT_FOUND;
-    for (const auto& supportedHttpVersion : gHttpSupportedVersions)
+    for (const xpf::http::HttpVersionMap& supportedHttpVersion : gHttpSupportedVersions)
     {
         if (line.StartsWith(supportedHttpVersion.Text, true))
         {
@@ -235,7 +235,7 @@ HttpParseStatusLine(
     /* Now the status code. */
     HttpTrimWhitespaces(line);
     status = STATUS_NOT_FOUND;
-    for (const auto& code : gHttpStatusCodes)
+    for (const xpf::http::HttpStatusMap& code : gHttpStatusCodes)
     {
         if (line.StartsWith(code.Text, true))
         {
@@ -390,7 +390,7 @@ xpf::http::BuildHttpRequest(
 
     /* GET  /foobar/otherbar/somepage?arg1=val1&arg2=val2 HTTP/1.1*/
     status = STATUS_NOT_FOUND;
-    for (const auto& item : gHttpSupportedVersions)
+    for (const xpf::http::HttpVersionMap& item : gHttpSupportedVersions)
     {
         if (item.Version == Version)
         {

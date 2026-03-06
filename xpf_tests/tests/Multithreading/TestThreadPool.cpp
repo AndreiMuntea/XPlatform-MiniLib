@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -49,7 +49,7 @@ MockThreadPoolIncrementCallback(
     _In_opt_ xpf::thread::CallbackArgument Context
 ) noexcept(true)
 {
-    auto mockContext = static_cast<MockTestThreadPoolContext*>(Context);
+    MockTestThreadPoolContext* mockContext = static_cast<MockTestThreadPoolContext*>(Context);
     if (nullptr != mockContext)
     {
         for (size_t i = 0; i < mockContext->Iterations; ++i)
@@ -70,7 +70,7 @@ MockThreadPoolEnqueueCallback(
     _In_opt_ xpf::thread::CallbackArgument Context
 ) noexcept(true)
 {
-    auto mockContext = static_cast<MockTestThreadPoolContext*>(Context);
+    MockTestThreadPoolContext* mockContext = static_cast<MockTestThreadPoolContext*>(Context);
     if (nullptr != mockContext)
     {
         for (size_t i = 0; i < 1000; ++i)

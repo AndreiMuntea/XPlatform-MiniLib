@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -40,7 +40,7 @@ MockLookasideStressCallback(
     _In_opt_ xpf::thread::CallbackArgument Context
 ) noexcept(true)
 {
-    auto mockContext = static_cast<MockLookasideStressContext*>(Context);
+    MockLookasideStressContext* mockContext = static_cast<MockLookasideStressContext*>(Context);
     if (nullptr != mockContext && nullptr != mockContext->Allocator)
     {
         for (size_t i = 0; i < 1000; ++i)

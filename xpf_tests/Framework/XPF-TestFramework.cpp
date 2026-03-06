@@ -11,7 +11,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -75,7 +75,7 @@ xpf_test::RunAllTests(
     // Now we can iterate over the section. Start at gXpfStartMarker and go until gXpfEndMarker.
     // We need to keep track of the padding added, so we skip nulls.
     //
-    for (auto crtEntry = &gXpfStartMarker; crtEntry != &gXpfEndMarker; crtEntry++)
+    for (const xpf_test::TestScenarioCallback** crtEntry = &gXpfStartMarker; crtEntry != &gXpfEndMarker; crtEntry++)
     {
         if (nullptr == (*crtEntry))
         {

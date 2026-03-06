@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -131,7 +131,7 @@ XPF_TEST_SCENARIO(TestAlgorithm, PointerToValueAndBack)
     // nullptr should convert to 0.
     //
     int* nullPtr = nullptr;
-    auto nullValue = xpf::AlgoPointerToValue(nullPtr);
+    size_t nullValue = xpf::AlgoPointerToValue(nullPtr);
     XPF_TEST_EXPECT_TRUE(0 == nullValue);
 
     //
@@ -140,7 +140,7 @@ XPF_TEST_SCENARIO(TestAlgorithm, PointerToValueAndBack)
     int dummyVariable = 42;
     int* originalPtr = &dummyVariable;
 
-    auto value = xpf::AlgoPointerToValue(originalPtr);
+    size_t value = xpf::AlgoPointerToValue(originalPtr);
     void* recoveredPtr = xpf::AlgoValueToPointer(static_cast<uint64_t>(value));
     XPF_TEST_EXPECT_TRUE(recoveredPtr == originalPtr);
 }

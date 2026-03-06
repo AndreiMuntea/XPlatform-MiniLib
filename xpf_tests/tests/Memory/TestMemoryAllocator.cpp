@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -44,10 +44,10 @@ XPF_TEST_SCENARIO(TestMemoryAllocator, NonTriviallyDestructibleObject)
 {
     XPF_TEST_EXPECT_TRUE(!xpf::IsTriviallyDestructible<xpf::mocks::Base>());
 
-    auto object = xpf::MemoryAllocator::AllocateMemory(sizeof(xpf::mocks::Base));
+    void* object = xpf::MemoryAllocator::AllocateMemory(sizeof(xpf::mocks::Base));
     XPF_TEST_EXPECT_TRUE(nullptr != object);
 
-    auto baseObject = static_cast<xpf::mocks::Base*>(object);
+    xpf::mocks::Base* baseObject = static_cast<xpf::mocks::Base*>(object);
     xpf::MemoryAllocator::Construct(baseObject, 100);
 
     xpf::MemoryAllocator::Destruct(baseObject);

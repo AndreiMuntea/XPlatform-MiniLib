@@ -5,7 +5,7 @@
   *
   * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
   *
-  * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+  * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
   *              All rights reserved.
   *
   * @license     See top-level directory LICENSE file.
@@ -131,7 +131,7 @@ AlgoValueToPointer(
  * 
  */
 template <class PtrType>
-constexpr inline auto
+constexpr inline size_t
 AlgoPointerToValue(
     _In_opt_ _Const_ const PtrType* const Pointer
 ) noexcept(true)

@@ -7,7 +7,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -181,7 +181,7 @@ IsEmpty(
     void
 ) const noexcept(true)
 {
-    const auto& rawPointer = this->m_CompressedPair.Second().ObjectBase;
+    Type* const& rawPointer = this->m_CompressedPair.Second().ObjectBase;
     return (nullptr == rawPointer);
 }
 
@@ -201,8 +201,8 @@ Reset(
     // Otherwise we need to destruct the underlying object.
     //
 
-    auto& allocator = this->m_CompressedPair.First();
-    auto& memoryBlock = this->m_CompressedPair.Second();
+    xpf::PolymorphicAllocator& allocator = this->m_CompressedPair.First();
+    MemoryBlock& memoryBlock = this->m_CompressedPair.Second();
 
     if (!this->IsEmpty())
     {
@@ -239,11 +239,11 @@ Assign(
     // And the final step is to invalidate other's raw pointer.
     //
 
-    auto& allocator = this->m_CompressedPair.First();
-    auto& memoryBlock = this->m_CompressedPair.Second();
+    xpf::PolymorphicAllocator& allocator = this->m_CompressedPair.First();
+    MemoryBlock& memoryBlock = this->m_CompressedPair.Second();
 
-    auto& otherAllocator = Other.m_CompressedPair.First();
-    auto& otherMemoryBlock = Other.m_CompressedPair.Second();
+    xpf::PolymorphicAllocator& otherAllocator = Other.m_CompressedPair.First();
+    MemoryBlock& otherMemoryBlock = Other.m_CompressedPair.Second();
 
     if (this != xpf::AddressOf(Other))
     {
@@ -436,8 +436,8 @@ MakeUniqueWithAllocator(
     // On release it will be optimized away - as these will be inline calls.
     //
     UniquePointer<TypeU> uniquePtr{ Allocator };
-    auto& allocator = uniquePtr.m_CompressedPair.First();
-    auto& memoryBlock = uniquePtr.m_CompressedPair.Second();
+    xpf::PolymorphicAllocator& allocator = uniquePtr.m_CompressedPair.First();
+    typename UniquePointer<TypeU>::MemoryBlock& memoryBlock = uniquePtr.m_CompressedPair.Second();
 
     //
     // Try to allocate memory and construct an object of type U.
@@ -482,8 +482,8 @@ DynamicUniquePointerCast(
     // Grab a reference from compressed pair. It makes the code more easier to read.
     // On release it will be optimized away - as these will be inline calls.
     //
-    auto& memoryBlock = newPointer.GetMemoryBlock();
-    auto& otherMemoryBlock = Pointer.GetMemoryBlock();
+    typename UniquePointer<CastedType>::MemoryBlock& memoryBlock = newPointer.GetMemoryBlock();
+    typename UniquePointer<InitialType>::MemoryBlock& otherMemoryBlock = Pointer.GetMemoryBlock();
 
     memoryBlock.AllocationBase = otherMemoryBlock.AllocationBase;
     memoryBlock.ObjectBase = static_cast<CastedType*>(otherMemoryBlock.ObjectBase);

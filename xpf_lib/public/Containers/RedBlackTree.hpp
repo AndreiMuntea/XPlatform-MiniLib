@@ -8,7 +8,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -442,11 +442,11 @@ RedBlackTree(
     /*
      * Grab references for readability.
      */
-    auto& allocator = this->m_CompressedPair.First();
-    auto& root = this->m_CompressedPair.Second();
+    xpf::PolymorphicAllocator& allocator = this->m_CompressedPair.First();
+    Node*& root = this->m_CompressedPair.Second();
 
-    auto& otherAllocator = Other.m_CompressedPair.First();
-    auto& otherRoot = Other.m_CompressedPair.Second();
+    xpf::PolymorphicAllocator& otherAllocator = Other.m_CompressedPair.First();
+    Node*& otherRoot = Other.m_CompressedPair.Second();
 
     /*
      * Steal from Other.
@@ -498,11 +498,11 @@ operator=(
         /*
          * Grab references for readability.
          */
-        auto& allocator = this->m_CompressedPair.First();
-        auto& root = this->m_CompressedPair.Second();
+        xpf::PolymorphicAllocator& allocator = this->m_CompressedPair.First();
+        Node*& root = this->m_CompressedPair.Second();
 
-        auto& otherAllocator = Other.m_CompressedPair.First();
-        auto& otherRoot = Other.m_CompressedPair.Second();
+        xpf::PolymorphicAllocator& otherAllocator = Other.m_CompressedPair.First();
+        Node*& otherRoot = Other.m_CompressedPair.Second();
 
         /*
          * Steal from Other.
@@ -539,7 +539,7 @@ Emplace(
     _Inout_ Value&& ValueToInsert
 ) noexcept(true)
 {
-    auto& root = this->m_CompressedPair.Second();
+    Node*& root = this->m_CompressedPair.Second();
 
     /*
      * Walk the tree to find the correct insertion point.
@@ -632,7 +632,7 @@ Find(
     _In_ _Const_ const Key& KeyToFind
 ) const noexcept(true)
 {
-    const auto& root = this->m_CompressedPair.Second();
+    Node* const& root = this->m_CompressedPair.Second();
     Node* current = root;
 
     while (nullptr != current)
@@ -810,7 +810,7 @@ Begin(
     void
 ) const noexcept(true)
 {
-    const auto& root = this->m_CompressedPair.Second();
+    Node* const& root = this->m_CompressedPair.Second();
 
     if (nullptr == root)
     {
@@ -867,7 +867,7 @@ Clear(
     void
 ) noexcept(true)
 {
-    auto& root = this->m_CompressedPair.Second();
+    Node*& root = this->m_CompressedPair.Second();
     this->DestroySubtree(root);
     root = nullptr;
     this->m_Size = 0;
@@ -918,7 +918,7 @@ RotateLeft(
     XPF_DEATH_ON_FAILURE(nullptr != X->Right);
     _Analysis_assume_(nullptr != X->Right);
 
-    auto& root = this->m_CompressedPair.Second();
+    Node*& root = this->m_CompressedPair.Second();
 
     Node* y = X->Right;
 
@@ -981,7 +981,7 @@ RotateRight(
     XPF_DEATH_ON_FAILURE(nullptr != X->Left);
     _Analysis_assume_(nullptr != X->Left);
 
-    auto& root = this->m_CompressedPair.Second();
+    Node*& root = this->m_CompressedPair.Second();
 
     Node* y = X->Left;
 
@@ -1041,7 +1041,7 @@ InsertFixup(
     XPF_DEATH_ON_FAILURE(nullptr != Z);
     _Analysis_assume_(nullptr != Z);
 
-    auto& root = this->m_CompressedPair.Second();
+    Node*& root = this->m_CompressedPair.Second();
 
     /*
      * While z's parent is red, we have a red-red violation.
@@ -1209,7 +1209,7 @@ EraseFixup(
     _Inout_opt_ Node* XParent
 ) noexcept(true)
 {
-    auto& root = this->m_CompressedPair.Second();
+    Node*& root = this->m_CompressedPair.Second();
 
     /*
      * x has an "extra black" that we need to push up or eliminate.
@@ -1417,7 +1417,7 @@ Transplant(
 {
     XPF_DEATH_ON_FAILURE(nullptr != U);
 
-    auto& root = this->m_CompressedPair.Second();
+    Node*& root = this->m_CompressedPair.Second();
 
     if (nullptr == U->Parent)
     {
@@ -1499,7 +1499,7 @@ AllocateNode(
     _Inout_ Value&& NodeValue
 ) noexcept(true)
 {
-    auto& allocator = this->m_CompressedPair.First();
+    xpf::PolymorphicAllocator& allocator = this->m_CompressedPair.First();
 
     void* memory = allocator.AllocFunction(sizeof(Node));
     if (nullptr == memory)
@@ -1534,7 +1534,7 @@ DeallocateNode(
 {
     XPF_DEATH_ON_FAILURE(nullptr != NodeToFree);
 
-    auto& allocator = this->m_CompressedPair.First();
+    xpf::PolymorphicAllocator& allocator = this->m_CompressedPair.First();
 
     xpf::MemoryAllocator::Destruct(NodeToFree);
     allocator.FreeFunction(NodeToFree);

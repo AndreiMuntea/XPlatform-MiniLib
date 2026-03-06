@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -143,7 +143,7 @@ xpf::BerkeleySocket::DeInitializeSocketApiProvider(
     {
         return;
     }
-    auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(*SocketApiProvider);
+    xpf::BerkeleySocket::SocketApiProviderInternal* apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(*SocketApiProvider);
 
     //
     // Deinitialize the support provider.
@@ -217,7 +217,7 @@ xpf::BerkeleySocket::GetAddressInformation(
             goto CleanUp;
         }
     #elif defined XPF_PLATFORM_WIN_KM
-        auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
+        xpf::BerkeleySocket::SocketApiProviderInternal* apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
         status = xpf::WskGetAddrInfo(&apiProvider->WskProvider,
                                      NodeName,
                                      ServiceName,
@@ -269,7 +269,7 @@ xpf::BerkeleySocket::FreeAddressInformation(
         freeaddrinfo(*AddrInfo);
 
     #elif defined XPF_PLATFORM_WIN_KM
-        auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
+        xpf::BerkeleySocket::SocketApiProviderInternal* apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
         (void) xpf::WskFreeAddrInfo(&apiProvider->WskProvider,
                                     AddrInfo);
     #else
@@ -344,7 +344,7 @@ xpf::BerkeleySocket::CreateSocket(
                                            : STATUS_SUCCESS;
         XPF_ASSERT(!newSocket->IsTlsSocket);
     #elif defined XPF_PLATFORM_WIN_KM
-        auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
+        xpf::BerkeleySocket::SocketApiProviderInternal* apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
         status = xpf::WskCreateSocket(&apiProvider->WskProvider,
                                       AddressFamily,
                                       Type,
@@ -406,7 +406,7 @@ xpf::BerkeleySocket::ShutdownSocket(
     {
         return STATUS_INVALID_PARAMETER;
     }
-    auto socket = static_cast<xpf::BerkeleySocket::SocketInternal*>(*TargetSocket);
+    xpf::BerkeleySocket::SocketInternal* socket = static_cast<xpf::BerkeleySocket::SocketInternal*>(*TargetSocket);
 
     //
     // Proper socket shutdown.
@@ -428,7 +428,7 @@ xpf::BerkeleySocket::ShutdownSocket(
         }
         XPF_ASSERT(!socket->IsTlsSocket);
     #elif defined XPF_PLATFORM_WIN_KM
-        auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
+        xpf::BerkeleySocket::SocketApiProviderInternal* apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
 
         if (socket->IsTlsSocket)
         {
@@ -487,7 +487,7 @@ xpf::BerkeleySocket::Bind(
         return STATUS_INVALID_PARAMETER;
     }
 
-    auto socket = static_cast<xpf::BerkeleySocket::SocketInternal*>(TargetSocket);
+    xpf::BerkeleySocket::SocketInternal* socket = static_cast<xpf::BerkeleySocket::SocketInternal*>(TargetSocket);
 
     //
     // Platform specific bind
@@ -500,7 +500,7 @@ xpf::BerkeleySocket::Bind(
         }
         XPF_ASSERT(!socket->IsTlsSocket);
     #elif defined XPF_PLATFORM_WIN_KM
-        auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
+        xpf::BerkeleySocket::SocketApiProviderInternal* apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
         NTSTATUS status = xpf::WskBind(&apiProvider->WskProvider,
                                        &socket->Socket,
                                        LocalAddress,
@@ -540,7 +540,7 @@ xpf::BerkeleySocket::Listen(
         return STATUS_INVALID_PARAMETER;
     }
 
-    auto socket = static_cast<xpf::BerkeleySocket::SocketInternal*>(TargetSocket);
+    xpf::BerkeleySocket::SocketInternal* socket = static_cast<xpf::BerkeleySocket::SocketInternal*>(TargetSocket);
 
     //
     // If the socket was not created for listen, we fail.
@@ -568,7 +568,7 @@ xpf::BerkeleySocket::Listen(
         }
         XPF_ASSERT(!socket->IsTlsSocket);
     #elif defined XPF_PLATFORM_WIN_KM
-        auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
+        xpf::BerkeleySocket::SocketApiProviderInternal* apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
         NTSTATUS status = xpf::WskListen(&apiProvider->WskProvider,
                                          &socket->Socket);
         if (!NT_SUCCESS(status))
@@ -613,7 +613,7 @@ xpf::BerkeleySocket::Connect(
         return STATUS_INVALID_PARAMETER;
     }
 
-    auto socket = static_cast<xpf::BerkeleySocket::SocketInternal*>(TargetSocket);
+    xpf::BerkeleySocket::SocketInternal* socket = static_cast<xpf::BerkeleySocket::SocketInternal*>(TargetSocket);
 
     //
     // Sanity check that this is not a listening socket.
@@ -635,7 +635,7 @@ xpf::BerkeleySocket::Connect(
         XPF_UNREFERENCED_PARAMETER(TargetHost);
         XPF_ASSERT(!socket->IsTlsSocket);
     #elif defined XPF_PLATFORM_WIN_KM
-        auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
+        xpf::BerkeleySocket::SocketApiProviderInternal* apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
 
         NTSTATUS status = xpf::WskConnect(&apiProvider->WskProvider,
                                           &socket->Socket,
@@ -712,7 +712,7 @@ xpf::BerkeleySocket::Accept(
         return STATUS_INVALID_PARAMETER;
     }
 
-    auto socket = static_cast<xpf::BerkeleySocket::SocketInternal*>(TargetSocket);
+    xpf::BerkeleySocket::SocketInternal* socket = static_cast<xpf::BerkeleySocket::SocketInternal*>(TargetSocket);
 
     //
     // Sanity check that this is a listening socket.
@@ -747,7 +747,7 @@ xpf::BerkeleySocket::Accept(
                                            : STATUS_SUCCESS;
         XPF_ASSERT(!newSocket->IsTlsSocket);
     #elif defined XPF_PLATFORM_WIN_KM
-        auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
+        xpf::BerkeleySocket::SocketApiProviderInternal* apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
         status = xpf::WskAccept(&apiProvider->WskProvider,
                                 &socket->Socket,
                                 &newSocket->Socket);
@@ -799,7 +799,7 @@ xpf::BerkeleySocket::Send(
         return STATUS_INVALID_PARAMETER;
     }
 
-    auto socket = static_cast<xpf::BerkeleySocket::SocketInternal*>(TargetSocket);
+    xpf::BerkeleySocket::SocketInternal* socket = static_cast<xpf::BerkeleySocket::SocketInternal*>(TargetSocket);
 
     //
     // Sanity check that this is not a listening socket.
@@ -867,7 +867,7 @@ xpf::BerkeleySocket::Send(
             }
         }
     #elif defined XPF_PLATFORM_WIN_KM
-        auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
+        xpf::BerkeleySocket::SocketApiProviderInternal* apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
         NTSTATUS status = STATUS_UNSUCCESSFUL;
 
         if (socket->IsTlsSocket)
@@ -921,7 +921,7 @@ xpf::BerkeleySocket::Receive(
         return STATUS_INVALID_PARAMETER;
     }
 
-    auto socket = static_cast<xpf::BerkeleySocket::SocketInternal*>(TargetSocket);
+    xpf::BerkeleySocket::SocketInternal* socket = static_cast<xpf::BerkeleySocket::SocketInternal*>(TargetSocket);
 
     //
     // Sanity check that this is not a listening socket.
@@ -1012,7 +1012,7 @@ xpf::BerkeleySocket::Receive(
             }
         }
     #elif defined XPF_PLATFORM_WIN_KM
-        auto apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
+        xpf::BerkeleySocket::SocketApiProviderInternal* apiProvider = static_cast<xpf::BerkeleySocket::SocketApiProviderInternal*>(SocketApiProvider);
         NTSTATUS status = STATUS_UNSUCCESSFUL;
 
         if (socket->IsTlsSocket)

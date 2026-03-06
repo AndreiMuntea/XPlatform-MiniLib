@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -250,7 +250,7 @@ ValidateRBTreeInvariants(
     _Inout_ NTSTATUS* Scenario
 ) noexcept(true)
 {
-    auto* root = Tree.Root();
+    xpf::RedBlackTreeNode<Key, Value>* root = Tree.Root();
 
     /* An empty tree is always valid. */
     if (nullptr == root)
@@ -403,7 +403,7 @@ XPF_TEST_SCENARIO(TestRedBlackTree, AllocateDeallocateNode)
 
     int key = 42;
     int value = 420;
-    auto* node = tree.AllocateNode(xpf::Move(key), xpf::Move(value));
+    xpf::RedBlackTreeNode<int, int>* node = tree.AllocateNode(xpf::Move(key), xpf::Move(value));
 
     XPF_TEST_EXPECT_TRUE(nullptr != node);
     XPF_TEST_EXPECT_TRUE(node->NodeKey == 42);
@@ -603,14 +603,14 @@ XPF_TEST_SCENARIO(TestRedBlackTree, StressInsertAscending)
     /* Verify all elements are findable. */
     for (int i = 0; i < 500; ++i)
     {
-        auto it = tree.Find(i);
+        xpf::RedBlackTreeIterator<int, int> it = tree.Find(i);
         XPF_TEST_EXPECT_TRUE(it != tree.End());
         XPF_TEST_EXPECT_TRUE(it.GetValue() == i * 2);
     }
 
     /* Verify sorted iteration. */
     int prev = -1;
-    for (auto it = tree.Begin(); it != tree.End(); ++it)
+    for (xpf::RedBlackTreeIterator<int, int> it = tree.Begin(); it != tree.End(); ++it)
     {
         XPF_TEST_EXPECT_TRUE(it.GetKey() > prev);
         prev = it.GetKey();
@@ -642,14 +642,14 @@ XPF_TEST_SCENARIO(TestRedBlackTree, StressInsertDescending)
     /* Verify all elements are findable. */
     for (int i = 0; i < 500; ++i)
     {
-        auto it = tree.Find(i);
+        xpf::RedBlackTreeIterator<int, int> it = tree.Find(i);
         XPF_TEST_EXPECT_TRUE(it != tree.End());
         XPF_TEST_EXPECT_TRUE(it.GetValue() == i * 3);
     }
 
     /* Verify sorted iteration. */
     int prev = -1;
-    for (auto it = tree.Begin(); it != tree.End(); ++it)
+    for (xpf::RedBlackTreeIterator<int, int> it = tree.Begin(); it != tree.End(); ++it)
     {
         XPF_TEST_EXPECT_TRUE(it.GetKey() > prev);
         prev = it.GetKey();
@@ -690,7 +690,7 @@ XPF_TEST_SCENARIO(TestRedBlackTree, StressInsertErase)
     /* Verify remaining elements (odd keys) are sorted. */
     int prev = -1;
     int count = 0;
-    for (auto it = tree.Begin(); it != tree.End(); ++it)
+    for (xpf::RedBlackTreeIterator<int, int> it = tree.Begin(); it != tree.End(); ++it)
     {
         XPF_TEST_EXPECT_TRUE(it.GetKey() > prev);
         XPF_TEST_EXPECT_TRUE(it.GetKey() % 2 == 1);    /* Only odd keys remain. */
@@ -737,7 +737,7 @@ XPF_TEST_SCENARIO(TestMap, SingleInsertAndFind)
     XPF_TEST_EXPECT_TRUE(map.Size() == size_t{ 1 });
     XPF_TEST_EXPECT_TRUE(!map.IsEmpty());
 
-    auto it = map.Find(10);
+    xpf::RedBlackTreeIterator<int, int> it = map.Find(10);
     XPF_TEST_EXPECT_TRUE(it != map.End());
     XPF_TEST_EXPECT_TRUE(it.GetKey() == 10);
     XPF_TEST_EXPECT_TRUE(it.GetValue() == 100);
@@ -761,7 +761,7 @@ XPF_TEST_SCENARIO(TestMap, InsertDuplicateKeyUpdatesValue)
     XPF_TEST_EXPECT_TRUE(map.Size() == size_t{ 1 });
 
     /* Value should be updated. */
-    auto it = map.Find(5);
+    xpf::RedBlackTreeIterator<int, int> it = map.Find(5);
     XPF_TEST_EXPECT_TRUE(it != map.End());
     XPF_TEST_EXPECT_TRUE(it.GetValue() == 99);
 
@@ -786,7 +786,7 @@ XPF_TEST_SCENARIO(TestMap, InsertMultipleElements)
 
     for (int i = 0; i < 10; ++i)
     {
-        auto it = map.Find(i);
+        xpf::RedBlackTreeIterator<int, int> it = map.Find(i);
         XPF_TEST_EXPECT_TRUE(it != map.End());
         XPF_TEST_EXPECT_TRUE(it.GetKey() == i);
         XPF_TEST_EXPECT_TRUE(it.GetValue() == i * 10);
@@ -1000,7 +1000,7 @@ XPF_TEST_SCENARIO(TestMap, IteratorSingleElement)
     int key = 42; int value = 420;
     XPF_TEST_EXPECT_TRUE(NT_SUCCESS(map.Emplace(xpf::Move(key), xpf::Move(value))));
 
-    auto it = map.Begin();
+    xpf::RedBlackTreeIterator<int, int> it = map.Begin();
     XPF_TEST_EXPECT_TRUE(it != map.End());
     XPF_TEST_EXPECT_TRUE(it.GetKey() == 42);
     XPF_TEST_EXPECT_TRUE(it.GetValue() == 420);
@@ -1028,7 +1028,7 @@ XPF_TEST_SCENARIO(TestMap, IteratorInOrder)
     /* Iterate and verify ascending order: 1, 3, 4, 5, 6, 7, 8. */
     int expectedKeys[] = { 1, 3, 4, 5, 6, 7, 8 };
     int idx = 0;
-    for (auto it = map.Begin(); it != map.End(); ++it)
+    for (xpf::RedBlackTreeIterator<int, int> it = map.Begin(); it != map.End(); ++it)
     {
         XPF_TEST_EXPECT_TRUE(idx < 7);
         XPF_TEST_EXPECT_TRUE(it.GetKey() == expectedKeys[idx]);
@@ -1054,8 +1054,8 @@ XPF_TEST_SCENARIO(TestMap, IteratorReverseOrder)
     }
 
     /* Start from the last element (maximum) via the internal tree. */
-    auto* root = map.Tree().Root();
-    auto it = xpf::RedBlackTreeIterator<int, int>{ map.Tree().Maximum(root) };
+    xpf::RedBlackTreeNode<int, int>* root = map.Tree().Root();
+    xpf::RedBlackTreeIterator<int, int> it = xpf::RedBlackTreeIterator<int, int>{ map.Tree().Maximum(root) };
 
     /* Traverse in reverse: 8, 7, 6, 5, 4, 3, 1. */
     int expectedKeys[] = { 8, 7, 6, 5, 4, 3, 1 };
@@ -1090,7 +1090,7 @@ XPF_TEST_SCENARIO(TestMap, IteratorAfterErase)
     /* Iterate and verify: 1, 2, 4, 5. */
     int expectedKeys[] = { 1, 2, 4, 5 };
     int idx = 0;
-    for (auto it = map.Begin(); it != map.End(); ++it)
+    for (xpf::RedBlackTreeIterator<int, int> it = map.Begin(); it != map.End(); ++it)
     {
         XPF_TEST_EXPECT_TRUE(idx < 4);
         XPF_TEST_EXPECT_TRUE(it.GetKey() == expectedKeys[idx]);
@@ -1131,7 +1131,7 @@ XPF_TEST_SCENARIO(TestMap, MoveConstructor)
     XPF_TEST_EXPECT_TRUE(map2.Size() == size_t{ 5 });
     for (int i = 0; i < 5; ++i)
     {
-        auto it = map2.Find(i);
+        xpf::RedBlackTreeIterator<int, int> it = map2.Find(i);
         XPF_TEST_EXPECT_TRUE(it != map2.End());
         XPF_TEST_EXPECT_TRUE(it.GetValue() == i * 100);
     }
@@ -1166,7 +1166,7 @@ XPF_TEST_SCENARIO(TestMap, MoveAssignment)
     XPF_TEST_EXPECT_TRUE(map2.Size() == size_t{ 5 });
     for (int i = 0; i < 5; ++i)
     {
-        auto it = map2.Find(i);
+        xpf::RedBlackTreeIterator<int, int> it = map2.Find(i);
         XPF_TEST_EXPECT_TRUE(it != map2.End());
     }
 
@@ -1353,7 +1353,7 @@ XPF_TEST_SCENARIO(TestSet, IteratorInOrder)
     /* Iterate and verify ascending order: 1, 2, 3, 4, 5. */
     int expected[] = { 1, 2, 3, 4, 5 };
     int idx = 0;
-    for (auto it = set.Begin(); it != set.End(); ++it)
+    for (xpf::RedBlackTreeIterator<int, uint8_t> it = set.Begin(); it != set.End(); ++it)
     {
         XPF_TEST_EXPECT_TRUE(idx < 5);
         XPF_TEST_EXPECT_TRUE(it.GetKey() == expected[idx]);

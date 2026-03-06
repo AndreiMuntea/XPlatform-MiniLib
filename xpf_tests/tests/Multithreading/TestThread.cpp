@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -37,7 +37,7 @@ MockThreadCallback(
     _In_opt_ xpf::thread::CallbackArgument Context
 ) noexcept(true)
 {
-    auto mockContext = static_cast<MockTestThreadContext*>(Context);
+    MockTestThreadContext* mockContext = static_cast<MockTestThreadContext*>(Context);
     if (nullptr != mockContext)
     {
         xpf::ApiAtomicIncrement(&mockContext->Increment);

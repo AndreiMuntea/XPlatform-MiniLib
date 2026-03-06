@@ -7,7 +7,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -194,7 +194,7 @@ IsEmpty(
     void
 ) const noexcept(true)
 {
-    const auto& referenceCounter = this->m_CompressedPair.Second().ReferenceCounter;
+    int32_t* const& referenceCounter = this->m_CompressedPair.Second().ReferenceCounter;
     return (nullptr == referenceCounter);
 }
 
@@ -237,11 +237,11 @@ Assign(
     // The last step is to increment the reference counter.
     //
 
-    auto& allocator = this->m_CompressedPair.First();
-    auto& memoryBlock = this->m_CompressedPair.Second();
+    xpf::PolymorphicAllocator& allocator = this->m_CompressedPair.First();
+    MemoryBlock& memoryBlock = this->m_CompressedPair.Second();
 
-    auto& otherAllocator = Other.m_CompressedPair.First();
-    auto& otherMemoryBlock = Other.m_CompressedPair.Second();
+    const xpf::PolymorphicAllocator& otherAllocator = Other.m_CompressedPair.First();
+    const MemoryBlock& otherMemoryBlock = Other.m_CompressedPair.Second();
 
     if (this != xpf::AddressOf(Other))
     {
@@ -412,8 +412,8 @@ Dereference(
     // If the raw pointer was never assigned, then we are done.
     // Otherwise we need to destruct the underlying object.
     //
-    auto& allocator = this->m_CompressedPair.First();
-    auto& memoryBlock = this->m_CompressedPair.Second();
+    xpf::PolymorphicAllocator& allocator = this->m_CompressedPair.First();
+    MemoryBlock& memoryBlock = this->m_CompressedPair.Second();
 
     while (true)
     {
@@ -481,7 +481,7 @@ Reference(
     // Grab a reference from compressed pair. It makes the code more easier to read.
     // On release it will be optimized away - as these will be inline calls.
     //
-    auto& memoryBlock = this->m_CompressedPair.Second();
+    MemoryBlock& memoryBlock = this->m_CompressedPair.Second();
 
     while (true)
     {
@@ -583,8 +583,8 @@ MakeSharedWithAllocator(
     // On release it will be optimized away - as these will be inline calls.
     //
     SharedPointer<TypeU> sharedPtr{ Allocator };
-    auto& allocator = sharedPtr.m_CompressedPair.First();
-    auto& memoryBlock = sharedPtr.m_CompressedPair.Second();
+    xpf::PolymorphicAllocator& allocator = sharedPtr.m_CompressedPair.First();
+    typename SharedPointer<TypeU>::MemoryBlock& memoryBlock = sharedPtr.m_CompressedPair.Second();
 
     //
     // Try to allocate memory and construct an object of type U.
@@ -642,8 +642,8 @@ DynamicSharedPointerCast(
     // Grab a reference from compressed pair. It makes the code more easier to read.
     // On release it will be optimized away - as these will be inline calls.
     //
-    auto& memoryBlock = newPointer.GetMemoryBlock();
-    auto& otherMemoryBlock = Pointer.GetMemoryBlock();
+    typename SharedPointer<CastedType>::MemoryBlock& memoryBlock = newPointer.GetMemoryBlock();
+    typename SharedPointer<InitialType>::MemoryBlock& otherMemoryBlock = Pointer.GetMemoryBlock();
 
     memoryBlock.ReferenceCounter = otherMemoryBlock.ReferenceCounter;
     memoryBlock.ObjectBase = static_cast<CastedType*>(otherMemoryBlock.ObjectBase);
@@ -669,8 +669,8 @@ DynamicSharedPointerCast(
         /* Grab a reference from compressed pair. It makes the code more easier to read.     */                             \
         /* On release it will be optimized away - as these will be inline calls.             */                             \
         /*                                                                                   */                             \
-        auto& _allocator    = Pointer.GetAllocator();                                                                       \
-        auto& _memoryBlock  = Pointer.GetMemoryBlock();                                                                     \
+        xpf::PolymorphicAllocator& _allocator    = Pointer.GetAllocator();                                                    \
+        typename xpf::SharedPointer<Type>::MemoryBlock& _memoryBlock  = Pointer.GetMemoryBlock();                                                                     \
                                                                                                                             \
         /*                                                                                   */                             \
         /* Try to allocate memory and construct an object of type U.                         */                             \
@@ -711,11 +711,11 @@ DynamicSharedPointerCast(
                                                                                                                             \
         xpf::SharedPointer<InitialType> _copy = OldPointer;                                                                 \
                                                                                                                             \
-        auto& _allocator = NewPointer.GetAllocator();                                                                       \
-        auto& _memoryBlock = NewPointer.GetMemoryBlock();                                                                   \
+        xpf::PolymorphicAllocator& _allocator = NewPointer.GetAllocator();                                                    \
+        typename xpf::SharedPointer<CastedType>::MemoryBlock& _memoryBlock = NewPointer.GetMemoryBlock();                    \
                                                                                                                             \
-        auto& _otherAllocator = _copy.GetAllocator();                                                                       \
-        auto& _otherMemoryBlock = _copy.GetMemoryBlock();                                                                   \
+        xpf::PolymorphicAllocator& _otherAllocator = _copy.GetAllocator();                                                   \
+        typename xpf::SharedPointer<InitialType>::MemoryBlock& _otherMemoryBlock = _copy.GetMemoryBlock();                                                                   \
                                                                                                                             \
         _memoryBlock.ReferenceCounter = _otherMemoryBlock.ReferenceCounter;                                                 \
         _memoryBlock.ObjectBase = static_cast<CastedType*>(_otherMemoryBlock.ObjectBase);                                   \

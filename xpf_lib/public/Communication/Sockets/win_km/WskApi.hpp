@@ -3,11 +3,11 @@
  *
  * @brief       This contains the windows - kernel mode header to abstract away
  *              the WSK API interactions. It is intended to be used only in cpp files.
- *              So this header is in private folder, unaccessible for others
+ *              This header is excluded from the umbrella header (xpf.hpp) and is for internal use only.
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.

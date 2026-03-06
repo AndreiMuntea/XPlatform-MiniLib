@@ -5,7 +5,7 @@
  *
  * @author      Andrei-Marius MUNTEA (munteaandrei17@gmail.com)
  *
- * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2023.
+ * @copyright   Copyright © Andrei-Marius MUNTEA 2020-2026.
  *              All rights reserved.
  *
  * @license     See top-level directory LICENSE file.
@@ -35,13 +35,13 @@ XpfTesEventDispatchHelper(
     _Inout_ xpf::EventBus* EventBus
 ) noexcept(true)
 {
-    auto mockEvent = xpf::MakeShared<xpf::mocks::MockEvent>(EventValue, EventId);
+    xpf::SharedPointer<xpf::mocks::MockEvent> mockEvent = xpf::MakeShared<xpf::mocks::MockEvent>(EventValue, EventId);
     if (mockEvent.IsEmpty())
     {
         return  STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    auto iEvent = xpf::DynamicSharedPointerCast<xpf::IEvent, xpf::mocks::MockEvent>(mockEvent);
+    xpf::SharedPointer<xpf::IEvent> iEvent = xpf::DynamicSharedPointerCast<xpf::IEvent, xpf::mocks::MockEvent>(mockEvent);
     if (iEvent.IsEmpty())
     {
         return  STATUS_INSUFFICIENT_RESOURCES;
@@ -61,7 +61,7 @@ XpfTesEventDispatchTpMethod(
     _In_opt_ xpf::thread::CallbackArgument Context
 ) noexcept(true)
 {
-    auto eventBus = static_cast<xpf::EventBus*>(Context);
+    xpf::EventBus* eventBus = static_cast<xpf::EventBus*>(Context);
     if (nullptr != eventBus)
     {
         for (uint32_t eventId = 0; eventId < 100; ++eventId)
