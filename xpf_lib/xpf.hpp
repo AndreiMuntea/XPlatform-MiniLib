@@ -50,6 +50,7 @@
 #include "public/Utility/ISerializable.hpp"
 #include "public/Utility/ProtobufSerializer.hpp"
 #include "public/Utility/PdbSymbolParser.hpp"
+#include "public/Utility/PeFileParser.hpp"
 
 #include "public/Filesystem/FileObject.hpp"
 
