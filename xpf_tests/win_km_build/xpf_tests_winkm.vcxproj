@@ -161,6 +161,9 @@
       <Project>{c85a3c29-06e6-4cbb-a2f4-e39b7ecb66e3}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(ProjectDir)\..\..\xpf_lib\xpf.natvis" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

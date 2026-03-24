@@ -29,6 +29,9 @@ ADD_LIBRARY( "xpf_lib" STATIC "xpf.hpp"
                               "private/Communication/Sockets/win_km/WskApi.cpp"
                               "private/Communication/http.cpp")
 
+# Add natvis file for Visual Studio debugger visualizers.
+target_sources( xpf_lib PRIVATE "xpf.natvis" )
+
 
 # Run the linter on lib - can be enabled when needed.
 # add_custom_command(TARGET xpf_lib

@@ -40,7 +40,8 @@ add_executable( "XPF_Tests" "XPF-Tests.cpp"
                             "tests/Utility/TestProtobufSerializer.cpp"
                             "tests/Utility/TestPdbSymbolParser.cpp"
                             "tests/Communication/TestSocketClientServer.cpp"
-                            "tests/Communication/TestHttp.cpp")
+                            "tests/Communication/TestHttp.cpp"
+                            "tests/TestNatvisValidation.cpp")
 
 # Link test executable against xpf-lib
 target_link_libraries( XPF_Tests xpf_lib )

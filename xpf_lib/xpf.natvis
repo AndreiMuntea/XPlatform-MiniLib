@@ -1,0 +1,450 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Natvis visualizers for XPlatform-MiniLib (xpf) types.
+    Works in Visual Studio and WinDbg.
+    Place this file alongside the xpf_lib project sources.
+-->
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+
+    <!-- ==================== CompressedPair (non-EBCO: both stored) ==================== -->
+    <Type Name="xpf::CompressedPair&lt;*,*,false&gt;">
+        <DisplayString>{{ [{m_FirstValue}, {m_SecondValue}] }}</DisplayString>
+        <Expand>
+            <Item Name="First">m_FirstValue</Item>
+            <Item Name="Second">m_SecondValue</Item>
+        </Expand>
+    </Type>
+
+    <!-- CompressedPair (EBCO: Type1 is base class, only m_SecondValue stored) -->
+    <Type Name="xpf::CompressedPair&lt;*,*,true&gt;">
+        <DisplayString>{{ [EBCO, {m_SecondValue}] }}</DisplayString>
+        <Expand>
+            <Item Name="First (base)">*($T1*)this</Item>
+            <Item Name="Second">m_SecondValue</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== PolymorphicAllocator ==================== -->
+    <Type Name="xpf::PolymorphicAllocator">
+        <DisplayString>{{ alloc={AllocFunction}, free={FreeFunction} }}</DisplayString>
+    </Type>
+
+    <!-- ==================== Buffer ==================== -->
+    <Type Name="xpf::Buffer">
+        <DisplayString>{{ size={m_Size} }}</DisplayString>
+        <Expand>
+            <Item Name="[size]">m_Size</Item>
+            <Item Name="[ptr]">m_CompressedPair.m_SecondValue</Item>
+            <Item Name="[allocator]">m_CompressedPair.m_FirstValue</Item>
+            <ArrayItems>
+                <Size>m_Size</Size>
+                <ValuePointer>(unsigned char*)m_CompressedPair.m_SecondValue</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+
+    <!-- ==================== Vector ==================== -->
+    <Type Name="xpf::Vector&lt;*&gt;">
+        <DisplayString>{{ size={m_Size} }}</DisplayString>
+        <Expand>
+            <Item Name="[size]">m_Size</Item>
+            <Item Name="[capacity]">m_Buffer.m_Size / sizeof($T1)</Item>
+            <ArrayItems>
+                <Size>m_Size</Size>
+                <ValuePointer>($T1*)m_Buffer.m_CompressedPair.m_SecondValue</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+
+    <!-- ==================== StringView<char> ==================== -->
+    <Type Name="xpf::StringView&lt;char&gt;">
+        <DisplayString Condition="m_BufferSize == 0">&lt;empty&gt;</DisplayString>
+        <DisplayString>{m_Buffer,[m_BufferSize]s8}</DisplayString>
+        <Expand>
+            <Item Name="[length]">m_BufferSize</Item>
+            <Item Name="[buffer]">m_Buffer,[m_BufferSize]s8</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== StringView<wchar_t> ==================== -->
+    <Type Name="xpf::StringView&lt;wchar_t&gt;">
+        <DisplayString Condition="m_BufferSize == 0">&lt;empty&gt;</DisplayString>
+        <DisplayString>{m_Buffer,[m_BufferSize]su}</DisplayString>
+        <Expand>
+            <Item Name="[length]">m_BufferSize</Item>
+            <Item Name="[buffer]">m_Buffer,[m_BufferSize]su</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== String<char> ==================== -->
+    <Type Name="xpf::String&lt;char&gt;">
+        <DisplayString Condition="m_Buffer.m_Size == 0">&lt;empty&gt;</DisplayString>
+        <DisplayString>{(char*)m_Buffer.m_CompressedPair.m_SecondValue,[(m_Buffer.m_Size / sizeof(char)) - 1]s8}</DisplayString>
+        <Expand>
+            <Item Name="[length]">(m_Buffer.m_Size / sizeof(char)) - 1</Item>
+            <Item Name="[buffer]">(char*)m_Buffer.m_CompressedPair.m_SecondValue,[(m_Buffer.m_Size / sizeof(char)) - 1]s8</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== String<wchar_t> ==================== -->
+    <Type Name="xpf::String&lt;wchar_t&gt;">
+        <DisplayString Condition="m_Buffer.m_Size == 0">&lt;empty&gt;</DisplayString>
+        <DisplayString>{(wchar_t*)m_Buffer.m_CompressedPair.m_SecondValue,[(m_Buffer.m_Size / sizeof(wchar_t)) - 1]su}</DisplayString>
+        <Expand>
+            <Item Name="[length]">(m_Buffer.m_Size / sizeof(wchar_t)) - 1</Item>
+            <Item Name="[buffer]">(wchar_t*)m_Buffer.m_CompressedPair.m_SecondValue,[(m_Buffer.m_Size / sizeof(wchar_t)) - 1]su</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== Span ==================== -->
+    <Type Name="xpf::Span&lt;*&gt;">
+        <DisplayString>{{ size={m_Size} }}</DisplayString>
+        <Expand>
+            <Item Name="[size]">m_Size</Item>
+            <ArrayItems>
+                <Size>m_Size</Size>
+                <ValuePointer>($T1*)m_Buffer</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+
+    <!-- ==================== Optional ==================== -->
+    <Type Name="xpf::Optional&lt;*&gt;">
+        <DisplayString Condition="!m_HasValue">&lt;empty&gt;</DisplayString>
+        <DisplayString Condition="m_HasValue">{m_Value}</DisplayString>
+        <Expand>
+            <Item Name="[has_value]">m_HasValue</Item>
+            <Item Name="[value]" Condition="m_HasValue">m_Value</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== UniquePointer ==================== -->
+    <Type Name="xpf::UniquePointer&lt;*&gt;">
+        <DisplayString Condition="m_CompressedPair.m_SecondValue.ObjectBase == 0">&lt;null&gt;</DisplayString>
+        <DisplayString>{*m_CompressedPair.m_SecondValue.ObjectBase}</DisplayString>
+        <Expand>
+            <Item Name="[object]" Condition="m_CompressedPair.m_SecondValue.ObjectBase != 0">*m_CompressedPair.m_SecondValue.ObjectBase</Item>
+            <Item Name="[ptr]">m_CompressedPair.m_SecondValue.ObjectBase</Item>
+            <Item Name="[alloc_base]">m_CompressedPair.m_SecondValue.AllocationBase</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== SharedPointer ==================== -->
+    <Type Name="xpf::SharedPointer&lt;*&gt;">
+        <DisplayString Condition="m_CompressedPair.m_SecondValue.ReferenceCounter == 0">&lt;null&gt;</DisplayString>
+        <DisplayString>{{ ref={*m_CompressedPair.m_SecondValue.ReferenceCounter}, obj={*m_CompressedPair.m_SecondValue.ObjectBase} }}</DisplayString>
+        <Expand>
+            <Item Name="[ref_count]" Condition="m_CompressedPair.m_SecondValue.ReferenceCounter != 0">*m_CompressedPair.m_SecondValue.ReferenceCounter</Item>
+            <Item Name="[object]" Condition="m_CompressedPair.m_SecondValue.ObjectBase != 0">*m_CompressedPair.m_SecondValue.ObjectBase</Item>
+            <Item Name="[ptr]">m_CompressedPair.m_SecondValue.ObjectBase</Item>
+            <Item Name="[ref_counter_ptr]">m_CompressedPair.m_SecondValue.ReferenceCounter</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== BusyLock ==================== -->
+    <Type Name="xpf::BusyLock">
+        <DisplayString Condition="m_Lock == 0">Unlocked</DisplayString>
+        <DisplayString Condition="(m_Lock &amp; 0x8000) != 0">Exclusive</DisplayString>
+        <DisplayString>Shared ({m_Lock &amp; 0x7FFF} readers)</DisplayString>
+        <Expand>
+            <Item Name="[raw]">m_Lock</Item>
+            <Item Name="[exclusive]">(m_Lock &amp; 0x8000) != 0</Item>
+            <Item Name="[readers]">m_Lock &amp; 0x7FFF</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== ReadWriteLock ==================== -->
+    <Type Name="xpf::ReadWriteLock">
+        <DisplayString Condition="m_Lock == 0">&lt;not initialized&gt;</DisplayString>
+        <DisplayString>{{ handle={m_Lock} }}</DisplayString>
+        <Expand>
+            <Item Name="[handle]">m_Lock</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== ExclusiveLockGuard ==================== -->
+    <Type Name="xpf::ExclusiveLockGuard">
+        <DisplayString>{{ exclusive lock guard }}</DisplayString>
+        <Expand>
+            <Item Name="[lock]">m_ExclusiveLock</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== SharedLockGuard ==================== -->
+    <Type Name="xpf::SharedLockGuard">
+        <DisplayString>{{ shared lock guard }}</DisplayString>
+        <Expand>
+            <Item Name="[lock]">m_SharedLock</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== RundownProtection ==================== -->
+    <Type Name="xpf::RundownProtection">
+        <DisplayString Condition="(m_Rundown &amp; 1) != 0">RundownActive (accesses={m_Rundown &gt;&gt; 1})</DisplayString>
+        <DisplayString Condition="m_Rundown == 0">Idle</DisplayString>
+        <DisplayString>Active (accesses={m_Rundown &gt;&gt; 1})</DisplayString>
+        <Expand>
+            <Item Name="[raw]">m_Rundown</Item>
+            <Item Name="[is_rundown]">(m_Rundown &amp; 1) != 0</Item>
+            <Item Name="[access_count]">m_Rundown &gt;&gt; 1</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== RundownGuard ==================== -->
+    <Type Name="xpf::RundownGuard">
+        <DisplayString Condition="m_IsRundownAcquired">{{ acquired }}</DisplayString>
+        <DisplayString>{{ not acquired }}</DisplayString>
+        <Expand>
+            <Item Name="[acquired]">m_IsRundownAcquired</Item>
+            <Item Name="[rundown]">m_RundownReference</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== XPF_SINGLE_LIST_ENTRY ==================== -->
+    <Type Name="xpf::_XPF_SINGLE_LIST_ENTRY">
+        <DisplayString Condition="Next == 0">[end]</DisplayString>
+        <DisplayString>{{ Next={Next} }}</DisplayString>
+    </Type>
+
+    <!-- ==================== TwoLockQueue ==================== -->
+    <Type Name="xpf::TwoLockQueue">
+        <DisplayString Condition="Head == 0 &amp;&amp; Tail == 0">&lt;empty&gt;</DisplayString>
+        <DisplayString>{{ Head={Head}, Tail={Tail} }}</DisplayString>
+        <Expand>
+            <Item Name="[head]">Head</Item>
+            <Item Name="[tail]">Tail</Item>
+            <Item Name="[head_lock]">HeadLock</Item>
+            <Item Name="[tail_lock]">TailLock</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== LookasideListAllocator ==================== -->
+    <Type Name="xpf::LookasideListAllocator">
+        <DisplayString>{{ elements={m_CurrentElements}/{m_MaxElements}, size={m_ElementSize} }}</DisplayString>
+        <Expand>
+            <Item Name="[current_elements]">m_CurrentElements</Item>
+            <Item Name="[max_elements]">m_MaxElements</Item>
+            <Item Name="[element_size]">m_ElementSize</Item>
+            <Item Name="[is_critical]">m_IsCriticalAllocator</Item>
+            <Item Name="[queue]">m_TwoLockQueue</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== RedBlackTreeNode ==================== -->
+    <Type Name="xpf::RedBlackTreeNode&lt;*,*&gt;">
+        <DisplayString Condition="Color == xpf::NodeColor::Red">{{ key={NodeKey}, Red }}</DisplayString>
+        <DisplayString>{{ key={NodeKey}, Black }}</DisplayString>
+        <Expand>
+            <Item Name="[key]">NodeKey</Item>
+            <Item Name="[value]">NodeValue</Item>
+            <Item Name="[color]">Color</Item>
+            <Item Name="[left]">Left</Item>
+            <Item Name="[right]">Right</Item>
+            <Item Name="[parent]">Parent</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== RedBlackTreeIterator ==================== -->
+    <Type Name="xpf::RedBlackTreeIterator&lt;*,*&gt;">
+        <DisplayString Condition="m_Node == 0">&lt;end&gt;</DisplayString>
+        <DisplayString>{{ key={m_Node->NodeKey}, value={m_Node->NodeValue} }}</DisplayString>
+        <Expand>
+            <Item Name="[node]" Condition="m_Node != 0">*m_Node</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== RedBlackTree ==================== -->
+    <!--
+        Uses CustomListItems with an iterative in-order traversal so that
+        items appear as a flat, sorted list:  [key] = value.
+    -->
+    <Type Name="xpf::RedBlackTree&lt;*,*,*&gt;">
+        <DisplayString>{{ size={m_Size} }}</DisplayString>
+        <Expand>
+            <Item Name="[size]">m_Size</Item>
+            <Item Name="[root]" Condition="m_CompressedPair.m_SecondValue != 0">*m_CompressedPair.m_SecondValue</Item>
+            <CustomListItems>
+                <Variable Name="current" InitialValue="m_CompressedPair.m_SecondValue"/>
+                <Variable Name="hasRight" InitialValue="0"/>
+
+                <!-- Go to the leftmost node (smallest key). -->
+                <Loop Condition="current != 0">
+                    <If Condition="current->Left != 0">
+                        <Exec>current = current->Left</Exec>
+                    </If>
+                    <If Condition="current->Left == 0">
+                        <Break/>
+                    </If>
+                </Loop>
+
+                <!-- Iterative in-order traversal. -->
+                <Loop Condition="current != 0">
+                    <Item Name="[{current->NodeKey}]">current->NodeValue</Item>
+
+                    <Exec>hasRight = current->Right != 0 ? 1 : 0</Exec>
+
+                    <!-- Case 1: right child exists - successor is leftmost in right subtree. -->
+                    <If Condition="hasRight">
+                        <Exec>current = current->Right</Exec>
+                        <Loop Condition="current->Left != 0">
+                            <Exec>current = current->Left</Exec>
+                        </Loop>
+                    </If>
+
+                    <!-- Case 2: no right child - walk up until we came from a left child. -->
+                    <If Condition="!hasRight">
+                        <Loop Condition="current->Parent != 0 &amp;&amp; current == current->Parent->Right">
+                            <Exec>current = current->Parent</Exec>
+                        </Loop>
+                        <Exec>current = current->Parent</Exec>
+                    </If>
+                </Loop>
+            </CustomListItems>
+        </Expand>
+    </Type>
+
+    <!-- ==================== Map (thin wrapper) ==================== -->
+    <Type Name="xpf::Map&lt;*,*,*&gt;">
+        <DisplayString>{{ size={m_Tree.m_Size} }}</DisplayString>
+        <Expand>
+            <Item Name="[tree]">m_Tree</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== Set (thin wrapper) ==================== -->
+    <Type Name="xpf::Set&lt;*,*&gt;">
+        <DisplayString>{{ size={m_Tree.m_Size} }}</DisplayString>
+        <Expand>
+            <Item Name="[tree]">m_Tree</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== thread::InternalContext ==================== -->
+    <Type Name="xpf::thread::InternalContext">
+        <DisplayString Condition="ThreadHandle == 0">&lt;not running&gt;</DisplayString>
+        <DisplayString>{{ handle={ThreadHandle} }}</DisplayString>
+        <Expand>
+            <Item Name="[handle]">ThreadHandle</Item>
+            <Item Name="[callback]">UserCallback</Item>
+            <Item Name="[argument]">UserCallbackArgument</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== thread::Thread ==================== -->
+    <Type Name="xpf::thread::Thread">
+        <DisplayString Condition="m_Context.ThreadHandle == 0">&lt;not running&gt;</DisplayString>
+        <DisplayString>{{ handle={m_Context.ThreadHandle} }}</DisplayString>
+        <Expand>
+            <Item Name="[context]">m_Context</Item>
+            <Item Name="[lock]">m_ContextLock</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== SignalHandle ==================== -->
+    <!--
+        Platform-specific members use Optional="true" so the debugger
+        silently skips fields that don't exist on the current platform.
+        Win UM/KM: Handle (HANDLE or KEVENT*).  Linux: IsSignaled, IsProperlyInitialized.
+    -->
+    <Type Name="xpf::SignalHandle">
+        <DisplayString Condition="IsManualResetEvent">{{ manual-reset }}</DisplayString>
+        <DisplayString>{{ auto-reset }}</DisplayString>
+        <Expand>
+            <Item Name="[manual_reset]">IsManualResetEvent</Item>
+            <Item Name="[handle]" Optional="true">Handle</Item>
+            <Item Name="[signaled]" Optional="true">IsSignaled</Item>
+            <Item Name="[initialized]" Optional="true">IsProperlyInitialized</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== Signal ==================== -->
+    <Type Name="xpf::Signal">
+        <DisplayString Condition="m_SignalHandle.IsManualResetEvent">{{ manual-reset signal }}</DisplayString>
+        <DisplayString>{{ auto-reset signal }}</DisplayString>
+        <Expand>
+            <Item Name="[manual_reset]">m_SignalHandle.IsManualResetEvent</Item>
+            <Item Name="[handle]" Optional="true">m_SignalHandle.Handle</Item>
+            <Item Name="[signaled]" Optional="true">m_SignalHandle.IsSignaled</Item>
+            <Item Name="[initialized]" Optional="true">m_SignalHandle.IsProperlyInitialized</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== ThreadPoolWorkItem ==================== -->
+    <Type Name="xpf::ThreadPoolWorkItem">
+        <DisplayString>{{ callback={ThreadCallback} }}</DisplayString>
+        <Expand>
+            <Item Name="[callback]">ThreadCallback</Item>
+            <Item Name="[rundown_callback]">ThreadRundownCallback</Item>
+            <Item Name="[argument]">ThreadCallbackArgument</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== ThreadPoolThreadContext ==================== -->
+    <Type Name="xpf::ThreadPoolThreadContext">
+        <DisplayString Condition="IsShutdownSignaled">{{ shutdown signaled }}</DisplayString>
+        <DisplayString>{{ active }}</DisplayString>
+        <Expand>
+            <Item Name="[thread]">CurrentThread</Item>
+            <Item Name="[owner]">OwnerThreadPool</Item>
+            <Item Name="[wake_signal]">WakeUpSignal</Item>
+            <Item Name="[shutdown]">IsShutdownSignaled</Item>
+            <Item Name="[work_queue]">WorkQueue</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== ThreadPool ==================== -->
+    <Type Name="xpf::ThreadPool">
+        <DisplayString>{{ threads={m_Threads.m_Size} }}</DisplayString>
+        <Expand>
+            <Item Name="[threads]">m_Threads</Item>
+            <Item Name="[rundown]">m_ThreadpoolRundown</Item>
+            <Item Name="[work_item_allocator]">m_WorkItemAllocator</Item>
+            <Item Name="[round_robin]">m_RoundRobinIndex</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== StreamReader ==================== -->
+    <Type Name="xpf::StreamReader">
+        <DisplayString>{{ cursor={m_Cursor}/{m_Buffer.m_Size} }}</DisplayString>
+        <Expand>
+            <Item Name="[cursor]">m_Cursor</Item>
+            <Item Name="[buffer_size]">m_Buffer.m_Size</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== StreamWriter ==================== -->
+    <Type Name="xpf::StreamWriter">
+        <DisplayString>{{ cursor={m_Cursor}/{m_Buffer.m_Size} }}</DisplayString>
+        <Expand>
+            <Item Name="[cursor]">m_Cursor</Item>
+            <Item Name="[buffer_size]">m_Buffer.m_Size</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== EventListenerData ==================== -->
+    <Type Name="xpf::EventListenerData">
+        <DisplayString Condition="NakedPointer == 0">&lt;unregistered&gt;</DisplayString>
+        <DisplayString>{{ listener={NakedPointer}, id={Id} }}</DisplayString>
+        <Expand>
+            <Item Name="[id]">Id</Item>
+            <Item Name="[listener]">NakedPointer</Item>
+            <Item Name="[rundown]">Rundown</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== EventBus ==================== -->
+    <Type Name="xpf::EventBus">
+        <DisplayString>{{ event bus }}</DisplayString>
+        <Expand>
+            <Item Name="[listeners]">m_Listeners</Item>
+            <Item Name="[listeners_lock]">m_ListenersLock</Item>
+            <Item Name="[rundown]">m_EventBusRundown</Item>
+        </Expand>
+    </Type>
+
+    <!-- ==================== Protobuf ==================== -->
+    <Type Name="xpf::Protobuf">
+        <DisplayString>{{ protobuf serializer }}</DisplayString>
+    </Type>
+
+</AutoVisualizer>

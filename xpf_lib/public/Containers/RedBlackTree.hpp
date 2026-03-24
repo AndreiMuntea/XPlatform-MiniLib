@@ -163,6 +163,8 @@ GetKey(
 ) const noexcept(true)
 {
     XPF_DEATH_ON_FAILURE(nullptr != this->m_Node);
+    _Analysis_assume_(nullptr != this->m_Node);
+
     return this->m_Node->NodeKey;
 }
 
@@ -197,6 +199,8 @@ GetValue(
 ) const noexcept(true)
 {
     XPF_DEATH_ON_FAILURE(nullptr != this->m_Node);
+    _Analysis_assume_(nullptr != this->m_Node);
+
     return this->m_Node->NodeValue;
 }
 
